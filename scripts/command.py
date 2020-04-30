@@ -22,10 +22,10 @@ class commander:
         self.rate = rospy.Rate(10) # 10hz
 
         # test code
-        # command = Command()
-        # command.command_source = 1
-        # command.command_type = 2
-        # self.data = command
+        command = Command()
+        command.command_source = 1
+        command.command_type = 2
+        self.data = command
         while not rospy.is_shutdown():
             if self.data.command_source == 1:
                 # working with PC

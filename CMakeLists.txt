@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(extensa)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
- add_compile_options(-std=c++11)
+# add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -53,11 +53,15 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## Generate messages in the 'msg' folder
 add_message_files(FILES
-  IKpose.msg
-  Mode.msg
-  Pressure.msg
-  Seg.msg
-  Command.msg
+  Seg_ABL.msg
+  Sensor.msg
+  Command_Pre_Open.msg
+  Command_ABL.msg
+  Command_Position.msg
+  Acturator.msg
+  States.msg
+  Segment.msg
+  
 )
 
 ## Generate services in the 'srv' folder
@@ -214,43 +218,42 @@ include_directories(
 # catkin_add_nosetests(test)
 
 
-add_executable(sensor
-  src/sensor.cpp
+add_executable(State_Estimator
+  src/State_Estimator.cpp
 )
-add_dependencies(sensor ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(sensor
+add_dependencies(State_Estimator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(State_Estimator
   ${catkin_LIBRARIES}
 )
 
-add_executable(video
-  src/video.cpp
+add_executable(Camera
+  src/Camera.cpp
 )
-add_dependencies(video ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(video
+add_dependencies(Camera ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(Camera
   ${catkin_LIBRARIES}
 )
 
-add_executable(gas
-  src/gas.cpp
+add_executable(COMMUNICATION_STM
+  src/COMMUNICATION_STM.cpp
 )
-add_dependencies(gas ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(gas
+add_dependencies(COMMUNICATION_STM ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(COMMUNICATION_STM
   ${catkin_LIBRARIES}
 )
 
-add_executable(feedback
-  src/feedback.cpp
+add_executable(Position_controller
+  src/Position_controller.cpp
 )
-add_dependencies(feedback ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(feedback
+add_dependencies(Position_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(Position_controller
   ${catkin_LIBRARIES}
 )
 
-#Jing
-add_executable(spi_node
-  src/spi_node.cpp
+add_executable(ABL_controller
+  src/ABL_controller.cpp
 )
-add_dependencies(spi_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(spi_node
+add_dependencies(ABL_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(ABL_controller
   ${catkin_LIBRARIES}
 )
