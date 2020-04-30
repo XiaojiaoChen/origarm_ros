@@ -53,6 +53,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## Generate messages in the 'msg' folder
 add_message_files(FILES
+  Valve.msg
+  Seg_Pre.msg
   Seg_ABL.msg
   Sensor.msg
   Command_Pre_Open.msg

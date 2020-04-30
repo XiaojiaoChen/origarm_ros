@@ -2,7 +2,7 @@
 #coding=utf-8
 
 import rospy
-from extensa.msg import Mode, Pressure, Command
+from extensa.msg import *
 from extensa.srv import ik
 
 class commander:
@@ -15,24 +15,23 @@ class commander:
     def commander(self):
         rospy.init_node('command_node', anonymous=True)
 
-        self.pub = rospy.Publisher('command', Command, queue_size=100)
+        self.pub = rospy.Publisher('Command_Position', Command_Position, queue_size=100)
         
         self.sub = rospy.Subscriber('console', Command, self.console)
 
         self.rate = rospy.Rate(10) # 10hz
 
         # test code
-        command = Command()
-        command.command_source = 1
-        command.command_type = 2
+        command = Command_Position()
+        command.pose.position.x = 1
+        command.pose.position.y = 1
+        command.pose.position.z = 1
+        command.pose.orientation.x = 1
+        command.pose.orientation.w = 1
         self.data = command
         while not rospy.is_shutdown():
-            if self.data.command_source == 1:
-                # working with PC
-                self.pub.publish(self.data)
-            else:
-                # individual mode
-                1
+            # working with PC
+            self.pub.publish(self.data)
             self.rate.sleep()
 
     def console(self, data):

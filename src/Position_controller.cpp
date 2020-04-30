@@ -35,13 +35,14 @@ class POSISTION_CONTROLLER
       Desired.request.input.ABL = states_.ABL;// present
       if(clt_.call(Desired))
       {
-        cout << Desired.response;
+        Cmd_ = Desired.response.output;
+        cout << Desired.response.output;
       }
     }
 
     void pub()
     {
-      pub_.publish(Cmd);
+      pub_.publish(Cmd_);
     }
 
   private:
@@ -53,7 +54,7 @@ class POSISTION_CONTROLLER
 
     extensa::States states_;
     extensa::Command_Position position_;
-    extensa::Command_ABL Cmd;
+    extensa::Command_ABL Cmd_;
 };
 
 int main(int argc, char **argv)
@@ -64,8 +65,8 @@ int main(int argc, char **argv)
 
   ROS_INFO("Ready to do POSISTION_CONTROLLER");
 
-  ros::AsyncSpinner s(3);
-  s.start();
+  // ros::AsyncSpinner s(3);
+  // s.start();
 
   ros::Rate loop_rate(10); 
   

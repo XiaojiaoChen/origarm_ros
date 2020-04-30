@@ -22,7 +22,8 @@ class ABL_controller
 
     void ABL(const extensa::Command_ABL& msg)
     {
-      ABL = msg;
+      ABL_ = msg;
+      cout<<msg;
     }
 
     void pub()
@@ -37,7 +38,7 @@ class ABL_controller
     ros::Publisher pub_ ;
 
     extensa::Command_Pre_Open Cmd_P_O;
-    extensa::Command_ABL ABL;
+    extensa::Command_ABL ABL_;
 };
 
 int main(int argc, char **argv)
@@ -47,8 +48,8 @@ int main(int argc, char **argv)
 
   ABL_controller ABL_controller_node;
 
-  ros::AsyncSpinner s(3);
-  s.start();
+  // ros::AsyncSpinner s(3);
+  // s.start();
 
   ros::Rate loop_rate(100); 
 

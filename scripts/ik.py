@@ -10,7 +10,7 @@ from std_msgs.msg import String
 from angles import normalize_angle
 import rospy
 from extensa.srv import ik
-from extensa.msg import Pressure
+from extensa.msg import *
 import traceback
 
 class softArm(object):
@@ -177,8 +177,19 @@ class SoftObject(object):
         for i in range(self.num):
             self.seg[i] = Arms[i]
 
-    def inverse_kinematic(self, pts, quat):
-        def test_square(dst, x0, a, n, R):  # a1 a2 a3 b1 b2 b3 r1 r2 r3
+    def inverse_kinematic(self, pts, quat, x0, single = 0):
+        def test_square(dst, x0, a, n, R, single = 0):  # a1 a2 a3 b1 b2 b3 r1 r2 r3
+            def single(x): # x y z
+                a1 = float(x[0])
+                b1 = float(x[1])
+                l1 = float(x[2])
+
+                result = np.array([
+                    l1/a1*(1-cos(a1))*cos(b1) - pts[0],
+                    l1/a1*(1-cos(a1))*sin(b1) - pts[1],
+                    l1/a1*sin(a1) - pts[2],
+                ])
+                return result.astype('float64')
             def string_type(x):
                 a1 = float(x[0])
                 a2 = float(x[1])
@@ -332,14 +343,23 @@ class SoftObject(object):
             now = time.time()
             x0_rosenbrock = np.array(x0).astype('float64')
             # string type
-            res = least_squares(string_type, x0_rosenbrock,
-                                bounds=([-pi, -pi, -pi, -2*pi, -2*pi, -2*pi, 0.05, 0.05, 0.05],
-                                        [pi, pi, pi, 2*pi, 2*pi, 2*pi, 1, 1, 1]))
-            new = np.array([res.x[0], res.x[3], res.x[6],
-                            res.x[1], res.x[4], res.x[7],
-                            res.x[2], res.x[5], res.x[8]
-                            ]).astype('float64')  # a1 b1 l1 a2 b2 l2 a3 b3 l3
-            result = tranformation_string(new)
+            if single:
+                res = least_squares(single, x0_rosenbrock,
+                                bounds=([-pi, -2*pi, 0.0],
+                                        [pi, 2*pi, 5]))
+                print(res.x)
+                result = np.array([
+                    res.x[0], res.x[1], res.x[2]
+                ])
+            else:
+                res = least_squares(string_type, x0_rosenbrock,
+                                    bounds=([-pi, -pi, -pi, -2*pi, -2*pi, -2*pi, 0.05, 0.05, 0.05],
+                                            [pi, pi, pi, 2*pi, 2*pi, 2*pi, 1, 1, 1]))
+                new = np.array([res.x[0], res.x[3], res.x[6],
+                                res.x[1], res.x[4], res.x[7],
+                                res.x[2], res.x[5], res.x[8]
+                                ]).astype('float64')  # a1 b1 l1 a2 b2 l2 a3 b3 l3
+                result = tranformation_string(new)
 
             print('time cost:', time.time() - now)
             # end
@@ -347,12 +367,13 @@ class SoftObject(object):
 
         # a1 a2 a3 b1 b2 b3 l1 l2 l3
         pts = [pts.x, pts.y, pts.z]
+        
         quat = [quat.x, quat.y, quat.z, quat.w]
 
         R = self.quat_transform(quat)
         n = [R[0][0],R[1][0],R[2][0]]
         a = [R[0][2],R[1][2],R[2][2]]
-        print(R)
+        # print(R)
 
         # normal type
         '''pos_now = [self.seg[0].alpha*3, self.seg[0].beta,
@@ -361,28 +382,26 @@ class SoftObject(object):
                     self.seg[6].length*3
                     ]'''
         # string type
-        pos_now = [ self.seg[0].alpha * 3, self.seg[0].beta,
-                    self.seg[3].alpha * 3, self.seg[3].beta,
-                    self.seg[6].alpha * 3, self.seg[6].beta,
-                    self.seg[0].length * 2 / self.seg[0].alpha * sin(self.seg[0].alpha / 6),
-                    self.seg[3].length * 2 / self.seg[3].alpha * sin(self.seg[3].alpha / 6),
-                    self.seg[6].length * 2 / self.seg[6].alpha * sin(self.seg[6].alpha / 6)
-                    ]
-        self.dst_pos = pts
-        self.desired = test_square(pts, pos_now, a, n, R)
+        x0 = [
+            x0[0].A+0.01, x0[0].B, x0[0].L
+        ]
+        # x0 = [ self.seg[0].alpha * 3, self.seg[0].beta,
+        #             self.seg[3].alpha * 3, self.seg[3].beta,
+        #             self.seg[6].alpha * 3, self.seg[6].beta,
+        #             self.seg[0].length * 2 / self.seg[0].alpha * sin(self.seg[0].alpha / 6),
+        #             self.seg[3].length * 2 / self.seg[3].alpha * sin(self.seg[3].alpha / 6),
+        #             self.seg[6].length * 2 / self.seg[6].alpha * sin(self.seg[6].alpha / 6)
+        #             ]
+        self.desired = test_square(pts, x0, a, n, R, single)
 
         return self.desired
 
     def quat_transform(self, qua): # alpha beta gamma
         R1 = Rotation.from_quat(qua).as_matrix()
         return R1
-    def updatePressure(self, pre):
-        for i in range(self.num):
-            self.seg[i].UpdateP(pre.segment[i])
-    def updateABL(self, desired):
-        for i in range(9):
-            self.seg[i].updateD(desired[i].A, desired[i].B, desired[i].L )
-    def outputPressure(self)
+
+    def outputPressure(self):
+        1
 
 class ik_solver:
     def __init__(self):
@@ -402,28 +421,24 @@ class ik_solver:
         self.ik_srv_setup()
 
     def handle_ik_srv(self, req):
-        self.softArms.updateABL(req.input.segment)
-        try:
-            result = self.softArms.inverse_kinematic(req.input.pose.position,
-            req.input.pose.orientation)
-        except:
+        result = self.softArms.inverse_kinematic(
+            req.input.pose.position,
+            req.input.pose.orientation,
+            req.input.ABL.segment,
             1
-        re = req.pre
+        )
 
-        # for i in range(9):
-        #     re.segment[i].p1 
-        #     re.segment[i].p2
-        #     re.segment[i].p3
-        #     re.segment[i].p4
-        #     re.segment[i].p5
-        #     re.segment[i].p6
-        print(np.degrees(result[0]))
-        print(np.degrees(result[1]))
-        print(np.degrees(result[3]))
-        print(np.degrees(result[4]))
-        print(np.degrees(result[6]))
-        print(np.degrees(result[7]))
-        print(result[8])
+        re = Command_ABL()
+        re.segment[0].A = result[0]
+        re.segment[0].B = result[1]
+        re.segment[0].L = result[2]
+        # print(np.degrees(result[0]))
+        # print(np.degrees(result[1]))
+        # print(np.degrees(result[3]))
+        # print(np.degrees(result[4]))
+        # print(np.degrees(result[6]))
+        # print(np.degrees(result[7]))
+        # print(result[8])
         return re
 
     def ik_srv_setup(self):

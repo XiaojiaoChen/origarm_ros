@@ -2,7 +2,7 @@
 
 	<!--<node pkg="extensa" name="command_node" type="command.py"/>
 	<node pkg="extensa" name="listener_node" type="subscriber.py"/>-->
-	<node pkg="extensa" name="ABL_controller_Node" type="ABL_controller" />
+	<node pkg="extensa" name="ABL_controller_Node" type="ABL_controller" output="screen"/>
 	<node pkg="extensa" name="COMMUNICATION_STM_Node" type="COMMUNICATION_STM"/>
 	<node pkg="extensa" name="Position_controller_Node" type="Position_controller"  />
 	<node pkg="extensa" name="State_Estimator_Node" type="State_Estimator"/>
