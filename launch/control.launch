@@ -1,0 +1,6 @@
+<launch>
+
+	<node pkg="extensa" name="command_node" type="command.py"/>
+	<node pkg="extensa" name="listener_node" type="subscriber.py"/>
+
+</launch>
