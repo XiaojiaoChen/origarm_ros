@@ -361,7 +361,7 @@ class SoftObject(object):
                     self.seg[6].length*3
                     ]'''
         # string type
-        pos_now = [self.seg[0].alpha * 3, self.seg[0].beta,
+        pos_now = [ self.seg[0].alpha * 3, self.seg[0].beta,
                     self.seg[3].alpha * 3, self.seg[3].beta,
                     self.seg[6].alpha * 3, self.seg[6].beta,
                     self.seg[0].length * 2 / self.seg[0].alpha * sin(self.seg[0].alpha / 6),
@@ -380,7 +380,8 @@ class SoftObject(object):
         for i in range(self.num):
             self.seg[i].UpdateP(pre.segment[i])
     def updateABL(self, desired):
-        for i in range()
+        for i in range(9):
+            self.seg[i].updateD(desired[i].A, desired[i].B, desired[i].L )
     def outputPressure(self)
 
 class ik_solver:
@@ -401,10 +402,10 @@ class ik_solver:
         self.ik_srv_setup()
 
     def handle_ik_srv(self, req):
-        self.softArms.updatePressure(req.pre)
+        self.softArms.updateABL(req.input.segment)
         try:
-            result = self.softArms.inverse_kinematic(req.pose.position,
-            req.pose.orientation)
+            result = self.softArms.inverse_kinematic(req.input.pose.position,
+            req.input.pose.orientation)
         except:
             1
         re = req.pre

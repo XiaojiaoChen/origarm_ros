@@ -1,4 +1,3 @@
-geometry_msgs/Pose pose
-extensa/Pressure pre
+extensa/States input
 ---
-extensa/Pressure output
+extensa/Command_ABL output
