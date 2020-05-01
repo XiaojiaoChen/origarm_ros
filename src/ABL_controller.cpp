@@ -1,7 +1,7 @@
 #include "ros/ros.h"
-#include "extensa/States.h"
-#include "extensa/Command_Pre_Open.h"
-#include "extensa/Command_ABL.h"
+#include "origarm_ros/States.h"
+#include "origarm_ros/Command_Pre_Open.h"
+#include "origarm_ros/Command_ABL.h"
 
 using namespace std;
 
@@ -12,15 +12,15 @@ class ABL_controller
     {
       sub1_ = n_.subscribe("States", 300, &ABL_controller::States, this);
       sub2_ = n_.subscribe("Command_ABL", 300, &ABL_controller::ABL, this);
-      pub_ = n_.advertise<extensa::Command_Pre_Open>("Command_Pre_Open", 300);
+      pub_ = n_.advertise<origarm_ros::Command_Pre_Open>("Command_Pre_Open", 300);
     }
 
-    void States(const extensa::States& msg)
+    void States(const origarm_ros::States& msg)
     {
         ;
     }
 
-    void ABL(const extensa::Command_ABL& msg)
+    void ABL(const origarm_ros::Command_ABL& msg)
     {
       ABL_ = msg;
       cout<<msg;
@@ -37,8 +37,8 @@ class ABL_controller
     ros::Subscriber sub2_;
     ros::Publisher pub_ ;
 
-    extensa::Command_Pre_Open Cmd_P_O;
-    extensa::Command_ABL ABL_;
+    origarm_ros::Command_Pre_Open Cmd_P_O;
+    origarm_ros::Command_ABL ABL_;
 };
 
 int main(int argc, char **argv)

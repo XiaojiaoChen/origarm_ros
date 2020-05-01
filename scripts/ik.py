@@ -9,8 +9,8 @@ from scipy.spatial.transform import Rotation
 from std_msgs.msg import String
 from angles import normalize_angle
 import rospy
-from extensa.srv import ik
-from extensa.msg import *
+from origarm_ros.srv import ik
+from origarm_ros.msg import *
 import traceback
 
 class softArm(object):
@@ -347,7 +347,8 @@ class SoftObject(object):
                 res = least_squares(single, x0_rosenbrock,
                                 bounds=([-pi, -2*pi, 0.0],
                                         [pi, 2*pi, 5]))
-                print(res.x)
+                dst = [0,0,0]
+                print(single(res.x))
                 result = np.array([
                     res.x[0], res.x[1], res.x[2]
                 ])

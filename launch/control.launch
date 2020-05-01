@@ -2,10 +2,11 @@
 
 	<!--<node pkg="extensa" name="command_node" type="command.py"/>
 	<node pkg="extensa" name="listener_node" type="subscriber.py"/>-->
-	<node pkg="extensa" name="ABL_controller_Node" type="ABL_controller" output="screen"/>
-	<node pkg="extensa" name="COMMUNICATION_STM_Node" type="COMMUNICATION_STM"/>
-	<node pkg="extensa" name="Position_controller_Node" type="Position_controller"  />
-	<node pkg="extensa" name="State_Estimator_Node" type="State_Estimator"/>
-	
+	<node pkg="origarm_ros" name="ABL_controller_Node" type="ABL_controller" />
+	<node pkg="origarm_ros" name="COMMUNICATION_STM_Node" type="COMMUNICATION_STM"/>
+	<node pkg="origarm_ros" name="Position_controller_Node" type="Position_controller"  output="screen"/>
+	<node pkg="origarm_ros" name="State_Estimator_Node" type="State_Estimator"/>
+	<node pkg="origarm_ros" name="Command_Node" type="command.py"/>
 	<node pkg="rqt_graph" name="rqt_graph_node" type="rqt_graph"/>
+	<node pkg="origarm_ros" name="ik_srv" type="ik.py"/>
 </launch>

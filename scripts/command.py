@@ -2,8 +2,8 @@
 #coding=utf-8
 
 import rospy
-from extensa.msg import *
-from extensa.srv import ik
+from origarm_ros.msg import *
+from origarm_ros.srv import ik
 
 class commander:
     def __init__(self):
@@ -16,8 +16,7 @@ class commander:
         rospy.init_node('command_node', anonymous=True)
 
         self.pub = rospy.Publisher('Command_Position', Command_Position, queue_size=100)
-        
-        self.sub = rospy.Subscriber('console', Command, self.console)
+    
 
         self.rate = rospy.Rate(10) # 10hz
 
@@ -28,7 +27,9 @@ class commander:
         command.pose.position.z = 1
         command.pose.orientation.x = 1
         command.pose.orientation.w = 1
+
         self.data = command
+        print("commander is ready")
         while not rospy.is_shutdown():
             # working with PC
             self.pub.publish(self.data)
@@ -53,6 +54,6 @@ class commander:
 if __name__ == '__main__':
     try:
         COMMANDER = commander()
-        print("commander is finished")
+        
     except rospy.ROSInterruptException as exc:
         print("Commander call failed:"+str(exc))

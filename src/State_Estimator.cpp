@@ -1,6 +1,6 @@
 #include "ros/ros.h"
-#include "extensa/States.h"
-#include "extensa/Sensor.h"
+#include "origarm_ros/States.h"
+#include "origarm_ros/Sensor.h"
 
 using namespace std;
 
@@ -10,10 +10,10 @@ class State_Estimator
     State_Estimator()
     {
       sub_ = n_.subscribe("Sensor", 300, &State_Estimator::callback, this);
-      pub_ = n_.advertise<extensa::States>("States", 300);
+      pub_ = n_.advertise<origarm_ros::States>("States", 300);
     }
 
-    void callback(const extensa::Sensor& msg)
+    void callback(const origarm_ros::Sensor& msg)
     {
       ;
     }
@@ -28,7 +28,7 @@ class State_Estimator
     ros::Subscriber sub_ ;
     ros::Publisher pub_ ;
 
-    extensa::States states_;
+    origarm_ros::States states_;
 };
 
 int main(int argc, char **argv)
