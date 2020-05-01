@@ -1,1 +1,1 @@
-origarm_ros/Acturator[6] acturator
+extensa/Acturator[6] acturator

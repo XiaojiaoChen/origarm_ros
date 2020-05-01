@@ -1,1 +1,1 @@
-origarm_ros/Seg_ABL[1] segment
+extensa/Seg_ABL[1] segment

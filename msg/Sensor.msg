@@ -1,1 +1,1 @@
-origarm_ros/Segment[] segment
+extensa/Segment[] segment

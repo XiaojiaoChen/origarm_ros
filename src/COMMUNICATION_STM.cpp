@@ -1,6 +1,6 @@
 #include "ros/ros.h"
-#include "origarm_ros/Sensor.h"
-#include "origarm_ros/Command_Pre_Open.h"
+#include "extensa/Sensor.h"
+#include "extensa/Command_Pre_Open.h"
 
 using namespace std;
 
@@ -11,10 +11,10 @@ class COMMUNICATION_STM
     {
       sub1_ = n_.subscribe("Command_Pre_Open", 300, &COMMUNICATION_STM::encoder, this);
       sub2_ = n_.subscribe("Carmera", 300, &COMMUNICATION_STM::encoder, this);
-      pub_ = n_.advertise<origarm_ros::Sensor>("Sensor", 300);
+      pub_ = n_.advertise<extensa::Sensor>("Sensor", 300);
     }
 
-    void encoder(const origarm_ros::Command_Pre_Open& msg)
+    void encoder(const extensa::Command_Pre_Open& msg)
     {
       ;
     }
@@ -30,7 +30,7 @@ class COMMUNICATION_STM
     ros::Subscriber sub2_;
     ros::Publisher pub_;
 
-    origarm_ros::Sensor sensor_;
+    extensa::Sensor sensor_;
 };
 
 int main(int argc, char **argv)
