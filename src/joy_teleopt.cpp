@@ -4,9 +4,9 @@
 #include <math.h>
 #include <time.h>
 
-#include "extensa/Command_ABL.h"
-#include "extensa/Seg_ABL.h"
-#include "extensa/States.h"
+#include "origarm_ros/Command_ABL.h"
+#include "origarm_ros/Seg_ABL.h"
+#include "origarm_ros/States.h"
 
 float alpha;
 float beta;
@@ -58,10 +58,10 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 }
 
 //subscribe current state
-void stateCallback(const extensa::States::ConstPtr& state)
+void stateCallback(const origarm_ros::States::ConstPtr& state)
 {
 	
-
+  //
 }
 
 
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
 
 	ros::Subscriber sub1 = nh.subscribe("joy", 1, joyCallback);
 	ros::Subscriber sub2 = nh.subscribe("state", 1, stateCallback);	
-	ros::Publisher  pub  = nh.advertise<extensa::Seg_ABL>("Cmd_ABL", 10);
+  ros::Publisher  pub  = nh.advertise<origarm_ros::Seg_ABL>("Cmd_ABL", 10);
 	
 	while (ros::ok())
 	{
@@ -144,7 +144,7 @@ int main(int argc, char **argv)
 			ROS_INFO("Length: %f", length);	
 		}
 		
-		extensa::Seg_ABL Cmd_ABL;
+    origarm_ros::Seg_ABL Cmd_ABL;
 		Cmd_ABL.A = alpha;
 		Cmd_ABL.B = beta;
 		Cmd_ABL.L = length;
