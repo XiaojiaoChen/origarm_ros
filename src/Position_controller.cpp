@@ -25,7 +25,6 @@ class POSISTION_CONTROLLER
     void Position(const origarm_ros::Command_Position& msg)
     {
       position_ = msg;
-      cout<<1;
       IK();
     }
 

@@ -3,7 +3,7 @@
 
 import numpy as np
 import time
-from math import cos, sin, sqrt, pi
+from math import cos, sin, sqrt, pi, atan, asin, atan, atan2
 from scipy.optimize import least_squares
 from scipy.spatial.transform import Rotation
 from std_msgs.msg import String
@@ -179,17 +179,47 @@ class SoftObject(object):
 
     def inverse_kinematic(self, pts, quat, x0, single = 0):
         def test_square(dst, x0, a, n, R, single = 0):  # a1 a2 a3 b1 b2 b3 r1 r2 r3
-            def single(x): # x y z
-                a1 = float(x[0])
-                b1 = float(x[1])
-                l1 = float(x[2])
+            def Pos2ABLD():
+                x = dst[0]
+                y = dst[1]
+                z = dst[2]
+                mod = x**2 + y**2
 
-                result = np.array([
-                    l1/a1*(1-cos(a1))*cos(b1) - pts[0],
-                    l1/a1*(1-cos(a1))*sin(b1) - pts[1],
-                    l1/a1*sin(a1) - pts[2],
-                ])
-                return result.astype('float64')
+                alphaD, betaD, lengthD = 0,0,0
+       
+                if mod <= z**2:
+                    alphaD = asin(2*sqrt(mod)*z/(z**2+mod))
+                    #print(self.alphaD)
+                    if x == .0: #根据x的正负性质 确定beta atan输出值域(-90,90)
+                        if y > .0:
+                            betaD = -pi/2
+                        else:
+                            betaD = pi/2
+                    elif x > 0:
+                        betaD = atan(y/x)
+                    elif x < 0:
+                        betaD = atan(y/x) + pi
+                    lengthD = (z**2+mod)/(2*sqrt(mod))*alphaD
+                elif mod >z**2:
+                    betaD = atan(y / x)
+
+                return [alphaD, betaD, lengthD]
+            def single(x):
+                a = float(x[0])
+                b = float(x[1])
+                l = float(x[2])
+                if a != 0:
+                    return [
+                        l/a*(1-cos(a))*cos(b),
+                        l/a*(1-cos(a))*sin(b),
+                        l/a*sin(a)
+                    ]
+                else:
+                    return [
+                        0,
+                        0,
+                        l
+                    ]
             def string_type(x):
                 a1 = float(x[0])
                 a2 = float(x[1])
@@ -344,14 +374,12 @@ class SoftObject(object):
             x0_rosenbrock = np.array(x0).astype('float64')
             # string type
             if single:
-                res = least_squares(single, x0_rosenbrock,
-                                bounds=([-pi, -2*pi, 0.0],
-                                        [pi, 2*pi, 5]))
-                dst = [0,0,0]
-                print(single(res.x))
-                result = np.array([
-                    res.x[0], res.x[1], res.x[2]
-                ])
+                res = Pos2ABLD()
+                print(res)
+                print(single(res))
+                result = [
+                    res[0], res[1], res[2]
+                ]
             else:
                 res = least_squares(string_type, x0_rosenbrock,
                                     bounds=([-pi, -pi, -pi, -2*pi, -2*pi, -2*pi, 0.05, 0.05, 0.05],
@@ -383,9 +411,6 @@ class SoftObject(object):
                     self.seg[6].length*3
                     ]'''
         # string type
-        x0 = [
-            x0[0].A+0.01, x0[0].B, x0[0].L
-        ]
         # x0 = [ self.seg[0].alpha * 3, self.seg[0].beta,
         #             self.seg[3].alpha * 3, self.seg[3].beta,
         #             self.seg[6].alpha * 3, self.seg[6].beta,
@@ -393,6 +418,7 @@ class SoftObject(object):
         #             self.seg[3].length * 2 / self.seg[3].alpha * sin(self.seg[3].alpha / 6),
         #             self.seg[6].length * 2 / self.seg[6].alpha * sin(self.seg[6].alpha / 6)
         #             ]
+        x0 =1
         self.desired = test_square(pts, x0, a, n, R, single)
 
         return self.desired

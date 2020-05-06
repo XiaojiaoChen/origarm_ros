@@ -7,11 +7,12 @@ using namespace std;
 class COMMUNICATION_STM
 {
   public:
-    COMMUNICATION_STM()
+    COMMUNICATION_STM(int seg = 1)
     {
       sub1_ = n_.subscribe("Command_Pre_Open", 300, &COMMUNICATION_STM::encoder, this);
       sub2_ = n_.subscribe("Carmera", 300, &COMMUNICATION_STM::encoder, this);
       pub_ = n_.advertise<origarm_ros::Sensor>("Sensor", 300);
+      sensor_.segment.resize(seg);
     }
 
     void encoder(const origarm_ros::Command_Pre_Open& msg)
@@ -37,8 +38,10 @@ int main(int argc, char **argv)
 {
 
   ros::init(argc, argv, "COMMUNICATION_STM_Node");
-
-  COMMUNICATION_STM COMMUNICATION_STM_Node;
+  
+  cout << *argv[1]<<endl;
+  int seg = int(*argv[1])-48;
+  COMMUNICATION_STM COMMUNICATION_STM_Node(seg);
 
   ros::AsyncSpinner s(3);
   s.start();
