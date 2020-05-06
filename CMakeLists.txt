@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(extensa)
+project(origarm_ros)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
  add_compile_options(-std=c++11)
@@ -61,8 +61,8 @@ add_message_files(FILES
   Acturator.msg
   States.msg
   Segment.msg
-	Seg.msg 
 	SegOpening.msg 
+	Valve.msg
 )
 
 ## Generate services in the 'srv' folder

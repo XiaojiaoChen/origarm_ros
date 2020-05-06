@@ -6,11 +6,10 @@
 #include <iostream>
 #include <vector>
 
-#include "extensa/Command_ABL.h"
-#include "extensa/Seg_ABL.h"
-#include "extensa/States.h"
-#include "extensa/Seg.h"
-#include "extensa/SegOpening.h"
+#include "origarm_ros/Command_ABL.h"
+#include "origarm_ros/Seg_ABL.h"
+#include "origarm_ros/States.h"
+#include "origarm_ros/SegOpening.h"
 
 using namespace std;
 
@@ -228,8 +227,8 @@ int main(int argc, char **argv)
 	ros::Rate r(100);     //Hz
 
 	ros::Subscriber sub1 = nh.subscribe("joy", 1, joyCallback);	
-	ros::Publisher  pub1  = nh.advertise<extensa::Seg_ABL>("Cmd_ABL", 10);
-	ros::Publisher  pub2  = nh.advertise<extensa::SegOpening>("Cmd_Opening", 100);
+	ros::Publisher  pub1  = nh.advertise<origarm_ros::Seg_ABL>("Cmd_ABL", 10);
+	ros::Publisher  pub2  = nh.advertise<origarm_ros::SegOpening>("Cmd_Opening", 100);
 	
 	Init_parameter();
 
@@ -259,12 +258,12 @@ int main(int argc, char **argv)
       //ROS_INFO("OpeningResult[0]: %f,[1]: %f,[2]: %f,[3]: %f,[4]: %f,[5]: %f",OpeningResult[0],OpeningResult[1],OpeningResult[2],OpeningResult[3],OpeningResult[4],OpeningResult[5]);	
 		}
 		
-		extensa::Seg_ABL Cmd_ABL;
+		origarm_ros::Seg_ABL Cmd_ABL;
 		Cmd_ABL.A = alpha;
 		Cmd_ABL.B = beta;
 		Cmd_ABL.L = length;
 				
-		extensa::SegOpening Cmd_Opening;
+		origarm_ros::SegOpening Cmd_Opening;
 		for (int i = 0; i < 6; i++)
 		{
 			Cmd_Opening.Op[i] = OpeningResult[i];
