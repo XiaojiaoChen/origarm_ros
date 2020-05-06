@@ -7,14 +7,13 @@ project(origarm_ros)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
-  geometry_msgs
-  message_generation
-  roscpp
-  rospy
-  std_msgs
-  std_srvs
-)
+find_package(catkin REQUIRED
+rospy
+roscpp
+std_msgs
+std_srvs
+geometry_msgs
+message_generation)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -41,7 +40,10 @@ find_package(catkin REQUIRED COMPONENTS
 ##     * add a exec_depend tag for "message_runtime"
 ## * In this file (CMakeLists.txt):
 ##   * add "message_generation" and every package in MSG_DEP_SET to
-##     find_package(catkin REQUIRED COMPONENTS ...)
+find_package(catkin REQUIRED COMPONENTS
+  message_generation
+  roscpp
+)
 ##   * add "message_runtime" and every package in MSG_DEP_SET to
 ##     catkin_package(CATKIN_DEPENDS ...)
 ##   * uncomment the add_*_files sections below as needed
@@ -50,41 +52,35 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  Valve.msg
+add_message_files(FILES
   Seg_ABL.msg
-  Acturator.msg
-  
-  Segment.msg
+  Sensor.msg
   Command_Pre_Open.msg
   Command_ABL.msg
   Command_Position.msg
-  Seg_Pre.msg
-  Sensor.msg
+  Acturator.msg
   States.msg
+  Segment.msg
+	SegOpening.msg 
+	Valve.msg
 )
 
-# Generate services in the 'srv' folder
-add_service_files(
-  FILES
+## Generate services in the 'srv' folder
+add_service_files(FILES
   ik.srv
   feature.srv
 )
-
 ## Generate actions in the 'action' folder
 # add_action_files(
 #   FILES
-#   Action1.action
-#   Action2.action
-# )
+#   #   # )
 
-# Generate added messages and services with any dependencies listed here
+## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
   geometry_msgs
   std_msgs 
-  std_srvs#   std_msgs
+  std_srvs # Or other packages containing msgs
 )
 
 ################################################
@@ -117,11 +113,11 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  CATKIN_DEPENDS
-    message_runtime
+    CATKIN_DEPENDS
+  message_runtime
 #  INCLUDE_DIRS include
 #  LIBRARIES origarm_ros
-#  CATKIN_DEPENDS geometry_msgs message_generation roscpp rospy std_msgs std_srvs
+#  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
 )
 
@@ -132,8 +128,9 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
+  include ${catkin_INCLUDE_DIRS}
+    include
+    ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -221,6 +218,7 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
+
 add_executable(State_Estimator
   src/State_Estimator.cpp
 )
@@ -260,6 +258,7 @@ add_dependencies(ABL_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXP
 target_link_libraries(ABL_controller
   ${catkin_LIBRARIES}
 )
+
 #Jing
 add_executable(spi_node src/spi_node.cpp)       
 add_dependencies(spi_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -272,4 +271,6 @@ add_dependencies(joy_teleopt ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORT
 target_link_libraries(joy_teleopt             
    ${catkin_LIBRARIES}
  )
+
+
 
