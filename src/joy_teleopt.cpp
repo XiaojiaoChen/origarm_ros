@@ -8,7 +8,6 @@
 
 #include "origarm_ros/Command_ABL.h"
 #include "origarm_ros/Seg_ABL.h"
-#include "origarm_ros/States.h"
 #include "origarm_ros/SegOpening.h"
 
 using namespace std;
@@ -56,8 +55,6 @@ float bellowConfigurationPx[6];
 float bellowConfigurationPy[6];
 float openingBase;
 float OpeningResult[6];
-
-float State_ABL[3];
 
 void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
