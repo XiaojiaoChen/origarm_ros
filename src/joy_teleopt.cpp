@@ -60,7 +60,7 @@ float bellowConfigurationPy[6];
 float openingBase;
 float OpeningResult[6];
 
-//Write XYZ unit:mm
+//Write XYZ unit:m
 float x = 0;
 float y = 0;
 float z = 0.055;
