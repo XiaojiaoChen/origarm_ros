@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(origarm_ros)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+ add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -259,4 +259,22 @@ add_executable(ABL_controller
 add_dependencies(ABL_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(ABL_controller
   ${catkin_LIBRARIES}
+<<<<<<< HEAD
 )
+=======
+)
+
+#Jing
+add_executable(spi_node src/spi_node.cpp)       
+add_dependencies(spi_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(spi_node                        
+   ${catkin_LIBRARIES}
+ )
+
+add_executable(joy_teleopt src/joy_teleopt.cpp) 
+add_dependencies(joy_teleopt ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(joy_teleopt             
+   ${catkin_LIBRARIES}
+ )
+
+>>>>>>> d3ef0a58dda78368ae03543b495da536d87c6716
