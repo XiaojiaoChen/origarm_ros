@@ -259,10 +259,6 @@ add_executable(ABL_controller
 add_dependencies(ABL_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(ABL_controller
   ${catkin_LIBRARIES}
-<<<<<<< HEAD
-)
-=======
-)
 
 #Jing
 add_executable(spi_node src/spi_node.cpp)       
@@ -277,4 +273,3 @@ target_link_libraries(joy_teleopt
    ${catkin_LIBRARIES}
  )
 
->>>>>>> d3ef0a58dda78368ae03543b495da536d87c6716
