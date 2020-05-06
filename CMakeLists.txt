@@ -259,7 +259,7 @@ add_executable(ABL_controller
 add_dependencies(ABL_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(ABL_controller
   ${catkin_LIBRARIES}
-
+)
 #Jing
 add_executable(spi_node src/spi_node.cpp)       
 add_dependencies(spi_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
