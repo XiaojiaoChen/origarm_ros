@@ -37,6 +37,9 @@ int main(int argc, char **argv)
 
   State_Estimator State_Estimator_Node;
 
+  ros::AsyncSpinner s(2);
+  s.start();
+
   ros::Rate loop_rate(100); 
 
   ROS_INFO("Ready for State_Estimator_Node");
