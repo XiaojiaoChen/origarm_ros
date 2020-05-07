@@ -186,22 +186,26 @@ class SoftObject(object):
                 mod = x**2 + y**2
 
                 alphaD, betaD, lengthD = 0,0,0
-       
-                if mod <= z**2:
-                    alphaD = asin(2*sqrt(mod)*z/(z**2+mod))
-                    #print(self.alphaD)
-                    if x == .0: #根据x的正负性质 确定beta atan输出值域(-90,90)
-                        if y > .0:
-                            betaD = -pi/2
-                        else:
-                            betaD = pi/2
-                    elif x > 0:
-                        betaD = atan(y/x)
-                    elif x < 0:
-                        betaD = atan(y/x) + pi
-                    lengthD = (z**2+mod)/(2*sqrt(mod))*alphaD
-                elif mod >z**2:
-                    betaD = atan(y / x)
+                if x==.0 and y==.0:
+                    alphaD = 0
+                    betaD = 0
+                    lengthD = z
+                else:
+                    if mod <= z**2:
+                        alphaD = asin(2*sqrt(mod)*z/(z**2+mod))
+                        #print(self.alphaD)
+                        if x == .0: #根据x的正负性质 确定beta atan输出值域(-90,90)
+                            if y > .0:
+                                betaD = -pi/2
+                            else:
+                                betaD = pi/2
+                        elif x > 0:
+                            betaD = atan(y/x)
+                        elif x < 0:
+                            betaD = atan(y/x) + pi
+                        lengthD = (z**2+mod)/(2*sqrt(mod))*alphaD
+                    elif mod >z**2:
+                        betaD = atan(y / x)
 
                 return [alphaD, betaD, lengthD]
             def single(x):

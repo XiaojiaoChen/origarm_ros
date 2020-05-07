@@ -40,8 +40,7 @@ class ABL_controller
     ABL_controller()
     {
       sub1_ = n_.subscribe("States", 300, &ABL_controller::States, this);
-      //sub2_ = n_.subscribe("Command_ABL", 300, &ABL_controller::ABL, this);
-			sub2_ = n_.subscribe("Cmd_ABL", 300, &ABL_controller::ABL, this);     //ABL for one segment, <origarm_ros::Seg_ABL>
+      sub2_ = n_.subscribe("Command_ABL", 300, &ABL_controller::ABL, this);
       pub_ = n_.advertise<origarm_ros::Command_Pre_Open>("Command_Pre_Open", 300);
     }
 
@@ -50,17 +49,19 @@ class ABL_controller
         ;
     }
 
-		//void ABL(const origarm_ros::Command_ABL& msg){}
-    void ABL(const origarm_ros::Seg_ABL& msg)
+		void ABL(const origarm_ros::Command_ABL& msg)
     {
-      //Cmd_ABL = msg;
-			alphad = msg.A;
-			betad = msg.B;
-			lengthd = msg.L; 			
+			alphad = msg.segment[0].A;
+			betad = msg.segment[0].B;
+			lengthd = msg.segment[0].L; 			
     }
 
     void pub()
     {
+      for (int i = 0; i<6; i++)
+      {
+        Cmd_P_O.segment[0].command[i].pressure = PressureD[i]; 
+      }
       pub_.publish(Cmd_P_O);
     }
 
@@ -86,11 +87,12 @@ int main(int argc, char **argv)
 
   ros::Rate loop_rate(100); 
 	
-	ABLD2PD();
+	
   ROS_INFO("Ready for ABL_controller_node");
 
   while(ros::ok())
   {
+    ABLD2PD();
     ABL_controller_node.pub();
     ros::spinOnce();
     loop_rate.sleep();

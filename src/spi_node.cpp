@@ -1,6 +1,11 @@
 /*spi_node spi communication between raspberry pi & stm32 nucleo*/
 
 #include <ros/ros.h>
+#include "origarm_ros/Command_Pre_Open.h"
+#include "origarm_ros/Command_ABL.h"
+#include "origarm_ros/Seg_ABL.h"
+#include "origarm_ros/Seg_Pre.h"
+#include "origarm_ros/Valve.h"
 
 #include <stdint.h>
 #include <unistd.h>
@@ -58,15 +63,32 @@ struct COMMANDDATA commandData[9][6];
 
 enum COMMAND_MODE{openingCommandType, pressureCommandType};
 
+int Cmd_pressure[6];
+
+void pressureCallback(const origarm_ros::Command_Pre_Open& pressured)
+{
+	for(int i = 0; i < 6; i++)
+	{
+		Cmd_pressure[i] = pressured.segment[0].command[i].pressure;
+	} 
+	
+}
+
 static void writeCommand()
 {
-	for (int i = 0; i < 9; i++)
+	/*for (int i = 0; i < 9; i++)
 	{
 		for (int j = 0; j < 6; j++)
 		{
 			commandData[i][j].commandType = openingCommandType;
 			commandData[i][j].values[0] = (6*i+j+1)*0.015*32767;
 		}
+	}*/
+
+	for (int i = 0; i < 6; i++)
+	{
+		commandData[0][i].commandType = pressureCommandType;
+		commandData[0][i].values[0] = Cmd_pressure[i];
 	}
 }
 
@@ -76,14 +98,6 @@ static void transfer(int fd, uint8_t const *tx, uint8_t const *rx, size_t len)
 {
 	int ret;
 	int out_fd;
-	/*struct spi_ioc_transfer tr = {
-		.tx_buf = (unsigned long)tx,
-		.rx_buf = (unsigned long)rx,
-		.len = len,
-		.delay_usecs = delay,
-		.speed_hz = speed,
-		.bits_per_word = bits,
-	};*/
 
 	struct spi_ioc_transfer tr;
 	tr.tx_buf = (unsigned long)tx;
@@ -290,30 +304,37 @@ int main(int argc, char* argv[])
 	printf("spi mode: 0x%x\n", mode);
 	printf("bits per word: %d\n", bits);
 	printf("max speed: %d Hz (%d KHz)\n", speed, speed/1000);
-	int j = 0;
-	writeCommand();
-        /* perform a loop*/
+	int t = 0;
+	
+   	ros::Subscriber sub1 = nh.subscribe("Command_Pre_Open", 1, pressureCallback);	
+
+   	ros::Rate r(100); 
+
 	while(ros::ok())
 	{
+		writeCommand();
 		//transfer(fd, default_tx, default_rx, sizeof(default_tx));		
 		transfer(fd, (uint8_t *)(&commandData[0][0]), (uint8_t *)(&sensorData[0][0]), sizeof(sensorData));
 
-		printf("Pressure[%d]: %hu %hu\r\n", 14, sensorData[2][2].pressure, sensorData[2][2].distance);
-		/*printf("Pressure[%d]: %hu %hu\r\n", 02, sensorData[0][2].pressure, sensorData[0][2].distance);
-		printf("Pressure[%d]: %hu %hu\r\n", 05, sensorData[0][5].pressure, sensorData[0][5].distance);		
-		printf("Pressure[%d]: %hu %hu\r\n", 10, sensorData[1][4].pressure, sensorData[1][4].distance);
-		printf("Pressure[%d]: %hu %hu\r\n", 11, sensorData[1][5].pressure, sensorData[1][5].distance);
-		printf("Pressure[%d]: %hu %hu\r\n", 16, sensorData[2][4].pressure, sensorData[2][4].distance);*/
+		for (int i = 0; i < 6; i++)
+		{
+			printf("Command[0][%d]: %hu\r\n", i, commandData[0][i].values[0]);
+			printf("Sensor[0][%d] : %hu %hu\r\n", i, sensorData[0][i].pressure, sensorData[0][i].distance);
+		}
 
-		printf("time:%d\r\n", j);
-		j = j+1;
+		//printf("Pressure[%d]: %hu %hu\r\n", 14, sensorData[2][2].pressure, sensorData[2][2].distance);
+		
+		printf("time:%d\r\n", t);
+		t = t+1;
 		
 		//sleep(1); //wait for 1 second
-		usleep(10000);//wait for 1000us = 1ms
+		//usleep(10000);//wait for 1000us = 1ms
+
+		ros::spinOnce();
+		r.sleep();    //sleep for 1/r sec
 	}
 
 	close(fd);
-	ros::spin();
 
 	return ret;
 

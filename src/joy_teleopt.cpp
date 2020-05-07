@@ -10,6 +10,7 @@
 #include "origarm_ros/Command_ABL.h"
 #include "origarm_ros/Seg_ABL.h"
 #include "origarm_ros/SegOpening.h"
+#include "origarm_ros/Command_Position.h"
 
 using namespace std;
 
@@ -303,7 +304,9 @@ int main(int argc, char **argv)
 	ros::Subscriber sub1 = nh.subscribe("joy", 1, joyCallback);	
 	ros::Publisher  pub1  = nh.advertise<origarm_ros::Seg_ABL>("Cmd_ABL", 100);
 	ros::Publisher  pub2  = nh.advertise<origarm_ros::SegOpening>("Cmd_Opening", 100);
-	ros::Publisher  pub3  = nh.advertise<geometry_msgs::Pose>("Cmd_XYZ", 100);
+	//ros::Publisher  pub3  = nh.advertise<geometry_msgs::Pose>("Cmd_XYZ", 100);
+	ros::Publisher  pub3  = nh.advertise<origarm_ros::Command_Position>("Command_Position", 100);
+
 	
 	Init_parameter();
 
@@ -354,14 +357,21 @@ int main(int argc, char **argv)
 			Cmd_Opening.Op[i] = OpeningResult[i];
 		}
 		
-		geometry_msgs::Pose Cmd_XYZ;
+		/*geometry_msgs::Pose Cmd_XYZ;
 		Cmd_XYZ.position.x = x;
 		Cmd_XYZ.position.y = y;
-		Cmd_XYZ.position.z = z;
+		Cmd_XYZ.position.z = z;*/
+
+		origarm_ros::Command_Position Command_Position;
+		Command_Position.pose.position.x = x;
+		Command_Position.pose.position.y = y;
+		Command_Position.pose.position.z = z;
+		Command_Position.pose.orientation.x = 1;
+		Command_Position.pose.orientation.w = 1;
 
 		pub1.publish(Cmd_ABL);
 		pub2.publish(Cmd_Opening);
-		pub3.publish(Cmd_XYZ);
+		pub3.publish(Command_Position);
 
 		ros::spinOnce();
 		r.sleep();    //sleep for 1/r sec
