@@ -63,15 +63,14 @@ struct COMMANDDATA commandData[9][6];
 
 enum COMMAND_MODE{openingCommandType, pressureCommandType};
 
-int Cmd_pressure[6];
+int16_t Cmd_pressure[6];
 
 void pressureCallback(const origarm_ros::Command_Pre_Open& pressured)
 {
 	for(int i = 0; i < 6; i++)
 	{
 		Cmd_pressure[i] = pressured.segment[0].command[i].pressure;
-	} 
-	
+	} 	
 }
 
 static void writeCommand()
@@ -88,7 +87,7 @@ static void writeCommand()
 	for (int i = 0; i < 6; i++)
 	{
 		commandData[0][i].commandType = pressureCommandType;
-		commandData[0][i].values[0] = Cmd_pressure[i]*0.001;
+		commandData[0][i].values[0] = Cmd_pressure[i];//kPa or Pa?
 	}
 }
 
@@ -100,6 +99,8 @@ static void transfer(int fd, uint8_t const *tx, uint8_t const *rx, size_t len)
 	int out_fd;
 
 	struct spi_ioc_transfer tr;
+	memset(&tr, 0, sizeof(struct spi_ioc_transfer));
+
 	tr.tx_buf = (unsigned long)tx;
 	tr.rx_buf = (unsigned long)rx;
 	tr.len = len;
@@ -123,6 +124,7 @@ static void transfer(int fd, uint8_t const *tx, uint8_t const *rx, size_t len)
 	}
 
 	ret = ioctl(fd, SPI_IOC_MESSAGE(1), &tr);
+	printf("ret:%d\r\n", ret);
 	if (ret < 1)
 		pabort("can't send spi message");
 	
@@ -306,14 +308,15 @@ int main(int argc, char* argv[])
 	printf("max speed: %d Hz (%d KHz)\n", speed, speed/1000);
 	int t = 0;
 	
-   	ros::Subscriber sub1 = nh.subscribe("Command_Pre_Open", 1, pressureCallback);	
+  ros::Subscriber sub1 = nh.subscribe("Command_Pre_Open", 1, pressureCallback);	
 
-   	ros::Rate r(100); 
+  ros::Rate r(100); 
 
 	while(ros::ok())
 	{
 		writeCommand();
-		//transfer(fd, default_tx, default_rx, sizeof(default_tx));		
+		//transfer(fd, default_tx, default_rx, sizeof(default_tx));
+		
 		transfer(fd, (uint8_t *)(&commandData[0][0]), (uint8_t *)(&sensorData[0][0]), sizeof(sensorData));
 
 		for (int i = 0; i < 6; i++)
