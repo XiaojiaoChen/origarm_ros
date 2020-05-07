@@ -88,7 +88,7 @@ static void writeCommand()
 	for (int i = 0; i < 6; i++)
 	{
 		commandData[0][i].commandType = pressureCommandType;
-		commandData[0][i].values[0] = Cmd_pressure[i];
+		commandData[0][i].values[0] = Cmd_pressure[i]*0.001;
 	}
 }
 

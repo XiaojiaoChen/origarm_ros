@@ -302,7 +302,7 @@ int main(int argc, char **argv)
 	ros::Rate r(100);     //Hz
 
 	ros::Subscriber sub1 = nh.subscribe("joy", 1, joyCallback);	
-	ros::Publisher  pub1  = nh.advertise<origarm_ros::Seg_ABL>("Cmd_ABL", 100);
+	ros::Publisher  pub1  = nh.advertise<origarm_ros::Command_ABL>("Cmd_ABL", 100);
 	ros::Publisher  pub2  = nh.advertise<origarm_ros::SegOpening>("Cmd_Opening", 100);
 	//ros::Publisher  pub3  = nh.advertise<geometry_msgs::Pose>("Cmd_XYZ", 100);
 	ros::Publisher  pub3  = nh.advertise<origarm_ros::Command_Position>("Command_Position", 100);
@@ -346,10 +346,10 @@ int main(int argc, char **argv)
 	
 		}
 		
-		origarm_ros::Seg_ABL Cmd_ABL;
-		Cmd_ABL.A = alpha;
-		Cmd_ABL.B = beta;
-		Cmd_ABL.L = length;
+		origarm_ros::Command_ABL Cmd_ABL;
+		Cmd_ABL.segment[0].A = alpha;
+		Cmd_ABL.segment[0].B = beta;
+		Cmd_ABL.segment[0].L = length;
 				
 		origarm_ros::SegOpening Cmd_Opening;
 		for (int i = 0; i < 6; i++)

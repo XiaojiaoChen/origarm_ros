@@ -40,7 +40,8 @@ class ABL_controller
     ABL_controller()
     {
       sub1_ = n_.subscribe("States", 300, &ABL_controller::States, this);
-      sub2_ = n_.subscribe("Command_ABL", 300, &ABL_controller::ABL, this);
+      //sub2_ = n_.subscribe("Command_ABL", 300, &ABL_controller::ABL, this);
+      sub2_ = n_.subscribe("Cmd_ABL", 300, &ABL_controller::ABL, this);
       pub_ = n_.advertise<origarm_ros::Command_Pre_Open>("Command_Pre_Open", 300);
     }
 
