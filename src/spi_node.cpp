@@ -54,7 +54,7 @@ struct SENSORDATA
 
 struct COMMANDDATA
 {
-	uint16_t values[3];
+	int16_t values[3];
 	uint16_t commandType;
 };
 
@@ -321,7 +321,7 @@ int main(int argc, char* argv[])
 
 		for (int i = 0; i < 6; i++)
 		{
-			printf("Command[0][%d]: %hu\r\n", i, commandData[0][i].values[0]);
+			printf("Command[0][%d]: %hd\r\n", i, commandData[0][i].values[0]);
 			printf("Sensor[0][%d] : %hu %hu\r\n", i, sensorData[0][i].pressure, sensorData[0][i].distance);
 		}
 
