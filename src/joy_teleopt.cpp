@@ -33,14 +33,14 @@ int status;
 //Write ABL
 float alpha;
 float beta;
-float length  = 0.35;
+float length  = 0.055;
 
 float a_scale = 0.001;
 float b_scale = 0.001;
-float l_scale = 0.0001;
+float l_scale = 0.00001;
 
-float l_max =  0.50;
-float l_min =  0.25;
+float l_max =  0.08;
+float l_min =  0.03;
 float a_max =  M_PI/2;
 float a_min = -M_PI/2;
 float b_max =  M_PI;

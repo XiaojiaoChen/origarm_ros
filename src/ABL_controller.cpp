@@ -4,7 +4,7 @@
 #include "origarm_ros/Command_ABL.h"
 
 //ABL->Pressure
-float k0 = 400;
+float k0 = 1700;
 float l0 = 0.055;
 float radR = 0.06;
 float radr = 0.02;
