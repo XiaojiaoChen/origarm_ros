@@ -24,6 +24,7 @@ class POSISTION_CONTROLLER
 
     void Position(const origarm_ros::Command_Position& msg)
     {
+      //cout<<"subscribe position"<<endl;
       position_ = msg;
       IK();
     }
@@ -31,8 +32,9 @@ class POSISTION_CONTROLLER
     void IK()
     {
       origarm_ros::ik Desired;
-      Desired.request.input.pose = position_.pose; //desired
+      Desired.request.input.pose = position_.pose; //desired;
       Desired.request.input.ABL = states_.ABL;// present
+      //cout << clt_.call(Desired);
       if(clt_.call(Desired))
       {
         Cmd_ = Desired.response.output;
