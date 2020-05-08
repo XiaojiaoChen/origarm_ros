@@ -32,6 +32,7 @@ void ABLD2PD()
 	PressureD[3] = b1-b2*2;
 	PressureD[4] = b1-b2-b3;
 	PressureD[5] = b1+b2-b3;
+
 }
 
 class ABL_controller
@@ -61,7 +62,7 @@ class ABL_controller
     {
       for (int i = 0; i<6; i++)
       {
-        Cmd_P_O.segment[0].command[i].pressure = PressureD[i]; 
+        Cmd_P_O.segment[0].command[i].pressure = PressureD[i]/1000; 
       }
       pub_.publish(Cmd_P_O);
     }
