@@ -64,6 +64,7 @@ add_message_files(FILES
 	SegOpening.msg 
 	Valve.msg
 	Seg_Pre.msg
+  
 )
 
 ## Generate services in the 'srv' folder
