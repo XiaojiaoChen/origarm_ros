@@ -56,6 +56,10 @@ int status;
 
 //Write ABL
 int segNumber;
+float segAlpha[9];
+float segBeta[9];
+float segLength[9];
+
 float alpha;
 float beta;
 float length  = 0.055;
@@ -230,24 +234,36 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 //Joystick->ABL
 void WriteABL()
 {
-	if (joyLy > 0.05)
-	{alpha = alpha + a_scale;}
+  	if (joyLy > 0.05)
+	{
+		segAlpha[segNumber] = segAlpha[segNumber] + a_scale;
+	}
 	else if (joyLy < -0.05)
-	{alpha = alpha - a_scale;}
+	{
+		segAlpha[segNumber] = segAlpha[segNumber] - a_scale;
+	}
 	
 	if (joyRx > 0.05)
 	{
 		if (joyRx > 0.5)
-		{beta = beta + 2*b_scale;}
+		{
+			segBeta[segNumber] = segBeta[segNumber] + 2*b_scale;
+		}
 		else
-		{beta = beta + b_scale;}
+		{
+			segBeta[segNumber] = segBeta[segNumber] + b_scale;
+		}
 	}
 	else if (joyRx < -0.05)
 	{
 		if (joyRx < -0.5)
-		{beta = beta - 2*b_scale;}
+		{
+			segBeta[segNumber] = segBeta[segNumber] - 2*b_scale;
+		}
 		else
-		{beta = beta - b_scale;}
+		{
+			segBeta[segNumber] = segBeta[segNumber] - b_scale;
+		}
 	}
 
 	if (joyLT != 1 && joyRT != 1)
@@ -259,43 +275,54 @@ void WriteABL()
 		if (abs(joyLT-1) > 0.05)
 		{
 			if (abs(joyLT-1) > 1)
-			{length = length + 2*l_scale;}
+			{
+				segLength[segNumber] = segLength[segNumber] + 2*l_scale;
+			}
 			else
-			{length = length + l_scale;}
+			{
+				segLength[segNumber] = segLength[segNumber] + l_scale;
+			}
 		}
 		else if (abs(joyRT-1) > 0.05)
 		{
 			if (abs(joyRT-1) > 1)
-			{length = length - 2*l_scale;}
+			{
+				segLength[segNumber] = segLength[segNumber] - 2*l_scale;
+			}
 			else
-        	{length = length - l_scale;}
+        	{
+        		segLength[segNumber] = segLength[segNumber] - l_scale;
+        	}
 		}
 	}
 			
-	if (alpha >= a_max)
-	{alpha = a_max;}
-	else if (alpha <= a_min)
-	{alpha = a_min;}
-
-	if (beta >= b_max)
-	{beta = b_max;}
-	else if (beta <= b_min)
-	{beta = b_min;}
-
-	if (length >= l_max)
-	{length = l_max;}
-	else if (length <= l_min)
-  	{length = l_min;}	
-
-}
-
-void Init_parameter()
-{
-	for (int i = 0; i < 6; i++)
+	if (segAlpha[segNumber] >= a_max)
 	{
-		bellowConfigurationPx[i] = belloConfigurationR*cos(i*2*M_PI/6);
-		bellowConfigurationPy[i] = belloConfigurationR*sin(i*2*M_PI/6);
+		segAlpha[segNumber] = a_max;
 	}
+	else if (segAlpha[segNumber] <= a_min)
+	{
+		segAlpha[segNumber] = a_min;
+	}
+
+	if (segBeta[segNumber] >= b_max)
+	{
+		segBeta[segNumber] = b_max;
+	}
+	else if (segBeta[segNumber] <= b_min)
+	{
+		segBeta[segNumber] = b_min;
+	}
+
+	if (segLength[segNumber] >= l_max)
+	{
+		segLength[segNumber] = l_max;
+	}
+	else if (segLength[segNumber] <= l_min)
+  	{
+  		segLength[segNumber] = l_min;
+  	}	
+  	
 }
 
 //Joystick->Opening
@@ -409,6 +436,22 @@ void WriteXYZ()
 
 }
 
+void Init_parameter()
+{
+	//for Write ABL
+	for (int i = 0; i < 9; i++)
+	{
+		segLength[i] = 0.055;
+	}
+
+	//for Write Opening
+	for (int i = 0; i < 6; i++)
+	{
+		bellowConfigurationPx[i] = belloConfigurationR*cos(i*2*M_PI/6);
+		bellowConfigurationPy[i] = belloConfigurationR*sin(i*2*M_PI/6);
+	}
+}
+
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "joy_teleopt");
@@ -430,7 +473,8 @@ int main(int argc, char **argv)
 		//check whether joystick is available
 		if (status == 1)
 		{
-			WriteABL();		
+			WriteABL();	
+					
 			ROS_INFO("status: %d", status);
 			ROS_INFO("segment:%d",segNumber);
 			/*ROS_INFO("Alpha : %f", alpha);	
@@ -449,9 +493,12 @@ int main(int argc, char **argv)
 		else if (status == 0)
 		{
 			//Reset
-			alpha  = 0;
-			beta   = 0;
-			length = 0.055;
+			for (int i = 0; i < 9; i++)
+			{
+				segAlpha[i]  = 0;
+				segBeta[i]   = 0;
+				segLength[i] = 0.055;
+			}		
 
 			x = 0;
 			y = 0;
@@ -493,9 +540,12 @@ int main(int argc, char **argv)
 		
 		//origarm_ros::Command_ABL Cmd_ABL;
 		origarm_ros::Cmd_ABL Cmd_ABL;
-		Cmd_ABL.segment[segNumber].A = alpha;
-		Cmd_ABL.segment[segNumber].B = beta;
-		Cmd_ABL.segment[segNumber].L = length;
+		for (int i = 0; i < 9; i++)
+		{
+			Cmd_ABL.segment[i].A = segAlpha[i];
+			Cmd_ABL.segment[i].B = segBeta[i];
+			Cmd_ABL.segment[i].L = segLength[i];
+		}		
 		Cmd_ABL.segmentNumber = segNumber;
 				
 		origarm_ros::SegOpening Cmd_Opening;

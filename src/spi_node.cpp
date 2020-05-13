@@ -6,6 +6,7 @@
 #include "origarm_ros/Seg_ABL.h"
 #include "origarm_ros/Seg_Pre.h"
 #include "origarm_ros/Valve.h"
+#include "origarm_ros/Cmd_ABL.h"
 
 #include <stdint.h>
 #include <unistd.h>
@@ -39,6 +40,9 @@ static uint32_t speed = 5000000;
 static uint16_t delay;
 static int verbose;
 
+#define seg 9
+#define act 6
+
 struct QUATERNIONCOMPACT
 {
 	uint16_t imuData0 :15, maxLocHigh :1;
@@ -58,19 +62,33 @@ struct COMMANDDATA
 	uint16_t commandType;
 };
 
-struct SENSORDATA sensorData[9][6];
-struct COMMANDDATA commandData[9][6];
+struct SENSORDATA sensorData[seg][act];
+struct COMMANDDATA commandData[seg][act];
 
 enum COMMAND_MODE{openingCommandType, pressureCommandType};
 
-int16_t Cmd_pressure[6];
+int16_t Cmd_pressure[seg][act];
+int segNumber;
 
 void pressureCallback(const origarm_ros::Command_Pre_Open& pressured)
 {
-	for(int i = 0; i < 6; i++)
+	/*for(int i = 0; i < 6; i++)
 	{
 		Cmd_pressure[i] = pressured.segment[0].command[i].pressure;
+	}*/
+
+	for(int i = 0; i < seg; i++)
+	{
+		for (int j = 0; j < act; j++)
+		{
+			Cmd_pressure[i][j] = pressured.segment[i].command[j].pressure;
+		}		
 	} 	
+}
+
+void segNumberCallback(const origarm_ros::Cmd_ABL& msg)
+{
+	segNumber = msg.segmentNumber;
 }
 
 static void writeCommand()
@@ -84,11 +102,21 @@ static void writeCommand()
 		}
 	}*/
 
-	for (int i = 0; i < 6; i++)
+	/*for (int i = 0; i < 6; i++)
 	{
 		commandData[0][i].commandType = pressureCommandType;
 		commandData[0][i].values[0] = Cmd_pressure[i];//kPa or Pa?
+	}*/
+
+	for (int i = 0; i < seg; i++)
+	{
+		for (int j = 0; j < act; j++)
+		{
+			commandData[i][j].commandType = openingCommandType;
+			commandData[i][j].values[0] = Cmd_pressure[i][j];
+		}
 	}
+
 }
 
 char *input_tx;
@@ -270,9 +298,7 @@ int main(int argc, char* argv[])
 	if (fd < 0)
 		pabort("can't open device");
 
-	/*
-	 * spi mode
-	 */
+	//spi mode	
 	ret = ioctl(fd, SPI_IOC_WR_MODE, &mode);
 	if (ret == -1)
 		pabort("can't set spi mode");
@@ -281,9 +307,7 @@ int main(int argc, char* argv[])
 	if (ret == -1)
 		pabort("can't get spi mode");
 
-	/*
-	 * bits per word
-	 */
+	//bits per word
 	ret = ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &bits);
 	if (ret == -1)
 		pabort("can't set bits per word");
@@ -292,9 +316,7 @@ int main(int argc, char* argv[])
 	if (ret == -1)
 		pabort("can't get bits per word");
 
-	/*
-	 * max speed hz
-	 */
+	//max speed hz
 	ret = ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed);
 	if (ret == -1)
 		pabort("can't set max speed hz");
@@ -306,9 +328,12 @@ int main(int argc, char* argv[])
 	printf("spi mode: 0x%x\n", mode);
 	printf("bits per word: %d\n", bits);
 	printf("max speed: %d Hz (%d KHz)\n", speed, speed/1000);
-	int t = 0;
+
+
+  int t = 0;
 	
-  ros::Subscriber sub1 = nh.subscribe("Command_Pre_Open", 1, pressureCallback);	
+  ros::Subscriber sub1 = nh.subscribe("Command_Pre_Open", 1, pressureCallback);
+  ros::Subscriber sub2 = nh.subscribe("Cmd_ABL", 1, segNumberCallback);		
 
   ros::Rate r(100); 
 
@@ -319,15 +344,29 @@ int main(int argc, char* argv[])
 		
 		transfer(fd, (uint8_t *)(&commandData[0][0]), (uint8_t *)(&sensorData[0][0]), sizeof(sensorData));
 
-		for (int i = 0; i < 6; i++)
+		/*for (int i = 0; i < seg; i++)
 		{
-			printf("Command[0][%d]: %hd\r\n", i, commandData[0][i].values[0]);
-			printf("Sensor[0][%d] : %hu %hu\r\n", i, sensorData[0][i].pressure, sensorData[0][i].distance);
-		}
+			for (int j = 0; j < act; j++)
+			{
+				printf("Command[%d][%d]: %hd\r\n", i, j, commandData[i][j].values[0]);
+				//printf("Sensor[%d][%d] : %hu %hu\r\n", i, j, sensorData[i][j].pressure, sensorData[i][j].distance);
+			}			
+		}*/
 
-		//printf("Pressure[%d]: %hu %hu\r\n", 14, sensorData[2][2].pressure, sensorData[2][2].distance);
-		
-		printf("time:%d\r\n", t);
+		printf("time:%d, segN:%d\r\n", t, segNumber); 
+		//printf("CommandPressure        | sensorData\r\n"); 
+		for (int i = 0; i < seg; i++)
+		{
+			printf("Data[%d][0]: %hd %hd %hd %hd %hd %hd| %hu %hu %hu %hu %hu %hu| %hu %hu %hu %hu %hu %hu\r\n", i, 
+				commandData[i][0].values[0], sensorData[i][0].pressure, sensorData[i][0].distance,
+				commandData[i][1].values[0], sensorData[i][1].pressure, sensorData[i][1].distance,
+				commandData[i][2].values[0], sensorData[i][2].pressure, sensorData[i][2].distance,
+				commandData[i][3].values[0], sensorData[i][3].pressure, sensorData[i][3].distance,
+				commandData[i][4].values[0], sensorData[i][4].pressure, sensorData[i][4].distance,
+				commandData[i][5].values[0], sensorData[i][5].pressure, sensorData[i][5].distance);			
+		}
+				
+		//printf("time:%d\r\n", t);
 		t = t+1;
 		
 		//sleep(1); //wait for 1 second
