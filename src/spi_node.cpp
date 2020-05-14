@@ -357,13 +357,25 @@ int main(int argc, char* argv[])
 		//printf("CommandPressure        | sensorData\r\n"); 
 		for (int i = 0; i < seg; i++)
 		{
-			printf("Data[%d][0]: %hd %hd %hd %hd %hd %hd| %hu %hu %hu %hu %hu %hu| %hu %hu %hu %hu %hu %hu\r\n", i, 
-				commandData[i][0].values[0], sensorData[i][0].pressure, sensorData[i][0].distance,
-				commandData[i][1].values[0], sensorData[i][1].pressure, sensorData[i][1].distance,
-				commandData[i][2].values[0], sensorData[i][2].pressure, sensorData[i][2].distance,
-				commandData[i][3].values[0], sensorData[i][3].pressure, sensorData[i][3].distance,
-				commandData[i][4].values[0], sensorData[i][4].pressure, sensorData[i][4].distance,
-				commandData[i][5].values[0], sensorData[i][5].pressure, sensorData[i][5].distance);			
+			printf("Data[%d]: %hd %hd %hd %hd %hd %hd| %hu %hu %hu %hu %hu %hu| %hu %hu %hu %hu %hu %hu\r\n", i, 
+				commandData[i][0].values[0], 
+				commandData[i][1].values[0], 
+				commandData[i][2].values[0], 
+				commandData[i][3].values[0], 
+				commandData[i][4].values[0], 
+				commandData[i][5].values[0],
+			        sensorData[i][0].pressure, 
+				sensorData[i][1].pressure,
+				sensorData[i][2].pressure,
+				sensorData[i][3].pressure,
+				sensorData[i][4].pressure,
+				sensorData[i][5].pressure,
+				sensorData[i][0].distance,
+				sensorData[i][1].distance,
+				sensorData[i][2].distance,
+				sensorData[i][3].distance,
+				sensorData[i][4].distance,
+				sensorData[i][5].distance);			
 		}
 				
 		//printf("time:%d\r\n", t);
