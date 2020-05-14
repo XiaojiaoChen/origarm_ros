@@ -364,7 +364,7 @@ int main(int argc, char* argv[])
 				commandData[i][3].values[0], 
 				commandData[i][4].values[0], 
 				commandData[i][5].values[0],
-			        sensorData[i][0].pressure, 
+			    sensorData[i][0].pressure, 
 				sensorData[i][1].pressure,
 				sensorData[i][2].pressure,
 				sensorData[i][3].pressure,

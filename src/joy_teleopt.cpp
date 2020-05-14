@@ -15,8 +15,12 @@
 #include "origarm_ros/Seg_ABL.h"
 #include "origarm_ros/SegOpening.h"
 #include "origarm_ros/Command_Position.h"
+#include "origarm_ros/keynumber.h"
 
 using namespace std;
+
+//keyboard mapping
+int key_no[10];
 
 //joystick mapping
 float joyLx;
@@ -106,6 +110,19 @@ float y_min = -0.01;
 float z_max =  0.08;
 float z_min =  0.03;
 
+//keyboard callback
+void keyCallback(const origarm_ros::keynumber& key)
+{
+	for (int i = 0; i < 10; i++)
+	{
+		key_no[i] = key.KEY_CODE[i];
+		if (key_no[i] > 0)
+		{
+			segNumber = i;
+		}
+	}
+
+}
 
 //joystick callback
 void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
@@ -160,7 +177,7 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 	}
 
 	// 9 segments, SegNumber:[1]->[9]	
-	if (joyA == 1 && last_joyA == 0)
+	/*if (joyA == 1 && last_joyA == 0)
 	{
 		segNumber = 0;
 	}
@@ -195,7 +212,7 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 	else if (joyRB == 1 && last_joyRB == 0)
 	{
 		segNumber = 8;
-	}
+	}*/
 
 	//only when joyRT && joyLT pressed together, joystick starts to control
 	if (joyLT == -1 && joyRT == -1)
@@ -459,6 +476,7 @@ int main(int argc, char **argv)
 	ros::Rate r(100);     //Hz
 
 	ros::Subscriber sub1 = nh.subscribe("joy", 1, joyCallback);	
+	ros::Subscriber sub2 = nh.subscribe("key_number", 1, keyCallback);
 	//ros::Publisher  pub1  = nh.advertise<origarm_ros::Command_ABL>("Cmd_ABL", 100);
 	ros::Publisher  pub1  = nh.advertise<origarm_ros::Cmd_ABL>("Cmd_ABL", 100);
 	ros::Publisher  pub2  = nh.advertise<origarm_ros::SegOpening>("Cmd_Opening", 100);

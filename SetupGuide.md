@@ -84,6 +84,11 @@ Add the following to the local.rules
 ACTION=="add", KERNEL=="spidev0.0", MODE="0666"
 ```
 
+## Enable keyboard
+
+>>
+
+
 ## 7-inch external screen (optional)
 Open SD card from card reader, in **system_boot**, add to **usrconig.txt** with
 ```

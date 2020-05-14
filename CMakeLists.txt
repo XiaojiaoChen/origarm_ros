@@ -65,7 +65,7 @@ add_message_files(FILES
 	Valve.msg
 	Seg_Pre.msg
 	Cmd_ABL.msg
-  
+  keynumber.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -275,5 +275,10 @@ target_link_libraries(joy_teleopt
    ${catkin_LIBRARIES}
  )
 
+add_executable(keyboard src/keyboard.cpp) 
+add_dependencies(keyboard ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(keyboard             
+   ${catkin_LIBRARIES}
+ )
 
 
