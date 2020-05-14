@@ -85,9 +85,26 @@ ACTION=="add", KERNEL=="spidev0.0", MODE="0666"
 ```
 
 ## Enable keyboard
-
->>
-
+install evtest tool
+```
+>>sudo apt install evtest -y
+```
+run evtest and check which event (e.g. eventX) corresponds to keyboard
+```
+>>sudo evtest
+```
+check path link for keyboard and copy the link to defualt_path[] in origarm_ros/src/keyboard.cpp
+```
+>>ls -h /dev/input/by-path/
+```
+check the permission for keyboard
+```
+>>ls -l /dev/input/eventX
+```
+configure rw permission for keyboard
+```
+>>sudo chmod a+rw /dev/input/eventX
+```
 
 ## 7-inch external screen (optional)
 Open SD card from card reader, in **system_boot**, add to **usrconig.txt** with
