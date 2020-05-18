@@ -120,10 +120,31 @@ hdmi_drive=1
 ## Clone a SD
 
 prepare another SD card through usb, check by
+
 ```
 lsblk -f 
 ```
 Normally, mmcblk0 is the original system SD card，sda is the new SD card.
 ```
 sudo dd bs=4M if=/dev/mmcblk0 of=/dev/sda status=progress
+
+
+## install Eigen library
+defualt library for installation: /usr/include/
+```
+>>sudo apt-get install libeigen3-dev
+```
+configure library
+```
+>>cd /usr/include/
+>>sudo ln -sf eigen3/Eigen Eigen
+>>sudo ln -sf eigen3/unsupported unsupported
+```
+
+configure CMakeList.txt
+```
+find_package(cmake_modules REQUIRED)
+find_package(Eigen3 REQUIRED)
+include_directories($EIGEN3_INCLUDE_DIR)
+add_definitions(${EIGEN_DEFINITIONS})
 ```

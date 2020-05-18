@@ -1,7 +1,7 @@
 #include <ros/ros.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Int16.h>
-#include "testbot/keynumber.h"
+#include "origarm_ros/keynumber.h"
 
 #include <iostream>
 #include <stdio.h>
@@ -49,7 +49,7 @@ int main(int argc, char** argv)
 	ros::init(argc, argv, "keyboard");
 	ros::NodeHandle n;
 	//ros::Publisher pub = n.advertise<std_msgs::Int16>("keyboard",100);
-	ros::Publisher pub = n.advertise<testbot::keynumber>("key_number",100);
+	ros::Publisher pub = n.advertise<origarm_ros::keynumber>("key_number",100);
 	ros::Rate r(100);
 	
 
@@ -87,7 +87,7 @@ int main(int argc, char** argv)
 		}
 
 		//std_msgs::Int16 keyboard;		
-		testbot::keynumber key_number;
+		origarm_ros::keynumber key_number;
 		for (int i = 0; i < 10; i++)
 		{
 			key_number.KEY_CODE[i] = value[i];

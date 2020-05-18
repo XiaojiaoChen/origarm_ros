@@ -6,7 +6,12 @@
 #include "origarm_ros/Seg_ABL.h"
 #include "origarm_ros/Seg_Pre.h"
 #include "origarm_ros/Valve.h"
-#include "origarm_ros/Cmd_ABL.h"
+#include "origarm_ros/Sensor.h"
+#include "origarm_ros/Sensor_Seg.h"
+#include "origarm_ros/Sensor_Act.h"
+#include "origarm_ros/modenumber.h"
+
+#include "myData.h"
 
 #include <stdint.h>
 #include <unistd.h>
@@ -40,43 +45,12 @@ static uint32_t speed = 5000000;
 static uint16_t delay;
 static int verbose;
 
-#define seg 9
-#define act 6
-
-struct QUATERNIONCOMPACT
-{
-	uint16_t imuData0 :15, maxLocHigh :1;
-	uint16_t imuData1 :15, maxLocLow :1;
-	uint16_t imuData2 :15, maxSign :1;
-};
-
-struct SENSORDATA
-{
-	uint16_t pressure:9, distance:7;
-	struct QUATERNIONCOMPACT quaternionCom;
-};
-
-struct COMMANDDATA
-{
-	int16_t values[3];
-	uint16_t commandType;
-};
-
-struct SENSORDATA sensorData[seg][act];
-struct COMMANDDATA commandData[seg][act];
-
-enum COMMAND_MODE{openingCommandType, pressureCommandType};
-
 int16_t Cmd_pressure[seg][act];
 int segNumber;
+int controlmode;
 
 void pressureCallback(const origarm_ros::Command_Pre_Open& pressured)
-{
-	/*for(int i = 0; i < 6; i++)
-	{
-		Cmd_pressure[i] = pressured.segment[0].command[i].pressure;
-	}*/
-
+{	
 	for(int i = 0; i < seg; i++)
 	{
 		for (int j = 0; j < act; j++)
@@ -86,37 +60,26 @@ void pressureCallback(const origarm_ros::Command_Pre_Open& pressured)
 	} 	
 }
 
-void segNumberCallback(const origarm_ros::Cmd_ABL& msg)
+void segNumberCallback(const origarm_ros::Command_ABL& msg)
 {
 	segNumber = msg.segmentNumber;
 }
 
+void modeNumberCallback(const origarm_ros::modenumber& msg)
+{
+	controlmode = msg.modeNumber;
+}
+
 static void writeCommand()
 {
-	/*for (int i = 0; i < 9; i++)
-	{
-		for (int j = 0; j < 6; j++)
-		{
-			commandData[i][j].commandType = openingCommandType;
-			commandData[i][j].values[0] = (6*i+j+1)*0.015*32767;
-		}
-	}*/
-
-	/*for (int i = 0; i < 6; i++)
-	{
-		commandData[0][i].commandType = pressureCommandType;
-		commandData[0][i].values[0] = Cmd_pressure[i];//kPa or Pa?
-	}*/
-
 	for (int i = 0; i < seg; i++)
 	{
 		for (int j = 0; j < act; j++)
 		{
-			commandData[i][j].commandType = openingCommandType;
-			commandData[i][j].values[0] = Cmd_pressure[i][j];
+			commandData.data[i][j].commandType = pressureCommandType;
+			commandData.data[i][j].values[0] = Cmd_pressure[i][j];
 		}
 	}
-
 }
 
 char *input_tx;
@@ -144,7 +107,8 @@ static void transfer(int fd, uint8_t const *tx, uint8_t const *rx, size_t len)
 		tr.rx_nbits = 4;
 	else if (mode & SPI_RX_DUAL)
 		tr.rx_nbits = 2;
-	if (!(mode & SPI_LOOP)) {
+	if (!(mode & SPI_LOOP)) 
+	{
 		if (mode & (SPI_TX_QUAD | SPI_TX_DUAL))
 			tr.rx_buf = 0;
 		else if (mode & (SPI_RX_QUAD | SPI_RX_DUAL))
@@ -333,7 +297,9 @@ int main(int argc, char* argv[])
   int t = 0;
 	
   ros::Subscriber sub1 = nh.subscribe("Command_Pre_Open", 1, pressureCallback);
-  ros::Subscriber sub2 = nh.subscribe("Cmd_ABL", 1, segNumberCallback);		
+  ros::Subscriber sub2 = nh.subscribe("Cmd_ABL", 1, segNumberCallback);
+  ros::Subscriber sub3 = nh.subscribe("modenumber", 1, modeNumberCallback);	
+  ros::Publisher  pub1 = nh.advertise<origarm_ros::Sensor>("Sensor",100);
 
   ros::Rate r(100); 
 
@@ -342,7 +308,10 @@ int main(int argc, char* argv[])
 		writeCommand();
 		//transfer(fd, default_tx, default_rx, sizeof(default_tx));
 		
-		transfer(fd, (uint8_t *)(&commandData[0][0]), (uint8_t *)(&sensorData[0][0]), sizeof(sensorData));
+		//transfer(fd, (uint8_t *)(&commandData[0][0]), (uint8_t *)(&sensorData[0][0]), sizeof(sensorData));
+		
+		transfer(fd, (uint8_t *)(&commandData), (uint8_t *)(&sensorData), sizeof(SPIDATA_R));
+
 
 		/*for (int i = 0; i < seg; i++)
 		{
@@ -353,31 +322,46 @@ int main(int argc, char* argv[])
 			}			
 		}*/
 
-		printf("time:%d, segN:%d\r\n", t, segNumber); 
+		printf("time:%d, segN:%d, mode:%d\r\n", t, segNumber, controlmode); 
 		//printf("CommandPressure        | sensorData\r\n"); 
 		for (int i = 0; i < seg; i++)
 		{
 			printf("Data[%d]: %hd %hd %hd %hd %hd %hd| %hu %hu %hu %hu %hu %hu| %hu %hu %hu %hu %hu %hu\r\n", i, 
-				commandData[i][0].values[0], 
-				commandData[i][1].values[0], 
-				commandData[i][2].values[0], 
-				commandData[i][3].values[0], 
-				commandData[i][4].values[0], 
-				commandData[i][5].values[0],
-			    sensorData[i][0].pressure, 
-				sensorData[i][1].pressure,
-				sensorData[i][2].pressure,
-				sensorData[i][3].pressure,
-				sensorData[i][4].pressure,
-				sensorData[i][5].pressure,
-				sensorData[i][0].distance,
-				sensorData[i][1].distance,
-				sensorData[i][2].distance,
-				sensorData[i][3].distance,
-				sensorData[i][4].distance,
-				sensorData[i][5].distance);			
+				commandData.data[i][0].values[0], 
+				commandData.data[i][1].values[0], 
+				commandData.data[i][2].values[0], 
+				commandData.data[i][3].values[0], 
+				commandData.data[i][4].values[0], 
+				commandData.data[i][5].values[0],
+			    sensorData.data[i][0].pressure, 
+				sensorData.data[i][1].pressure,
+				sensorData.data[i][2].pressure,
+				sensorData.data[i][3].pressure,
+				sensorData.data[i][4].pressure,
+				sensorData.data[i][5].pressure,
+				sensorData.data[i][0].distance,
+				sensorData.data[i][1].distance,
+				sensorData.data[i][2].distance,
+				sensorData.data[i][3].distance,
+				sensorData.data[i][4].distance,
+				sensorData.data[i][5].distance);			
 		}
-				
+
+		origarm_ros::Sensor Sensor;
+		for (int i = 0; i < seg; i++)
+		{
+			for (int j = 0; j < act; j++)
+			{
+				Sensor.sensor_segment[i].sensor_actuator[j].pressure = sensorData.data[i][j].pressure;
+				Sensor.sensor_segment[i].sensor_actuator[j].distance = sensorData.data[i][j].distance;
+				Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.w = sensorData.data[i][j].quaternion.imuData[0];
+				Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.x = sensorData.data[i][j].quaternion.imuData[1];
+				Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.y = sensorData.data[i][j].quaternion.imuData[2];
+				Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.z = sensorData.data[i][j].quaternion.imuData[3];				
+			}
+		}
+		pub1.publish(Sensor);
+						
 		//printf("time:%d\r\n", t);
 		t = t+1;
 		

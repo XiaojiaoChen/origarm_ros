@@ -8,14 +8,13 @@
 #include <vector>
 #include <stdio.h>
 #include <stdlib.h>
-#include <termios.h>                    //termios, TCSANOW, ECHO, ICANON
 
 #include "origarm_ros/Command_ABL.h"
-#include "origarm_ros/Cmd_ABL.h"
 #include "origarm_ros/Seg_ABL.h"
 #include "origarm_ros/SegOpening.h"
 #include "origarm_ros/Command_Position.h"
 #include "origarm_ros/keynumber.h"
+#include "origarm_ros/modenumber.h"
 
 using namespace std;
 
@@ -30,17 +29,17 @@ float joyRy;
 float joyLT;
 float joyRT;
 int joyLB;
-int joyRB;		//segment[8]
-int joyX;		//segment[3]
-int joyY;		//segment[2]
-int joyA;       //segment[0]
-int joyB;		//segment[1]
+int joyRB;	    //mode[4]	
+int joyX;		//mode[2]
+int joyY;		//mode[3]
+int joyA;       //mode[0]
+int joyB;		//mode[1]
 int joyCrossY;	
 int joyCrossX;	
-int joyUp;		//segment[6]
-int joyDown;	//segment[4]
-int joyLeft;	//segment[7]
-int joyRight;	//segment[5]
+int joyUp;		
+int joyDown;	
+int joyLeft;	
+int joyRight;	
 
 int last_joyRB;
 int last_joyX;
@@ -110,6 +109,11 @@ float y_min = -0.01;
 float z_max =  0.08;
 float z_min =  0.03;
 
+//control mode
+//mode[0]: one segment xyz; mode[1]: one segment opening; mode[2]: one segment abl; mode[3]: three segments abl; mode[4]: nine segments abl
+//mode[0]: joyA;            mode[1]: joyB;            mode[2]: joyX;                mode[3]: joyY;               mode[4]: joyRB	
+int mode;
+
 //keyboard callback
 void keyCallback(const origarm_ros::keynumber& key)
 {
@@ -121,7 +125,6 @@ void keyCallback(const origarm_ros::keynumber& key)
 			segNumber = i;
 		}
 	}
-
 }
 
 //joystick callback
@@ -176,43 +179,26 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 		joyDown = 0;
 	}
 
-	// 9 segments, SegNumber:[1]->[9]	
-	/*if (joyA == 1 && last_joyA == 0)
+	if (joyA == 1 && last_joyA == 0)
 	{
-		segNumber = 0;
+		mode = 0;
 	}
 	else if (joyB == 1 && last_joyB == 0)
 	{
-		segNumber = 1;
+		mode = 1;
 	}
 	else if (joyY == 1 && last_joyY == 0)
 	{
-		segNumber = 2;
+		mode = 3;
 	}
 	else if (joyX == 1 && last_joyX == 0)
 	{
-		segNumber = 3;
-	}
-	else if (joyDown == 1 && last_joyDown == 0)
-	{
-		segNumber = 4;
-	}
-	else if (joyRight == 1 && last_joyRight == 0)
-	{
-		segNumber = 5;
-	}
-	else if (joyUp == 1 && last_joyUp == 0)
-	{
-		segNumber = 6;
-	}
-	else if (joyLeft == 1 && last_joyLeft == 0)
-	{
-		segNumber = 7;
+		mode = 2;
 	}
 	else if (joyRB == 1 && last_joyRB == 0)
 	{
-		segNumber = 8;
-	}*/
+		mode = 4;
+	}
 
 	//only when joyRT && joyLT pressed together, joystick starts to control
 	if (joyLT == -1 && joyRT == -1)
@@ -477,11 +463,10 @@ int main(int argc, char **argv)
 
 	ros::Subscriber sub1 = nh.subscribe("joy", 1, joyCallback);	
 	ros::Subscriber sub2 = nh.subscribe("key_number", 1, keyCallback);
-	//ros::Publisher  pub1  = nh.advertise<origarm_ros::Command_ABL>("Cmd_ABL", 100);
-	ros::Publisher  pub1  = nh.advertise<origarm_ros::Cmd_ABL>("Cmd_ABL", 100);
+	ros::Publisher  pub1  = nh.advertise<origarm_ros::Command_ABL>("Cmd_ABL", 100);	
 	ros::Publisher  pub2  = nh.advertise<origarm_ros::SegOpening>("Cmd_Opening", 100);
-	//ros::Publisher  pub3  = nh.advertise<geometry_msgs::Pose>("Cmd_XYZ", 100);
-	ros::Publisher  pub3  = nh.advertise<origarm_ros::Command_Position>("Command_Position", 100);
+	ros::Publisher  pub3  = nh.advertise<origarm_ros::Command_Position>("Cmd_Position", 100);
+	ros::Publisher  pub4  = nh.advertise<origarm_ros::modenumber>("modenumber", 100);
 
 	
 	Init_parameter();
@@ -495,6 +480,7 @@ int main(int argc, char **argv)
 					
 			ROS_INFO("status: %d", status);
 			ROS_INFO("segment:%d",segNumber);
+			ROS_INFO("mode   :%d", mode);
 			/*ROS_INFO("Alpha : %f", alpha);	
   			ROS_INFO("Beta  : %f", beta);
 			ROS_INFO("Length: %f", length);*/			
@@ -541,23 +527,8 @@ int main(int argc, char **argv)
 			ROS_INFO("z : %f", z);*/
 	
 		}
-		else
-		{
-			ROS_INFO("status: %d", status);
-			/*ROS_INFO("Alpha : %f", alpha);	
-  			ROS_INFO("Beta  : %f", beta);
-			ROS_INFO("Length: %f", length);*/
-
-			//ROS_INFO("Lx: %f, Ly: %f, Rx: %f, Ry: %f",joyLx,joyLy,joyRx,joyRx);
-      		//ROS_INFO("OpeningResult[0]: %f,[1]: %f,[2]: %f,[3]: %f,[4]: %f,[5]: %f",OpeningResult[0],OpeningResult[1],OpeningResult[2],OpeningResult[3],OpeningResult[4],OpeningResult[5]);
-
-			/*ROS_INFO("x : %f", x);	
-  			ROS_INFO("y : %f", y);
-			ROS_INFO("z : %f", z);*/
-		}
 		
-		//origarm_ros::Command_ABL Cmd_ABL;
-		origarm_ros::Cmd_ABL Cmd_ABL;
+		origarm_ros::Command_ABL Cmd_ABL;		
 		for (int i = 0; i < 9; i++)
 		{
 			Cmd_ABL.segment[i].A = segAlpha[i];
@@ -572,22 +543,33 @@ int main(int argc, char **argv)
 			Cmd_Opening.Op[i] = OpeningResult[i];
 		}
 		
-		/*geometry_msgs::Pose Cmd_XYZ;
-		Cmd_XYZ.position.x = x;
-		Cmd_XYZ.position.y = y;
-		Cmd_XYZ.position.z = z;*/
+		origarm_ros::Command_Position Cmd_Position;
+		Cmd_Position.pose.position.x = x;
+		Cmd_Position.pose.position.y = y;
+		Cmd_Position.pose.position.z = z;
+		Cmd_Position.pose.orientation.x = 1;
+		Cmd_Position.pose.orientation.w = 1;
 
-		origarm_ros::Command_Position Command_Position;
-		Command_Position.pose.position.x = x;
-		Command_Position.pose.position.y = y;
-		Command_Position.pose.position.z = z;
-		Command_Position.pose.orientation.x = 1;
-		Command_Position.pose.orientation.w = 1;
+		origarm_ros::modenumber modenumber;	
+		modenumber.modeNumber = mode;
 
-		pub1.publish(Cmd_ABL);
-		pub2.publish(Cmd_Opening);
-		pub3.publish(Command_Position);
+		//control mode
+		//mode[0]: one segment xyz; mode[1]: one segment opening; mode[2]: one segment abl; mode[3]: three segments abl; mode[4]: nine segments abl
+		//mode[0]: joyA;            mode[1]: joyB;            mode[2]: joyX;                mode[3]: joyY;               mode[4]: joyRB	
+		if (mode == 0)
+		{
+			pub3.publish(Cmd_Position);
+		}
+		else if (mode == 1)
+		{
+			pub2.publish(Cmd_Opening);
+		}
+		else
+		{
+			pub1.publish(Cmd_ABL);
+		}
 
+		pub4.publish(modenumber);
 		ros::spinOnce();
 		r.sleep();    //sleep for 1/r sec
 		//usleep(10000); // N*us

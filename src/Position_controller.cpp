@@ -11,9 +11,9 @@ class POSISTION_CONTROLLER
   public:
     POSISTION_CONTROLLER()
     {
-      pub_ = n_.advertise<origarm_ros::Command_ABL>("Command_ABL", 300);
+      pub_ = n_.advertise<origarm_ros::Command_ABL>("Cmd_ABL", 300);
       sub1_ = n_.subscribe("States", 300, &POSISTION_CONTROLLER::States, this);
-      sub2_ = n_.subscribe("Command_Position", 300, &POSISTION_CONTROLLER::Position, this);
+      sub2_ = n_.subscribe("Cmd_Position", 300, &POSISTION_CONTROLLER::Position, this);
       clt_ = n_.serviceClient<origarm_ros::ik>("ik");
     } 
 
@@ -38,7 +38,7 @@ class POSISTION_CONTROLLER
       if(clt_.call(Desired))
       {
         Cmd_ = Desired.response.output;
-        cout << Desired.response.output;
+        //cout << Desired.response.output;
       }
     }
 
