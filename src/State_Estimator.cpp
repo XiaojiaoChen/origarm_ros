@@ -96,6 +96,7 @@ void quat2AB()
   beta=atan2(-n2,n1);
   if(alpha<0.13)//the smaller alpha is, the larger error beta would have.
   beta=0;*/
+  
   float n1[seg];
   float n2[seg];
   float n3[seg];
@@ -128,7 +129,7 @@ void dist2Length()
     /*lengthr[i] = (sensorData.data[i][0].distance + sensorData.data[i][1].distance + sensorData.data[i][2].distance + 
       sensorData.data[i][3].distance + sensorData.data[i][4].distance + sensorData.data[i][5].distance)/act;*/  
 
-    lengthr[i] = (distancer[i][0] + distancer[i][1] + distancer[i][2] + distancer[i][3] + distancer[i][4] + distancer[i][5])/act;  
+    lengthr[i] = (distancer[i][0] + distancer[i][1] + distancer[i][2] + distancer[i][3] + distancer[i][4] + distancer[i][5])/act-length0;  
   }
 }
 

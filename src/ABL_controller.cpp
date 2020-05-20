@@ -2,6 +2,8 @@
 #include "origarm_ros/States.h"
 #include "origarm_ros/Command_Pre_Open.h"
 #include "origarm_ros/Command_ABL.h"
+#include "origarm_ros/SegOpening.h"
+#include "origarm_ros/modenumber.h"
 
 #include "myPID.h"
 #include "myPID.cpp"
@@ -9,14 +11,6 @@
 #include <Eigen/Eigen>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
-
-//ABL->Pressure
-float k0 = 1700;
-float length0 = 0.055;
-float radR = 0.06;
-float radr = 0.02;
-float crossA = 0.00126;           //M_PI*radr^2
-float C1 = 6*k0*radR*0.5/crossA;
 
 float b1[seg];
 float btem[seg];
@@ -41,7 +35,7 @@ float dalphaRatio[seg];
 float dbeta[seg];
 float dlength[seg];
 
-float alphar[seg];                 //ABL real value, calculated by sensor data
+float alphar[seg];                //ABL real value, calculated by sensor data
 float betar[seg];
 float lengthr[seg];
 
@@ -56,6 +50,11 @@ float pressureDFeed[seg][act];
 float pressureDBack[seg][act];
 
 int feedbackFlag = 0;
+
+float openingD[seg][act];
+int mode_;
+float last_pressureD[seg][act];
+float last_openingD[seg][act];
 
 using namespace std;
 
@@ -153,8 +152,7 @@ void FeedbackController(int feedbackFlag)
     {
       pressureD[i][j] = pressureDFeed[i][j] + pressureDBack[i][j];
     }    
-  }
-    
+  }   
 }
 
 
@@ -165,6 +163,8 @@ class ABL_controller
     {
       sub1_ = n_.subscribe("States", 300, &ABL_controller::States, this);
       sub2_ = n_.subscribe("Cmd_ABL", 300, &ABL_controller::ABL, this);
+      sub3_ = n_.subscribe("Cmd_Opening", 300, &ABL_controller::Opening, this);
+      sub4_ = n_.subscribe("modenumber", 300, &ABL_controller::mode, this);
       pub_ = n_.advertise<origarm_ros::Command_Pre_Open>("Command_Pre_Open", 300);
     }
 
@@ -188,28 +188,69 @@ class ABL_controller
       }       
     }
 
-    void pub()
+    void Opening(const origarm_ros::SegOpening& msg)
     {
+      for (int j = 0; j < act; j++)
+      {
+        openingD[0][j] = msg.Op[j];
+      }
+
+      /*for (int i = 0; i < seg; i++)
+      {
+        for (int j = 0; j < act; j++)
+        {
+          openingD[i][j] = msg.Op[j];
+        }
+      }*/
+    }
+
+    void mode (const origarm_ros::modenumber& msg)
+    {
+      mode_ = msg.modeNumber;
+      
       for (int i = 0; i < seg; i++)
       {
         for (int j = 0; j < act; j++)
         {
-          Cmd_P_O.segment[i].command[j].pressure = pressureD[i][j]/1000; 
+          if (mode_ == 1)
+          { 
+            Cmd_P_O.segment[i].command[j].pressure = openingD[i][j]*32767; 
+            Cmd_P_O.segment[i].command[j].valve    = 0;                       //bool == 0, commandType == openingCommandType            
+          }
+          else
+          {
+            Cmd_P_O.segment[i].command[j].pressure = pressureD[i][j]/1000; 
+            Cmd_P_O.segment[i].command[j].valve    = 1;                     //bool == 1, commandType == pressureCommandType
+          }                                
         }
       }
-
+      
+      for (int i = 0; i < seg; i++)
+      {
+        for (int j = 0; j < act; j++)
+        {
+          last_pressureD[i][j] = Cmd_P_O.segment[i].command[j].pressure;
+        }          
+      }  
+    }
+    
+    void pub()
+    {
       pub_.publish(Cmd_P_O);
     }
 
-  private:
-    ros::NodeHandle n_;
-    ros::Subscriber sub1_;
-    ros::Subscriber sub2_;
-    ros::Publisher pub_ ;
+    private:
+      ros::NodeHandle n_;
+      ros::Subscriber sub1_;
+      ros::Subscriber sub2_;
+      ros::Subscriber sub3_;
+      ros::Subscriber sub4_;
+      ros::Publisher pub_ ;
 
-    origarm_ros::Command_Pre_Open Cmd_P_O;
-    origarm_ros::Command_ABL Command_ABL;
-};
+      origarm_ros::Command_Pre_Open Cmd_P_O;
+      origarm_ros::Command_ABL Command_ABL;
+      origarm_ros::SegOpening Cmd_Opening;
+  };
 
 int main(int argc, char **argv)
 {
@@ -232,6 +273,8 @@ int main(int argc, char **argv)
     FeedbackController(feedbackFlag);
 
     ABL_controller_node.pub();
+
+    //printf("lastmode: %d, mode: %d\r\n",last_mode_, mode_);
 
     /*for (int i = 0; i < seg; i++)
     {

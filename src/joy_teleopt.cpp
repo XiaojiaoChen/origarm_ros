@@ -12,6 +12,7 @@
 #include "origarm_ros/Command_ABL.h"
 #include "origarm_ros/Seg_ABL.h"
 #include "origarm_ros/SegOpening.h"
+#include "origarm_ros/Command_Pre_Open.h"
 #include "origarm_ros/Command_Position.h"
 #include "origarm_ros/keynumber.h"
 #include "origarm_ros/modenumber.h"
@@ -111,7 +112,7 @@ float z_min =  0.03;
 
 //control mode
 //mode[0]: one segment xyz; mode[1]: one segment opening; mode[2]: one segment abl; mode[3]: three segments abl; mode[4]: nine segments abl
-//mode[0]: joyA;            mode[1]: joyB;            mode[2]: joyX;                mode[3]: joyY;               mode[4]: joyRB	
+//mode[0]: joyA;            mode[1]: joyB;                mode[2]: joyX;            mode[3]: joyY;               mode[4]: joyRB	
 int mode;
 
 //keyboard callback
@@ -465,6 +466,7 @@ int main(int argc, char **argv)
 	ros::Subscriber sub2 = nh.subscribe("key_number", 1, keyCallback);
 	ros::Publisher  pub1  = nh.advertise<origarm_ros::Command_ABL>("Cmd_ABL", 100);	
 	ros::Publisher  pub2  = nh.advertise<origarm_ros::SegOpening>("Cmd_Opening", 100);
+	//ros::Publisher  pub2  = nh.advertise<origarm_ros::Command_Pre_Open>("Command_Pre_Open", 100);
 	ros::Publisher  pub3  = nh.advertise<origarm_ros::Command_Position>("Cmd_Position", 100);
 	ros::Publisher  pub4  = nh.advertise<origarm_ros::modenumber>("modenumber", 100);
 
@@ -480,19 +482,11 @@ int main(int argc, char **argv)
 					
 			ROS_INFO("status: %d", status);
 			ROS_INFO("segment:%d",segNumber);
-			ROS_INFO("mode   :%d", mode);
-			/*ROS_INFO("Alpha : %f", alpha);	
-  			ROS_INFO("Beta  : %f", beta);
-			ROS_INFO("Length: %f", length);*/			
+			ROS_INFO("mode   :%d", mode);		
 			
 			WriteOpening();
-      		//ROS_INFO("Lx: %f, Ly: %f, Rx: %f, Ry: %f",joyLx,joyLy,joyRx,joyRx);
-      		//ROS_INFO("OpeningResult[0]: %f,[1]: %f,[2]: %f,[3]: %f,[4]: %f,[5]: %f",OpeningResult[0],OpeningResult[1],OpeningResult[2],OpeningResult[3],OpeningResult[4],OpeningResult[5]);
-
+ 
 			WriteXYZ();
-			/*ROS_INFO("x : %f", x);	
-  			ROS_INFO("y : %f", y);
-			ROS_INFO("z : %f", z);*/				
 		}						
 		else if (status == 0)
 		{
@@ -515,16 +509,6 @@ int main(int argc, char **argv)
 			
 
 			ROS_INFO("status: %d", status);
-			/*ROS_INFO("Alpha : %f", alpha);	
-  			ROS_INFO("Beta  : %f", beta);
-			ROS_INFO("Length: %f", length);*/
-
-			//ROS_INFO("Lx: %f, Ly: %f, Rx: %f, Ry: %f",joyLx,joyLy,joyRx,joyRx);
-      		//ROS_INFO("OpeningResult[0]: %f,[1]: %f,[2]: %f,[3]: %f,[4]: %f,[5]: %f",OpeningResult[0],OpeningResult[1],OpeningResult[2],OpeningResult[3],OpeningResult[4],OpeningResult[5]);
-
-			/*ROS_INFO("x : %f", x);	
-  			ROS_INFO("y : %f", y);
-			ROS_INFO("z : %f", z);*/
 	
 		}
 		
@@ -538,9 +522,12 @@ int main(int argc, char **argv)
 		Cmd_ABL.segmentNumber = segNumber;
 				
 		origarm_ros::SegOpening Cmd_Opening;
+		//origarm_ros::Command_Pre_Open Command_Pre_Open;
 		for (int i = 0; i < 6; i++)
 		{
 			Cmd_Opening.Op[i] = OpeningResult[i];
+			//Command_Pre_Open.segment[0].command[i].pressure = OpeningResult[i]*32767;
+			//Command_Pre_Open.segment[0].command[i].valve = 0;						//bool == 0, commandType == openingCommandType
 		}
 		
 		origarm_ros::Command_Position Cmd_Position;
@@ -552,10 +539,10 @@ int main(int argc, char **argv)
 
 		origarm_ros::modenumber modenumber;	
 		modenumber.modeNumber = mode;
-
+		modenumber.status     = status;
 		//control mode
 		//mode[0]: one segment xyz; mode[1]: one segment opening; mode[2]: one segment abl; mode[3]: three segments abl; mode[4]: nine segments abl
-		//mode[0]: joyA;            mode[1]: joyB;            mode[2]: joyX;                mode[3]: joyY;               mode[4]: joyRB	
+		//mode[0]: joyA;            mode[1]: joyB;            	  mode[2]: joyX;            mode[3]: joyY;               mode[4]: joyRB	
 		if (mode == 0)
 		{
 			pub3.publish(Cmd_Position);
@@ -570,6 +557,7 @@ int main(int argc, char **argv)
 		}
 
 		pub4.publish(modenumber);
+
 		ros::spinOnce();
 		r.sleep();    //sleep for 1/r sec
 		//usleep(10000); // N*us

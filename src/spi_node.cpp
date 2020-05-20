@@ -46,8 +46,10 @@ static uint16_t delay;
 static int verbose;
 
 int16_t Cmd_pressure[seg][act];
+bool commandType_[seg][act];
 int segNumber;
 int controlmode;
+int status;
 
 void pressureCallback(const origarm_ros::Command_Pre_Open& pressured)
 {	
@@ -56,6 +58,7 @@ void pressureCallback(const origarm_ros::Command_Pre_Open& pressured)
 		for (int j = 0; j < act; j++)
 		{
 			Cmd_pressure[i][j] = pressured.segment[i].command[j].pressure;
+			commandType_[i][j] = pressured.segment[i].command[j].valve;
 		}		
 	} 	
 }
@@ -68,6 +71,7 @@ void segNumberCallback(const origarm_ros::Command_ABL& msg)
 void modeNumberCallback(const origarm_ros::modenumber& msg)
 {
 	controlmode = msg.modeNumber;
+	status = msg.status;
 }
 
 static void writeCommand()
@@ -76,8 +80,17 @@ static void writeCommand()
 	{
 		for (int j = 0; j < act; j++)
 		{
-			commandData.data[i][j].commandType = pressureCommandType;
-			commandData.data[i][j].values[0] = Cmd_pressure[i][j];
+			//commandData.data[i][j].commandType = pressureCommandType;
+			if (commandType_[i][j] == 0)
+			{
+				commandData.data[i][j].commandType = openingCommandType;
+				commandData.data[i][j].values[0] = Cmd_pressure[i][j];				
+			}
+			else if (commandType_[i][j] == 1)
+			{
+				commandData.data[i][j].commandType = pressureCommandType;
+				commandData.data[i][j].values[0] = Cmd_pressure[i][j];
+			}			
 		}
 	}
 }
@@ -322,7 +335,7 @@ int main(int argc, char* argv[])
 			}			
 		}*/
 
-		printf("time:%d, segN:%d, mode:%d\r\n", t, segNumber, controlmode); 
+		printf("time:%d, segN:%d, mode:%d, status: %d\r\n", t, segNumber, controlmode, status); 
 		//printf("CommandPressure        | sensorData\r\n"); 
 		for (int i = 0; i < seg; i++)
 		{
@@ -362,7 +375,6 @@ int main(int argc, char* argv[])
 		}
 		pub1.publish(Sensor);
 						
-		//printf("time:%d\r\n", t);
 		t = t+1;
 		
 		//sleep(1); //wait for 1 second

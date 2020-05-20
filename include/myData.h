@@ -38,7 +38,13 @@ typedef struct SPIDATA_R_TAG{
 SPIDATA_T sensorData;
 SPIDATA_R commandData;
 
-
+//ABL->Pressure
+float k0 = 1700;
+float length0 = 0.055;
+float radR = 0.06;
+float radr = 0.02;
+float crossA = 0.00126;           //M_PI*radr^2
+float C1 = 6*k0*radR*0.5/crossA;
 
 
 #endif // MYDATA_H__
