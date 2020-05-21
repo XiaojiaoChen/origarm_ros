@@ -35,6 +35,7 @@ class POSISTION_CONTROLLER
       Desired.request.input.pose = position_.pose; //desired;
       Desired.request.input.ABL = states_.ABL;// present
       //cout << clt_.call(Desired);
+  
       if(clt_.call(Desired))
       {
         Cmd_ = Desired.response.output;

@@ -53,8 +53,7 @@ int feedbackFlag = 0;
 
 float openingD[seg][act];
 int mode_;
-float last_pressureD[seg][act];
-float last_openingD[seg][act];
+int segnumber_;
 
 using namespace std;
 
@@ -163,7 +162,7 @@ class ABL_controller
     {
       sub1_ = n_.subscribe("States", 300, &ABL_controller::States, this);
       sub2_ = n_.subscribe("Cmd_ABL", 300, &ABL_controller::ABL, this);
-      sub3_ = n_.subscribe("Cmd_Opening", 300, &ABL_controller::Opening, this);
+      //sub3_ = n_.subscribe("Cmd_Opening", 300, &ABL_controller::Opening, this);
       sub4_ = n_.subscribe("modenumber", 300, &ABL_controller::mode, this);
       pub_ = n_.advertise<origarm_ros::Command_Pre_Open>("Command_Pre_Open", 300);
     }
@@ -185,57 +184,37 @@ class ABL_controller
         alphad[i] = msg.segment[i].A;
         betad[i] = msg.segment[i].B;
         lengthd[i] = msg.segment[i].L;    
-      }       
+      }
+      segnumber_ = msg.segmentNumber;       
     }
 
-    void Opening(const origarm_ros::SegOpening& msg)
+    /*void Opening(const origarm_ros::SegOpening& msg)
     {
       for (int j = 0; j < act; j++)
       {
         openingD[0][j] = msg.Op[j];
       }
-
-      /*for (int i = 0; i < seg; i++)
-      {
-        for (int j = 0; j < act; j++)
-        {
-          openingD[i][j] = msg.Op[j];
-        }
-      }*/
-    }
+    }*/
 
     void mode (const origarm_ros::modenumber& msg)
     {
       mode_ = msg.modeNumber;
-      
-      for (int i = 0; i < seg; i++)
-      {
-        for (int j = 0; j < act; j++)
-        {
-          if (mode_ == 1)
-          { 
-            Cmd_P_O.segment[i].command[j].pressure = openingD[i][j]*32767; 
-            Cmd_P_O.segment[i].command[j].valve    = 0;                       //bool == 0, commandType == openingCommandType            
-          }
-          else
-          {
-            Cmd_P_O.segment[i].command[j].pressure = pressureD[i][j]/1000; 
-            Cmd_P_O.segment[i].command[j].valve    = 1;                     //bool == 1, commandType == pressureCommandType
-          }                                
-        }
-      }
-      
-      for (int i = 0; i < seg; i++)
-      {
-        for (int j = 0; j < act; j++)
-        {
-          last_pressureD[i][j] = Cmd_P_O.segment[i].command[j].pressure;
-        }          
-      }  
     }
     
     void pub()
     {
+      //control mode
+      //mode[0]: 1 abl; mode[1]: 3 abl; mode[2]: 9 abl; mode[3]: 1 xyz; mode[4]: 3 xyz; mode[5]: 9 xyz
+      //mode[0]: joyA;  mode[1]: joyB;  mode[2]: joyX;  mode[3]: joyY;  mode[4]: joyRB; mode[5]: joyLB
+      for (int i = 0; i < seg; i++)
+      {
+        for (int j = 0; j < act; j++)
+        {
+          Cmd_P_O.segment[i].command[j].pressure = pressureD[i][j]/1000; 
+          Cmd_P_O.segment[i].command[j].valve    = 1;                       //bool == 1, commandType == pressureCommandType
+        }
+      }
+
       pub_.publish(Cmd_P_O);
     }
 
@@ -249,7 +228,7 @@ class ABL_controller
 
       origarm_ros::Command_Pre_Open Cmd_P_O;
       origarm_ros::Command_ABL Command_ABL;
-      origarm_ros::SegOpening Cmd_Opening;
+      //origarm_ros::SegOpening Cmd_Opening;
   };
 
 int main(int argc, char **argv)

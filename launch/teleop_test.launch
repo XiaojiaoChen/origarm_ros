@@ -7,5 +7,5 @@
     <node pkg="origarm_ros" name="spi_node" type="spi_node" output="screen"/>
     <node pkg="origarm_ros" name="StateEstimator_node" type="State_Estimator" />
     <node pkg="origarm_ros" name="ik_srv" type="ik.py" /> 
-    <node pkg="rqt_graph" name="rqt_graph_node" type="rqt_graph"/>   
+    <!--<node pkg="rqt_graph" name="rqt_graph_node" type="rqt_graph"/>-->   
 </launch>
