@@ -463,6 +463,13 @@ class ik_solver:
         re.segment[0].A = result[0]
         re.segment[0].B = result[1]
         re.segment[0].L = result[2]
+
+        # Jing
+        for i in range(1,9):
+            re.segment[i].A = 0;
+            re.segment[i].B = 0;
+            re.segment[i].L = 0.055;
+
         # print(np.degrees(result[0]))
         # print(np.degrees(result[1]))
         # print(np.degrees(result[3]))

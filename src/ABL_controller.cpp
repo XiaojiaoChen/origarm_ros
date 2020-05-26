@@ -4,6 +4,7 @@
 #include "origarm_ros/Command_ABL.h"
 #include "origarm_ros/SegOpening.h"
 #include "origarm_ros/modenumber.h"
+#include "origarm_ros/segnumber.h"
 
 #include "myPID.h"
 #include "myPID.cpp"
@@ -20,6 +21,7 @@ float pressureD[seg][act];
 float alphad[seg];                //ABL desired value
 float betad[seg];
 float lengthd[seg];
+float l0;
 
 float Texta[seg];                 //external torque
 float Textb[seg];
@@ -91,7 +93,10 @@ void FeedbackController(int feedbackFlag)
     Ty[i] = Textb[i]/crossA/radR;
     phycD[i] = cos(betad[i])*Tx[i]-sin(betad[i])*Ty[i];
     physD[i] = sin(betad[i])*Tx[i]+cos(betad[i])*Ty[i];
-    phypD[i] = (Fl+6*k0*(lengthd[i]-length0))/crossA;
+    
+    l0 = length0;
+
+    phypD[i] = (Fl+6*k0*(lengthd[i]-l0))/crossA;
 
     pressureDFeed[i][0] = phypD[i]/6+phycD[i]/3;
     pressureDFeed[i][1] = (phycD[i]+phypD[i]+1.7320508*physD[i])/6;
@@ -145,13 +150,13 @@ void FeedbackController(int feedbackFlag)
     }
   }
 
-  for(int i = 0; i < seg; i++)
+  for (int i = 0; i < seg; i++)
   {
     for (int j = 0; j < act; j++)
     {
-      pressureD[i][j] = pressureDFeed[i][j] + pressureDBack[i][j];
-    }    
-  }   
+        pressureD[i][j] = pressureDFeed[i][j] + pressureDBack[i][j];
+    }
+  }
 }
 
 
@@ -161,9 +166,11 @@ class ABL_controller
     ABL_controller()
     {
       sub1_ = n_.subscribe("States", 300, &ABL_controller::States, this);
-      sub2_ = n_.subscribe("Cmd_ABL", 300, &ABL_controller::ABL, this);
-      //sub3_ = n_.subscribe("Cmd_Opening", 300, &ABL_controller::Opening, this);
+      sub2_ = n_.subscribe("Cmd_ABL_joy", 300, &ABL_controller::ABL_joy, this);
+      sub3_ = n_.subscribe("Cmd_ABL_ik", 300, &ABL_controller::ABL_ik, this);
+      //sub5_ = n_.subscribe("Cmd_Opening", 300, &ABL_controller::Opening, this);
       sub4_ = n_.subscribe("modenumber", 300, &ABL_controller::mode, this);
+      sub5_ = n_.subscribe("segnumber", 300, &ABL_controller::segn, this);
       pub_ = n_.advertise<origarm_ros::Command_Pre_Open>("Command_Pre_Open", 300);
     }
 
@@ -177,15 +184,30 @@ class ABL_controller
       }
     }
 
-    void ABL(const origarm_ros::Command_ABL& msg)
+    void ABL_joy(const origarm_ros::Command_ABL& msg)
     {
+
       for (int i = 0; i < seg; i++)
       {
         alphad[i] = msg.segment[i].A;
         betad[i] = msg.segment[i].B;
         lengthd[i] = msg.segment[i].L;    
       }
-      segnumber_ = msg.segmentNumber;       
+  }
+
+    void ABL_ik(const origarm_ros::Command_ABL& msg)
+    {
+      for (int i = 0; i < seg; i++)
+      {
+        alphad[i] = msg.segment[i].A;
+        betad[i] = msg.segment[i].B;
+        lengthd[i] = msg.segment[i].L;    
+      } 
+   }
+
+    void segn(const origarm_ros::segnumber& msg)
+    {
+      segnumber_ = msg.segmentNumber;
     }
 
     /*void Opening(const origarm_ros::SegOpening& msg)
@@ -224,12 +246,15 @@ class ABL_controller
       ros::Subscriber sub2_;
       ros::Subscriber sub3_;
       ros::Subscriber sub4_;
+      ros::Subscriber sub5_;
       ros::Publisher pub_ ;
 
       origarm_ros::Command_Pre_Open Cmd_P_O;
       origarm_ros::Command_ABL Command_ABL;
       //origarm_ros::SegOpening Cmd_Opening;
   };
+
+
 
 int main(int argc, char **argv)
 {
@@ -238,7 +263,7 @@ int main(int argc, char **argv)
 
   ABL_controller ABL_controller_node;
 
-  ros::AsyncSpinner s(3);
+  ros::AsyncSpinner s(4);
   s.start();
 
   ros::Rate loop_rate(100); 
@@ -252,8 +277,6 @@ int main(int argc, char **argv)
     FeedbackController(feedbackFlag);
 
     ABL_controller_node.pub();
-
-    //printf("lastmode: %d, mode: %d\r\n",last_mode_, mode_);
 
     /*for (int i = 0; i < seg; i++)
     {

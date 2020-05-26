@@ -10,6 +10,7 @@
 #include "origarm_ros/Sensor_Seg.h"
 #include "origarm_ros/Sensor_Act.h"
 #include "origarm_ros/modenumber.h"
+#include "origarm_ros/segnumber.h"
 
 #include "myData.h"
 
@@ -63,7 +64,7 @@ void pressureCallback(const origarm_ros::Command_Pre_Open& pressured)
 	} 	
 }
 
-void segNumberCallback(const origarm_ros::Command_ABL& msg)
+void segNumberCallback(const origarm_ros::segnumber& msg)
 {
 	segNumber = msg.segmentNumber;
 }
@@ -80,7 +81,6 @@ static void writeCommand()
 	{
 		for (int j = 0; j < act; j++)
 		{
-			//commandData.data[i][j].commandType = pressureCommandType;
 			if (commandType_[i][j] == 0)
 			{
 				commandData.data[i][j].commandType = openingCommandType;
@@ -312,6 +312,7 @@ int main(int argc, char* argv[])
   ros::Subscriber sub1 = nh.subscribe("Command_Pre_Open", 1, pressureCallback);
   ros::Subscriber sub2 = nh.subscribe("Cmd_ABL", 1, segNumberCallback);
   ros::Subscriber sub3 = nh.subscribe("modenumber", 1, modeNumberCallback);	
+  ros::Subscriber sub4 = nh.subscribe("segnumber", 1, segNumberCallback);
   ros::Publisher  pub1 = nh.advertise<origarm_ros::Sensor>("Sensor",100);
 
   ros::Rate r(100); 

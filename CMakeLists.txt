@@ -74,6 +74,7 @@ add_message_files(FILES
     	
   keynumber.msg
   modenumber.msg
+  segnumber.msg
 )
 
 ## Generate services in the 'srv' folder
