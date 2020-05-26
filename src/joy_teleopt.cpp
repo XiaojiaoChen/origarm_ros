@@ -121,12 +121,18 @@ float x_scale = 0.00001;
 float y_scale = 0.00001;
 float z_scale = 0.0001;
 
-float x_max =  0.01;
+/*float x_max =  0.01;
 float x_min = -0.01;
 float y_max =  0.01;
-float y_min = -0.01;
+float y_min = -0.01;*/
+
+float x_max =  0.06;
+float x_min = -0.06;
+float y_max =  0.06;
+float y_min = -0.06;
+
 float z_max =  0.08;
-float z_min =  0.03;
+float z_min =  0.01;
 float z_max9 = 0.055*9+(z_max-0.055)*9;
 float z_min9 = 0.055*9-(0.055-z_min)*9;
 
@@ -376,67 +382,70 @@ void writeABL3(int joystickFLag)
 {
 	if (joystickFLag == 1)
 	{
-		if (joyLy > 0.05)
-		{			
-			segAlpha_[segNumber] = segAlpha_[segNumber] + a_scale;
-		}
-		else if (joyLy < -0.05)
+		if (segNumber < 3)
 		{
-			segAlpha_[segNumber] = segAlpha_[segNumber] - a_scale;
-		}
+			if (joyLy > 0.05)
+			{			
+				segAlpha_[segNumber] = segAlpha_[segNumber] + a_scale;
+			}
+			else if (joyLy < -0.05)
+			{
+				segAlpha_[segNumber] = segAlpha_[segNumber] - a_scale;
+			}
 
-		if (joyRx > 0.05)
-		{
-			if (joyRx > 0.5)
+			if (joyRx > 0.05)
 			{
-				segBeta_[segNumber] = segBeta_[segNumber] + 2*b_scale;
-			}
-			else
-			{
-				segBeta_[segNumber] = segBeta_[segNumber] + b_scale;
-			}
-		}
-		else if (joyRx < -0.05)
-		{
-			if (joyRx < -0.5)
-			{
-				segBeta_[segNumber] = segBeta_[segNumber] - 2*b_scale;
-			}
-			else
-			{
-				segBeta_[segNumber] = segBeta_[segNumber] - b_scale;
-			}
-		}
-
-		if (joyLT != 1 && joyRT != 1)
-		{
-
-		}
-		else if (abs(joyLT-1) > 0.05)
-		{
-			if (abs(joyLT-1) > 1)
-			{
-				segLength_[segNumber] = segLength_[segNumber] + 2*l_scale;
-			}
-			else
-			{
-				segLength_[segNumber] = segLength_[segNumber] + l_scale;
-			}
-		}
-		else if (abs(joyRT-1) > 0.05)
-		{
-			if (abs(joyRT-1) > 0.05)
-			{
-				if (abs(joyRT-1) > 1)
+				if (joyRx > 0.5)
 				{
-					segLength_[segNumber] = segLength_[segNumber] - 2*l_scale;
+					segBeta_[segNumber] = segBeta_[segNumber] + 2*b_scale;
 				}
 				else
 				{
-					segLength_[segNumber] = segLength_[segNumber] - l_scale;
+					segBeta_[segNumber] = segBeta_[segNumber] + b_scale;
 				}
 			}
-		}
+			else if (joyRx < -0.05)
+			{
+				if (joyRx < -0.5)
+				{
+					segBeta_[segNumber] = segBeta_[segNumber] - 2*b_scale;
+				}
+				else
+				{
+					segBeta_[segNumber] = segBeta_[segNumber] - b_scale;
+				}
+			}
+
+			if (joyLT != 1 && joyRT != 1)
+			{
+
+			}
+			else if (abs(joyLT-1) > 0.05)
+			{
+				if (abs(joyLT-1) > 1)
+				{
+					segLength_[segNumber] = segLength_[segNumber] + 2*l_scale;
+				}
+				else
+				{
+					segLength_[segNumber] = segLength_[segNumber] + l_scale;
+				}
+			}
+			else if (abs(joyRT-1) > 0.05)
+			{
+				if (abs(joyRT-1) > 0.05)
+				{
+					if (abs(joyRT-1) > 1)
+					{
+						segLength_[segNumber] = segLength_[segNumber] - 2*l_scale;
+					}
+					else
+					{
+						segLength_[segNumber] = segLength_[segNumber] - l_scale;
+					}
+				}
+			}
+		}		
 	}
 	else if (joystickFLag == 0)
 	{
@@ -638,7 +647,7 @@ Eigen::Vector3f FKtrans(float a[], float b[], float l[], int size)
 
 	for (int i = 0; i < size; i++)
 	{
-		if (abs(a[i]) < 1e-3)
+		if (abs(a[i]) < 1e-4)
 		{	
 			Tr << cos(b[i]), -sin(b[i]), 0,    0,
 			  	  sin(b[i]),  cos(b[i]), 0,    0,
@@ -700,7 +709,7 @@ void writeXYZ1(int joystickFLag)
 	}
 	else if (joystickFLag == 0)
 	{
-		if (abs(alpha) < 1e-3)
+		if (abs(alpha) < 1e-4)
 		{
 			x = 0;
 			y = 0;
@@ -708,17 +717,18 @@ void writeXYZ1(int joystickFLag)
 		}
 		else
 		{
-			/*float a[1] = {alpha};
-			float b[1] = {beta};
-			float l[1] = {length};
-			int n = 1;
-			x = FKtrans(a, b, l, n)(0);
-			y = FKtrans(a, b, l, n)(1);
-			z = FKtrans(a, b, l, n)(2);*/
 			x = length*cos(beta)*(1-cos(alpha))/alpha;
 			y = length*sin(beta)*(1-cos(alpha))/alpha;
 			z = length*sin(alpha)/alpha;
-		}		
+		}
+
+		/*float a[1] = {alpha};
+		float b[1] = {beta};
+		float l[1] = {length};
+		int n = 1;
+		x = FKtrans(a, b, l, n)(0);
+		y = FKtrans(a, b, l, n)(1);
+		z = FKtrans(a, b, l, n)(2);*/	
 	}
 
 	x = CONSTRAIN(x, x_min, x_max);
@@ -873,7 +883,7 @@ int main(int argc, char **argv)
 				writeABL3(1);        //joystick -> ABL3
 				writeABL9(2);        //ABL3     -> ABL9
 				writeXYZ3(0);		 //ABL3     -> XYZ3
-				writeXYZ9(0);        //ABL9     -> XYZ9
+				writeXYZ9(2);        //XYZ3     -> XYZ9
 			}
 			else if (mode == 2)      //ABL_9 control mode
 			{
@@ -890,7 +900,7 @@ int main(int argc, char **argv)
 				writeXYZ3(1);        //joystick -> XYZ3
 				writeABL3(0);        //XYZ3     -> ABL3
 				writeABL9(2);        //ABL3     -> ABL9
-				writeXYZ9(0);        //ABL9     -> XYZ9								
+				writeXYZ9(2);        //XYZ3     -> XYZ9								
 			}
 			else if (mode == 5)      //XYZ_9 control mode
 			{
@@ -961,7 +971,6 @@ int main(int argc, char **argv)
 			Cmd_Opening.Op[i] = OpeningResult[i];
 		}*/
 		
-
 		//control mode
 		//mode[0]: 1 abl; mode[1]: 3 abl; mode[2]: 9 abl; mode[3]: 1 xyz; mode[4]: 3 xyz; mode[5]: 9 xyz
 		//mode[0]: joyA;  mode[1]: joyB;  mode[2]: joyX;  mode[3]: joyY;  mode[4]: joyRB; mode[5]: joyLB
@@ -988,7 +997,7 @@ int main(int argc, char **argv)
 				Cmd_ABL.segment[i].B = segBeta_[int(i/3)];
 				Cmd_ABL.segment[i].L = segLength_[int(i/3)]/3;
 				
-				//printf("ABL3: %f, %f, %f\r\n", segAlpha_[int(i/3)]/3, segBeta_[int(i/3)], segLength_[int(i/3)]/3);	
+				printf("ABL3: %f, %f, %f\r\n", segAlpha_[int(i/3)]/3, segBeta_[int(i/3)], segLength_[int(i/3)]/3);	
 			}
 			
 			pub1.publish(Cmd_ABL);

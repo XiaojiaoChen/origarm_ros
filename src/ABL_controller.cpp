@@ -21,6 +21,15 @@ float pressureD[seg][act];
 float alphad[seg];                //ABL desired value
 float betad[seg];
 float lengthd[seg];
+
+float ajoy[seg];
+float bjoy[seg];
+float ljoy[seg];
+
+float apos[seg];
+float bpos[seg];
+float lpos[seg];
+
 float l0;
 
 float Texta[seg];                 //external torque
@@ -87,6 +96,25 @@ void ABLD2PD()
 //calculate PressureFeedback
 void FeedbackController(int feedbackFlag) 
 {
+  if (mode_ < 3)
+  {
+    for (int i = 0; i < seg; i++)
+    {
+      alphad[i]  = ajoy[i];
+      betad[i]   = bjoy[i];
+      lengthd[i] = ljoy[i];
+    }
+  }
+  else
+  {
+    for (int i = 0; i < seg; i++)
+    {
+      alphad[i]  = apos[i];
+      betad[i]   = bpos[i];
+      lengthd[i] = lpos[i];
+    }
+  }
+
   for (int i = 0; i < seg; i++)
   {
     Tx[i] = Texta[i]/crossA/radR-C1*alphad[i];
@@ -189,9 +217,9 @@ class ABL_controller
 
       for (int i = 0; i < seg; i++)
       {
-        alphad[i] = msg.segment[i].A;
-        betad[i] = msg.segment[i].B;
-        lengthd[i] = msg.segment[i].L;    
+        ajoy[i] = msg.segment[i].A;
+        bjoy[i] = msg.segment[i].B;
+        ljoy[i] = msg.segment[i].L;    
       }
   }
 
@@ -199,9 +227,9 @@ class ABL_controller
     {
       for (int i = 0; i < seg; i++)
       {
-        alphad[i] = msg.segment[i].A;
-        betad[i] = msg.segment[i].B;
-        lengthd[i] = msg.segment[i].L;    
+        apos[i] = msg.segment[i].A;
+        bpos[i] = msg.segment[i].B;
+        lpos[i] = msg.segment[i].L;    
       } 
    }
 
