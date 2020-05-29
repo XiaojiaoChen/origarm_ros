@@ -260,7 +260,7 @@ class ABL_controller
       {
         for (int j = 0; j < act; j++)
         {
-          Cmd_P_O.segment[i].command[j].pressure = pressureD[i][j]/1000; 
+          Cmd_P_O.segment[i].command[j].pressure = pressureD[i][j]/100;     //send hPa to spi_node 
           Cmd_P_O.segment[i].command[j].valve    = 1;                       //bool == 1, commandType == pressureCommandType
         }
       }
