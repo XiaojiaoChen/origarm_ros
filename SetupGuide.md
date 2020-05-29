@@ -84,6 +84,28 @@ Add the following to the local.rules
 ACTION=="add", KERNEL=="spidev0.0", MODE="0666"
 ```
 
+## Enable keyboard
+install evtest tool
+```
+>>sudo apt install evtest -y
+```
+run evtest and check which event (e.g. eventX) corresponds to keyboard
+```
+>>sudo evtest
+```
+check path link for keyboard and copy the link to defualt_path[] in origarm_ros/src/keyboard.cpp
+```
+>>ls -h /dev/input/by-path/
+```
+check the permission for keyboard
+```
+>>ls -l /dev/input/eventX
+```
+configure rw permission for keyboard
+```
+>>sudo chmod a+rw /dev/input/eventX
+```
+
 ## 7-inch external screen (optional)
 Open SD card from card reader, in **system_boot**, add to **usrconig.txt** with
 ```
@@ -98,10 +120,31 @@ hdmi_drive=1
 ## Clone a SD
 
 prepare another SD card through usb, check by
+
 ```
 lsblk -f 
 ```
 Normally, mmcblk0 is the original system SD card，sda is the new SD card.
 ```
 sudo dd bs=4M if=/dev/mmcblk0 of=/dev/sda status=progress
+
+
+## install Eigen library
+defualt library for installation: /usr/include/
+```
+>>sudo apt-get install libeigen3-dev
+```
+configure library
+```
+>>cd /usr/include/
+>>sudo ln -sf eigen3/Eigen Eigen
+>>sudo ln -sf eigen3/unsupported unsupported
+```
+
+configure CMakeList.txt
+```
+find_package(cmake_modules REQUIRED)
+find_package(Eigen3 REQUIRED)
+include_directories($EIGEN3_INCLUDE_DIR)
+add_definitions(${EIGEN_DEFINITIONS})
 ```

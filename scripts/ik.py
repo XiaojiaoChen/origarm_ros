@@ -436,19 +436,19 @@ class SoftObject(object):
 
 class ik_solver:
     def __init__(self):
-        # x = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.2, 0.2, 0.2]
+        x = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.2, 0.2, 0.2]
 
-        # soft1 = softArm(alpha=x[0], beta=x[3], length=x[6], actuator_type='big')
-        # soft2 = softArm(alpha=x[1], beta=x[3], length=x[7], actuator_type='big')
-        # soft3 = softArm(alpha=x[2], beta=x[3], length=x[8], actuator_type='big')
-        # soft4 = softArm(alpha=x[0], beta=x[4], length=x[6])
-        # soft5 = softArm(alpha=x[1], beta=x[4], length=x[7])
-        # soft6 = softArm(alpha=x[2], beta=x[4], length=x[8])
-        # soft7 = softArm(alpha=x[0], beta=x[5], length=x[6])
-        # soft8 = softArm(alpha=x[1], beta=x[5], length=x[7])
-        # soft9 = softArm(alpha=x[2], beta=x[5], length=x[8])
+        soft1 = softArm(alpha=x[0], beta=x[3], length=x[6], actuator_type='big')
+        soft2 = softArm(alpha=x[1], beta=x[3], length=x[7], actuator_type='big')
+        soft3 = softArm(alpha=x[2], beta=x[3], length=x[8], actuator_type='big')
+        soft4 = softArm(alpha=x[0], beta=x[4], length=x[6])
+        soft5 = softArm(alpha=x[1], beta=x[4], length=x[7])
+        soft6 = softArm(alpha=x[2], beta=x[4], length=x[8])
+        soft7 = softArm(alpha=x[0], beta=x[5], length=x[6])
+        soft8 = softArm(alpha=x[1], beta=x[5], length=x[7])
+        soft9 = softArm(alpha=x[2], beta=x[5], length=x[8])
 
-        # self.softArms = SoftObject(soft1, soft2, soft3, soft4, soft5, soft6, soft7, soft8, soft9)
+        self.softArms = SoftObject(soft1, soft2, soft3, soft4, soft5, soft6, soft7, soft8, soft9)
         self.ik_srv_setup()
 
     def handle_ik_srv(self, req):
@@ -463,6 +463,13 @@ class ik_solver:
         re.segment[0].A = result[0]
         re.segment[0].B = result[1]
         re.segment[0].L = result[2]
+
+        # Jing
+        for i in range(1,9):
+            re.segment[i].A = 0;
+            re.segment[i].B = 0;
+            re.segment[i].L = 0.055;
+
         # print(np.degrees(result[0]))
         # print(np.degrees(result[1]))
         # print(np.degrees(result[3]))
