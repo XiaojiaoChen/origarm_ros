@@ -289,3 +289,15 @@ add_dependencies(keyboard ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_
 target_link_libraries(keyboard             
    ${catkin_LIBRARIES}
  )
+
+add_executable(demo_abl src/demo_abl.cpp) 
+add_dependencies(keyboard ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(demo_abl             
+   ${catkin_LIBRARIES}
+ )
+
+add_executable(demo_picknplace src/demo_picknplace.cpp) 
+add_dependencies(demo_picknplace ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(demo_picknplace             
+   ${catkin_LIBRARIES}
+ )
