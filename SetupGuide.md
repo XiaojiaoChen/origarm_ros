@@ -127,14 +127,14 @@ lsblk -f
 Normally, mmcblk0 is the original system SD card，sda is the new SD card.
 ```
 sudo dd bs=4M if=/dev/mmcblk0 of=/dev/sda status=progress
-
+```
 
 ## install Eigen library
-defualt library for installation: /usr/include/
+
 ```
 >>sudo apt-get install libeigen3-dev
 ```
-configure library
+configure library (defualt library for installation: /usr/include/)
 ```
 >>cd /usr/include/
 >>sudo ln -sf eigen3/Eigen Eigen
