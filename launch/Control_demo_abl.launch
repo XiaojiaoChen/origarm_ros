@@ -1,4 +1,6 @@
 <launch>    
+    <param name = "tp" type = "int" value = "1000"/>
+	<param name = "ts" type = "int" value = "10000"/>
     <node pkg="origarm_ros" name="demo_abl" type="demo_abl"/> 
     <node pkg="origarm_ros" name="ABL_controller_Node" type="ABL_controller"/>
     <node pkg="origarm_ros" name="spi_node" type="spi_node" output="screen"/>   
