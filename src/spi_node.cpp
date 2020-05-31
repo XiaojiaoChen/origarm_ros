@@ -310,9 +310,8 @@ int main(int argc, char* argv[])
   int t = 0;
 	
   ros::Subscriber sub1 = nh.subscribe("Command_Pre_Open", 1, pressureCallback);
-  ros::Subscriber sub2 = nh.subscribe("Cmd_ABL", 1, segNumberCallback);
-  ros::Subscriber sub3 = nh.subscribe("modenumber", 1, modeNumberCallback);	
-  ros::Subscriber sub4 = nh.subscribe("segnumber", 1, segNumberCallback);
+  ros::Subscriber sub2 = nh.subscribe("modenumber", 1, modeNumberCallback);	
+  ros::Subscriber sub3 = nh.subscribe("segnumber", 1, segNumberCallback);
   ros::Publisher  pub1 = nh.advertise<origarm_ros::Sensor>("Sensor",100);
 
   ros::Rate r(100); 
