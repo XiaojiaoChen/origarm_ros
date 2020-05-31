@@ -48,19 +48,17 @@ int main(int argc, char **argv)
 		origarm_ros::Command_Position Command_XYZ_demo;
 		origarm_ros::modenumber moden;
 		origarm_ros::segnumber segn;
-
-		moden.modeNumber = mode_;
-		segn.segmentNumber = segment_;
-
-		pub2.publish(moden);
-		pub3.publish(segn);
-
-
+		
 		if (flag == 1)
 		{
 			// original point -> pose A
 			for (int i = 0; i < tp; i++)
 			{
+				moden.modeNumber = mode_;
+				pub2.publish(moden);
+				segn.segmentNumber = segment_;
+				pub3.publish(segn);
+
 				demo_x = i*xa/(tp-1);
 				demo_y = i*ya/(tp-1);
 				demo_z = length0 + i*(za-length0)/(tp-1);
@@ -72,6 +70,7 @@ int main(int argc, char **argv)
 				Command_XYZ_demo.pose.orientation.w = 1;
 
 				pub1.publish(Command_XYZ_demo);
+				
 				printf("O->A, X: %f, Y: %f, Z: %f\r\n", demo_x, demo_y, demo_z);
  				usleep(ts);
 			}
@@ -85,6 +84,11 @@ int main(int argc, char **argv)
 				// pose A -> pose B
 				for (int i = 0; i < tp; i++)
 				{
+					moden.modeNumber = mode_;
+					pub2.publish(moden);
+					segn.segmentNumber = segment_;
+					pub3.publish(segn);
+
 					demo_x = xa + i*(xb - xa)/(tp-1);
 					demo_y = ya + i*(yb - ya)/(tp-1);
 					demo_z = za + i*(zb - za)/(tp-1);
@@ -96,6 +100,7 @@ int main(int argc, char **argv)
 					Command_XYZ_demo.pose.orientation.w = 1;
 
 					pub1.publish(Command_XYZ_demo);
+					
 					printf("A->B[%d], X: %f, Y: %f, Z: %f\r\n", j, demo_x, demo_y, demo_z);
  					usleep(ts);
 				}
@@ -103,6 +108,11 @@ int main(int argc, char **argv)
 				// pose B -> pose A 			
 				for (int i = 0; i < tp; i++)
 				{
+					moden.modeNumber = mode_;
+					pub2.publish(moden);
+					segn.segmentNumber = segment_;
+					pub3.publish(segn);
+
 					demo_x = xb + i*(xa - xb)/(tp-1);
 					demo_y = yb + i*(ya - yb)/(tp-1);
 					demo_z = zb + i*(za - zb)/(tp-1);
@@ -114,6 +124,7 @@ int main(int argc, char **argv)
 					Command_XYZ_demo.pose.orientation.w = 1;
 
 					pub1.publish(Command_XYZ_demo);
+
 					printf("B->A[%d], X: %f, Y: %f, Z: %f\r\n", j, demo_x, demo_y, demo_z);
  					usleep(ts);
 				}
@@ -126,6 +137,11 @@ int main(int argc, char **argv)
 			// pose A -> original point
 			for (int i = 0; i < tp; i++)
 			{
+				moden.modeNumber = mode_;
+				pub2.publish(moden);
+				segn.segmentNumber = segment_;
+				pub3.publish(segn);
+
 				demo_x = xa + i*(xorigin - xa)/(tp-1);
 				demo_y = ya + i*(yorigin - ya)/(tp-1);
 				demo_z = za + i*(zorigin - za)/(tp-1);
@@ -137,6 +153,8 @@ int main(int argc, char **argv)
 				Command_XYZ_demo.pose.orientation.w = 1;
 
 				pub1.publish(Command_XYZ_demo);
+				
+
 				printf("A->O, X: %f, Y: %f, Z: %f\r\n", demo_x, demo_y, demo_z);
  				usleep(ts);
 			}
@@ -145,6 +163,11 @@ int main(int argc, char **argv)
 		}
 		else
 		{
+			moden.modeNumber = mode_;
+			pub2.publish(moden);
+			segn.segmentNumber = segment_;
+			pub3.publish(segn);
+
 			demo_x = xorigin;
 			demo_y = yorigin;
 			demo_z = zorigin;
@@ -154,8 +177,9 @@ int main(int argc, char **argv)
 			Command_XYZ_demo.pose.position.z = demo_z;
 			Command_XYZ_demo.pose.orientation.x = 1;
 			Command_XYZ_demo.pose.orientation.w = 1;
-
+			
 			pub1.publish(Command_XYZ_demo);
+			
 			printf("stay O, X: %f, Y: %f, Z: %f\r\n", demo_x, demo_y, demo_z);
 		}	
 				

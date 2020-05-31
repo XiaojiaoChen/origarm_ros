@@ -41,7 +41,6 @@ int main(int argc, char **argv)
 		pub2.publish(moden);
 		pub3.publish(segn);
 
-
 		if (flag == 1)
 		{	
 			for (int i = 0; i < tp; i++)
