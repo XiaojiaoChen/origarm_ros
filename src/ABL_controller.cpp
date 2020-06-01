@@ -64,7 +64,6 @@ int feedbackFlag = 0;
 
 float openingD[seg][act];
 int mode_;
-int segnumber_;
 
 using namespace std;
 
@@ -73,6 +72,22 @@ PID_Type *alphaPID  = newPID(0.8, 0.005, 0, 0.005, 0.6, 1);
 PID_Type *betaPID   = newPID(0.8, 0.005, 0, 0.005, 0.5, 1.5);
 PID_Type *lengthPID = newPID(  1,  0.01, 0, 0.005, 0.1, 0.1);
 
+void initParameter()
+{
+  for (int i = 0; i < seg; i++)
+  {
+    ajoy[i] = 0;
+    bjoy[i] = 0;
+    ljoy[i] = length0;
+  }
+
+  for (int i = 0; i < seg; i++)
+  {
+    apos[i] = 0;
+    bpos[i] = 0;
+    lpos[i] = length0;
+  }
+}
 
 //ABL->Pressure D:desired
 void ABLD2PD()
@@ -193,13 +208,12 @@ class ABL_controller
   public:
     ABL_controller()
     {
-      sub1_ = n_.subscribe("States", 300, &ABL_controller::States, this);
-      sub2_ = n_.subscribe("Cmd_ABL_joy", 300, &ABL_controller::ABL_joy, this);
-      sub3_ = n_.subscribe("Cmd_ABL_ik", 300, &ABL_controller::ABL_ik, this);
+      sub1_ = n_.subscribe("States", 1, &ABL_controller::States, this);
+      sub2_ = n_.subscribe("Cmd_ABL_joy", 1, &ABL_controller::ABL_joy, this);
+      sub3_ = n_.subscribe("Cmd_ABL_ik", 1, &ABL_controller::ABL_ik, this);
       //sub5_ = n_.subscribe("Cmd_Opening", 300, &ABL_controller::Opening, this);
-      sub4_ = n_.subscribe("modenumber", 300, &ABL_controller::mode, this);
-      sub5_ = n_.subscribe("segnumber", 300, &ABL_controller::segn, this);
-      pub_ = n_.advertise<origarm_ros::Command_Pre_Open>("Command_Pre_Open", 300);
+      sub4_ = n_.subscribe("modenumber", 1, &ABL_controller::mode, this);
+      pub_ = n_.advertise<origarm_ros::Command_Pre_Open>("Command_Pre_Open", 100);
     }
 
     void States(const origarm_ros::States& msg)
@@ -210,6 +224,13 @@ class ABL_controller
         betar[i] = msg.ABL.segment[i].B;
         lengthr[i] = msg.ABL.segment[i].L;
       }
+      ROS_INFO("GET ABL States");
+    }
+
+    void mode (const origarm_ros::modenumber& msg)
+    {
+      mode_ = msg.modeNumber;
+      ROS_INFO("GET Modenumber!");
     }
 
     void ABL_joy(const origarm_ros::Command_ABL& msg)
@@ -221,6 +242,7 @@ class ABL_controller
         bjoy[i] = msg.segment[i].B;
         ljoy[i] = msg.segment[i].L;    
       }
+      ROS_INFO("GET ABL Command from JOY!");
   }
 
     void ABL_ik(const origarm_ros::Command_ABL& msg)
@@ -230,13 +252,9 @@ class ABL_controller
         apos[i] = msg.segment[i].A;
         bpos[i] = msg.segment[i].B;
         lpos[i] = msg.segment[i].L;    
-      } 
+      }
+      ROS_INFO("GET ABL Command from IK!"); 
    }
-
-    void segn(const origarm_ros::segnumber& msg)
-    {
-      segnumber_ = msg.segmentNumber;
-    }
 
     /*void Opening(const origarm_ros::SegOpening& msg)
     {
@@ -245,11 +263,6 @@ class ABL_controller
         openingD[0][j] = msg.Op[j];
       }
     }*/
-
-    void mode (const origarm_ros::modenumber& msg)
-    {
-      mode_ = msg.modeNumber;
-    }
     
     void pub()
     {
@@ -274,7 +287,6 @@ class ABL_controller
       ros::Subscriber sub2_;
       ros::Subscriber sub3_;
       ros::Subscriber sub4_;
-      ros::Subscriber sub5_;
       ros::Publisher pub_ ;
 
       origarm_ros::Command_Pre_Open Cmd_P_O;
@@ -289,13 +301,14 @@ int main(int argc, char **argv)
 
   ros::init(argc, argv, "ABL_controller_node");
 
+  initParameter();
+
   ABL_controller ABL_controller_node;
 
-  ros::AsyncSpinner s(4);
+  ros::AsyncSpinner s(5);
   s.start();
 
   ros::Rate loop_rate(100); 
-	
 	
   ROS_INFO("Ready for ABL_controller_node");
 
@@ -317,9 +330,11 @@ int main(int argc, char **argv)
         pressureD[i][5]);     
     }*/
 
-    ros::spinOnce();
+    //ros::spinOnce();
+    
     loop_rate.sleep();
   }
 
+  ros::waitForShutdown();
   return 0;
 }

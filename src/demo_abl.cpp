@@ -25,6 +25,25 @@ int main(int argc, char **argv)
 	ros::NodeHandle nh;	
 	ros::Rate r(100);     //Hz
 
+	if (nh.getParam("tp", tp))
+	{
+		ROS_INFO("tp is set to %d\r\n", tp);
+	}
+	else
+	{
+		tp = 1000;
+	}
+	
+
+	if (nh.getParam("ts", ts))
+	{
+		ROS_INFO("ts is set to %d\r\n", ts);
+	}
+	else
+	{
+		ts = 10000;
+	}
+
 	ros::Publisher  pub1 = nh.advertise<origarm_ros::Command_ABL>("Cmd_ABL_joy", 100);
 	ros::Publisher  pub2 = nh.advertise<origarm_ros::modenumber>("modenumber", 100);
 	ros::Publisher  pub3 = nh.advertise<origarm_ros::segnumber>("segnumber", 100);		
@@ -37,10 +56,9 @@ int main(int argc, char **argv)
 
 		moden.modeNumber = mode_;
 		segn.segmentNumber = segment_;
-
+		
 		pub2.publish(moden);
 		pub3.publish(segn);
-
 
 		if (flag == 1)
 		{	
