@@ -86,9 +86,9 @@ int main(int argc, char **argv)
 				segn.segmentNumber = segment_;
 				pub3.publish(segn);
 
-				demo_x = i*xa/(tp-1);
-				demo_y = i*ya/(tp-1);
-				demo_z = length0 + i*(za-length0)/(tp-1);
+				demo_x = xorigin + i*(xa - xorigin)/(tp-1);
+				demo_y = yorigin + i*(ya - yorigin)/(tp-1);
+				demo_z = zorigin + i*(za - zorigin)/(tp-1);
 
 				Command_XYZ_demo.pose.position.x = demo_x;
 				Command_XYZ_demo.pose.position.y = demo_y;

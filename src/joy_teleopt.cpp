@@ -133,8 +133,10 @@ float y_min = -0.06;
 
 float z_max =  0.08;
 float z_min =  0.01;
-float z_max9 = 0.055*9+(z_max-0.055)*9;
-float z_min9 = 0.055*9-(0.055-z_min)*9;
+float z_max9 = z_max*9;
+float z_min9 = z_min*9;
+float z_max6 = z_max*6;
+float z_min6 = z_min*6;
 
 //Internal parameters
 //ABL calculated by XYZ
@@ -461,7 +463,7 @@ void writeABL3(int joystickFLag)
 	{
 		segAlpha_[i]  = CONSTRAIN(segAlpha_[i], a_min, a_max);
 		segBeta_[i]   = CONSTRAIN(segBeta_[i], b_min, b_max);
-		segLength_[i] = CONSTRAIN(segLength_[i], 0.055*3-(0.055-l_min)*3, 0.055*3+(l_max-0.055)*3);
+		segLength_[i] = CONSTRAIN(segLength_[i], l_min*3, l_max*3);
 	}
 }
 
@@ -542,24 +544,13 @@ void writeABL9(int joystickFLag)
 	}
 	else if (joystickFLag == 2) //calculated from ABL_3 control mode
 	{
-		for (int i = 0; i < 3; i++)
+		for (int i = 0; i < 6; i++)
 		{
-			segAlpha[i] = segAlpha_[0]/3;
-			segBeta[i]  = segBeta_[0];
-			segLength[i]= segLength_[0]/3;
+			segAlpha[i] = segAlpha_[int(i/2)]/2;
+			segBeta[i]  = segBeta_[int(i/2)];
+			segLength[i]= segLength_[int(i/2)]/2;
 		}
-		for (int i = 3; i < 6; i++)
-		{
-			segAlpha[i] = segAlpha_[1]/3;
-			segBeta[i]  = segBeta_[1];
-			segLength[i]= segLength_[1]/3;
-		}
-		for (int i = 6; i < 9; i++)
-		{
-			segAlpha[i] = segAlpha_[2]/3;
-			segBeta[i]  = segBeta_[2];
-			segLength[i]= segLength_[2]/3;
-		}
+
 	}
 
 	for (int i = 0; i < 9; i++)
@@ -777,7 +768,7 @@ void writeXYZ3(int joystickFLag)
 
 	segx_ = CONSTRAIN(segx_, x_min, x_max);
 	segy_ = CONSTRAIN(segy_, y_min, y_max);
-	segz_ = CONSTRAIN(segz_, z_min9, z_max9);
+	segz_ = CONSTRAIN(segz_, z_min6, z_max6);
 }
 
 void writeXYZ9(int joystickFLag)
@@ -827,7 +818,7 @@ void writeXYZ9(int joystickFLag)
 
 	segx = CONSTRAIN(segx, x_min, x_max);
 	segy = CONSTRAIN(segy, y_min, y_max);
-	segz = CONSTRAIN(segz, z_min9, z_max9);
+	segz = CONSTRAIN(segz, z_min6, z_max6);
 }
 
 void Init_parameter()
@@ -928,7 +919,7 @@ int main(int argc, char **argv)
 			{
 				segAlpha_[i]  = 0;
 				segBeta_[i]   = 0;
-				segLength_[i] = 0.055*3;
+				segLength_[i] = 0.055*2;
 			}
 
 			alpha = 0;
@@ -941,11 +932,11 @@ int main(int argc, char **argv)
 
 			segx_ = 0;
 			segy_ = 0;
-			segz_ = 0.055*9; 
+			segz_ = 0.055*6; 
 
 			segx = 0;
 			segy = 0;
-			segz = 0.055*9; 
+			segz = 0.055*6; 
 
 			for (int i = 0; i < 6; i++)
 			{
@@ -991,26 +982,47 @@ int main(int argc, char **argv)
 		}
 		else if (mode == 1)
 		{
-			for (int i = 0; i < seg; i++)
+			/*for (int i = 0; i < seg; i++)
 			{
 				Cmd_ABL.segment[i].A = segAlpha_[int(i/3)]/3;
 				Cmd_ABL.segment[i].B = segBeta_[int(i/3)];
 				Cmd_ABL.segment[i].L = segLength_[int(i/3)]/3;
 				
 				printf("ABL3: %f, %f, %f\r\n", segAlpha_[int(i/3)]/3, segBeta_[int(i/3)], segLength_[int(i/3)]/3);	
+			}*/
+
+			for (int i = 0; i < 6; i++)
+			{
+				Cmd_ABL.segment[i].A = segAlpha_[int(i/2)]/2;
+				Cmd_ABL.segment[i].B = segBeta_[int(i/2)];
+				Cmd_ABL.segment[i].L = segLength_[int(i/2)]/2;
+				
+				printf("ABL3: %f, %f, %f\r\n", segAlpha_[int(i/2)]/2, segBeta_[int(i/2)], segLength_[int(i/2)]/2);	
+			}
+
+			for (int i = 6; i < seg; i++)
+			{
+				Cmd_ABL.segment[i].A = 0;
+				Cmd_ABL.segment[i].B = 0;
+				Cmd_ABL.segment[i].L = length0;
 			}
 			
 			pub1.publish(Cmd_ABL);
 		}
 		else if (mode == 2)
 		{			
-			for (int i = 0; i < seg; i++)
+			for (int i = 0; i < 6; i++)
 			{
 				Cmd_ABL.segment[i].A = segAlpha[i];
 				Cmd_ABL.segment[i].B = segBeta[i];
-				Cmd_ABL.segment[i].L = segLength[i];
+				Cmd_ABL.segment[i].L = segLength[i];	
+			}
 
-				//printf("ABL9: %f, %f, %f\r\n", segAlpha[i], segBeta[i], segLength[i]);		
+			for (int i = 6; i < seg; i++)
+			{
+				Cmd_ABL.segment[i].A = 0;
+				Cmd_ABL.segment[i].B = 0;
+				Cmd_ABL.segment[i].L = length0;
 			}
 
 			pub1.publish(Cmd_ABL);

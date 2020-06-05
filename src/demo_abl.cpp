@@ -66,13 +66,20 @@ int main(int argc, char **argv)
  			{
  				demo_a = i*M_PI*0.5/(tp-1);
  				demo_b = 0;
- 				demo_l = length0*9;
+ 				demo_l = length0*6;
 
- 				for (int i = 0; i < seg; i++)
+ 				for (int i = 0; i < 6; i++)
  				{
- 					Command_ABL_demo.segment[i].A = demo_a/9;
+ 					Command_ABL_demo.segment[i].A = demo_a/6;
  					Command_ABL_demo.segment[i].B = demo_b;
- 					Command_ABL_demo.segment[i].L = demo_l/9;
+ 					Command_ABL_demo.segment[i].L = demo_l/6;
+ 				}
+
+ 				for (int i = 6; i < seg; i++)
+ 				{
+ 					Command_ABL_demo.segment[i].A = 0;
+ 					Command_ABL_demo.segment[i].B = 0;
+ 					Command_ABL_demo.segment[i].L = length0;
  				}
  			
  				pub1.publish(Command_ABL_demo);
@@ -85,13 +92,20 @@ int main(int argc, char **argv)
  			{
  				demo_a = M_PI*0.5;
  				demo_b = i*2*M_PI/(tp-1);
- 				demo_l = length0*9;
+ 				demo_l = length0*6;
 
- 				for (int i = 0; i < seg; i++)
+ 				for (int i = 0; i < 6; i++)
  				{
- 					Command_ABL_demo.segment[i].A = demo_a/9;
+ 					Command_ABL_demo.segment[i].A = demo_a/6;
  					Command_ABL_demo.segment[i].B = demo_b;
- 					Command_ABL_demo.segment[i].L = demo_l/9;
+ 					Command_ABL_demo.segment[i].L = demo_l/6;
+ 				}
+
+ 				for (int i = 6; i < seg; i++)
+ 				{
+ 					Command_ABL_demo.segment[i].A = 0;
+ 					Command_ABL_demo.segment[i].B = 0;
+ 					Command_ABL_demo.segment[i].L = length0;
  				}
 
  				pub1.publish(Command_ABL_demo);
@@ -104,13 +118,20 @@ int main(int argc, char **argv)
  			{
  				demo_a = M_PI*0.5;
  				demo_b = 0;
- 				demo_l = length0*9 + i*(0.08-length0)*9/(tp-1);
+ 				demo_l = length0*6 + i*(0.08-length0)*6/(tp-1);
 
- 				for (int i = 0; i < seg; i++)
+ 				for (int i = 0; i < 6; i++)
  				{
- 					Command_ABL_demo.segment[i].A = demo_a/9;
+ 					Command_ABL_demo.segment[i].A = demo_a/6;
  					Command_ABL_demo.segment[i].B = demo_b;
- 					Command_ABL_demo.segment[i].L = demo_l/9;
+ 					Command_ABL_demo.segment[i].L = demo_l/6;
+ 				}
+
+ 				for (int i = 6; i < seg; i++)
+ 				{
+ 					Command_ABL_demo.segment[i].A = 0;
+ 					Command_ABL_demo.segment[i].B = 0;
+ 					Command_ABL_demo.segment[i].L = length0;
  				}
 
  				pub1.publish(Command_ABL_demo);
@@ -123,13 +144,20 @@ int main(int argc, char **argv)
  			{
  				demo_a = M_PI*0.5;
  				demo_b = 0;
- 				demo_l = 0.08*9 - i*(0.08-length0)*9/(tp-1);
+ 				demo_l = 0.08*6 - i*(0.08-length0)*6/(tp-1);
 
- 				for (int i = 0; i < seg; i++)
+ 				for (int i = 0; i < 6; i++)
  				{
- 					Command_ABL_demo.segment[i].A = demo_a/9;
+ 					Command_ABL_demo.segment[i].A = demo_a/6;
  					Command_ABL_demo.segment[i].B = demo_b;
- 					Command_ABL_demo.segment[i].L = demo_l/9;
+ 					Command_ABL_demo.segment[i].L = demo_l/6;
+ 				}
+
+ 				for (int i = 6; i < seg; i++)
+ 				{
+ 					Command_ABL_demo.segment[i].A = 0;
+ 					Command_ABL_demo.segment[i].B = 0;
+ 					Command_ABL_demo.segment[i].L = length0;
  				}
 
  				pub1.publish(Command_ABL_demo);
@@ -142,13 +170,20 @@ int main(int argc, char **argv)
  			{
  				demo_a = M_PI*0.5 - i*M_PI*0.5/(tp-1);
  				demo_b = 0;
- 				demo_l = length0*9;
+ 				demo_l = length0*6;
 
  				for (int i = 0; i < seg; i++)
  				{
- 					Command_ABL_demo.segment[i].A = demo_a/9;
+ 					Command_ABL_demo.segment[i].A = demo_a/6;
  					Command_ABL_demo.segment[i].B = demo_b;
- 					Command_ABL_demo.segment[i].L = demo_l/9;
+ 					Command_ABL_demo.segment[i].L = demo_l/6;
+ 				}
+
+ 				for (int i = 6; i < seg; i++)
+ 				{
+ 					Command_ABL_demo.segment[i].A = 0;
+ 					Command_ABL_demo.segment[i].B = 0;
+ 					Command_ABL_demo.segment[i].L = length0;
  				}
  			
  				pub1.publish(Command_ABL_demo);
