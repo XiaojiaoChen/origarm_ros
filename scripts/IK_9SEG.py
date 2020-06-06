@@ -20,7 +20,7 @@ class ik_solver:
         result = self.inverse_kinematic(
             req.input.pose.position,
             req.input.pose.orientation,
-            req.input.ABL
+            req.input.ABL,
             req.mode
         ) 
         print(result)
@@ -234,14 +234,16 @@ class ik_solver:
                 ]
                 # FOR 3 SEG
                 for i in range(1):
-                    for j in range(3):
-                        re.segment[2*i+j].A = result[3*i]/3
-                        re.segment[2*i+j].B = result[3*i+1]/3
-                        re.segment[2*i+j].L = result[3*i+2]/3
-                for i in range(3,9):
+                    for j in range(1):
+                        re.segment[2*i+j].A = result[3*i]
+                        re.segment[2*i+j].B = result[3*i+1]
+                        re.segment[2*i+j].L = result[3*i+2]
+                for i in range(1,9):
                     re.segment[i].A = 0
                     re.segment[i].B = 0
-                    re.segment[i].L = 0
+                    re.segment[i].L = 0.055
+
+                print (re.segment)   
 
             elif mode.modeNumber == 4:
                 # string type
@@ -274,7 +276,7 @@ class ik_solver:
                 for i in range(6,9):
                     re.segment[i].A = 0
                     re.segment[i].B = 0
-                    re.segment[i].L = 0
+                    re.segment[i].L = 0.055
        
                 # print(self.position(result))
                 # print(np.degrees(result[0]))
@@ -301,7 +303,7 @@ class ik_solver:
 
     def quat_transform(self, qua): # alpha beta gamma
         R1 = Rotation.from_quat(qua).as_matrix()
-        N1 = [R1[0][0],R1[1][0],R1[2][0]]`
+        N1 = [R1[0][0],R1[1][0],R1[2][0]]
         A1 = [R1[0][2],R1[1][2],R1[2][2]]
 
         return N1, A1

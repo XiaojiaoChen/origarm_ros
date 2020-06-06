@@ -41,7 +41,7 @@ class POSISTION_CONTROLLER
       origarm_ros::ik Desired;
       Desired.request.input.pose = position_.pose; //desired
       Desired.request.input.ABL = states_.ABL;// present
-      Desired.request.mode = mode_ // mode
+      Desired.request.mode = mode_; // mode
       //cout << clt_.call(Desired);
   
       if(clt_.call(Desired))
@@ -61,6 +61,7 @@ class POSISTION_CONTROLLER
     ros::Publisher pub_;
     ros::Subscriber sub1_;
     ros::Subscriber sub2_;
+    ros::Subscriber sub3_;
     ros::ServiceClient clt_;
 
     origarm_ros::States states_;

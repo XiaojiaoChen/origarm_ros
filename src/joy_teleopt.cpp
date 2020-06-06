@@ -151,8 +151,8 @@ float segBetad[9];
 float segLengthd[9];
 
 //control mode
-//mode[0]: 1 abl; mode[1]: 3 abl; mode[2]: 9 abl; mode[3]: 1 xyz; mode[4]: 3 xyz; mode[5]: 9 xyz
-//mode[0]: joyA;  mode[1]: joyB;  mode[2]: joyX;  mode[3]: joyY;  mode[4]: joyRB; mode[5]: joyLB
+//mode[0]: 1 abl; mode[1]: 3 abl; mode[2]: 9 abl; mode[3]: 1 xyz; mode[4]: 3 xyz;
+//mode[0]: joyA;  mode[1]: joyB;  mode[2]: joyX;  mode[3]: joyY;  mode[4]: joyRB;
 int mode;
 
 //keyboard callback
@@ -240,10 +240,6 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 	{
 		mode = 4;
 	}
-	else if (joyLB == 1 && last_joyLB == 0)
-	{
-		mode = 5;
-	}
 
 	//only when joyRT && joyLT pressed together, joystick starts to control
 	if (joyLT == -1 && joyRT == -1)
@@ -286,18 +282,18 @@ void ABLCallback(const origarm_ros::Command_ABL& msg)
 	betad   = msg.segment[0].B;
 	lengthd = msg.segment[0].L;
 
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 6; i++)
 	{
 		segAlphad_[i]  = msg.segment[i].A;
 		segBetad_[i]   = msg.segment[i].B;
 		segLengthd_[i] = msg.segment[i].L;
 	}
 
-	for (int i = 0; i < 9; i++)
+	for (int i = 0; i < 6; i++)
 	{
-		segAlphad[i]  = msg.segment[i].A;
-		segBetad[i]   = msg.segment[i].B;
-		segLengthd[i] = msg.segment[i].L;
+		segAlphad_[i]  = CONSTRAIN(segAlphad_[i], a_min, a_max);
+		segBetad_[i]   = CONSTRAIN(segBetad_[i], b_min, b_max);
+		segLengthd_[i] = CONSTRAIN(segLengthd_[i], l_min, l_max);
 	}
 }
 
@@ -453,17 +449,17 @@ void writeABL3(int joystickFLag)
 	{
 		for (int i = 0; i < 3; i++)
 		{
-			segAlpha_[i]  = segAlphad_[i];
-			segBeta_[i]   = segBetad_[i];
-			segLength_[i] = segLengthd_[i];
+			segAlpha_[i]  = segAlphad_[int(i*2)]*2;
+			segBeta_[i]   = segBetad_[int(i*2)];
+			segLength_[i] = segLengthd_[int(i*2)]*2;
 		}		
 	}
 
 	for (int i = 0; i < 3; i++)
 	{
-		segAlpha_[i]  = CONSTRAIN(segAlpha_[i], a_min, a_max);
+		segAlpha_[i]  = CONSTRAIN(segAlpha_[i], a_min*2, a_max*2);
 		segBeta_[i]   = CONSTRAIN(segBeta_[i], b_min, b_max);
-		segLength_[i] = CONSTRAIN(segLength_[i], l_min*3, l_max*3);
+		segLength_[i] = CONSTRAIN(segLength_[i], l_min*2, l_max*2);
 	}
 }
 
@@ -550,7 +546,6 @@ void writeABL9(int joystickFLag)
 			segBeta[i]  = segBeta_[int(i/2)];
 			segLength[i]= segLength_[int(i/2)]/2;
 		}
-
 	}
 
 	for (int i = 0; i < 9; i++)
@@ -860,10 +855,14 @@ int main(int argc, char **argv)
 	Init_parameter();
 
 	while (ros::ok())
-	{
+	{		
 		//check whether joystick is available
 		if (status == 1)
 		{
+			//control mode
+			//mode[0]: 1 abl; mode[1]: 3 abl; mode[2]: 9 abl; mode[3]: 1 xyz; mode[4]: 3 xyz; 
+			//mode[0]: joyA;  mode[1]: joyB;  mode[2]: joyX;  mode[3]: joyY;  mode[4]: joyRB; 
+
 			if (mode == 0)           //ABL_1 control mode
 			{		
 				writeABL1(1);		 //joystick -> ABL1
@@ -874,12 +873,12 @@ int main(int argc, char **argv)
 				writeABL3(1);        //joystick -> ABL3
 				writeABL9(2);        //ABL3     -> ABL9
 				writeXYZ3(0);		 //ABL3     -> XYZ3
-				writeXYZ9(2);        //XYZ3     -> XYZ9
+				//writeXYZ9(2);        //XYZ3     -> XYZ9
 			}
 			else if (mode == 2)      //ABL_9 control mode
 			{
 				writeABL9(1);        //joystick -> ABL9
-				writeXYZ9(0);        //ABL9     -> XYZ9
+				//writeXYZ9(0);        //ABL9     -> XYZ9
 			}
 			else if (mode == 3)      //XYZ_1 control mode
 			{
@@ -891,13 +890,13 @@ int main(int argc, char **argv)
 				writeXYZ3(1);        //joystick -> XYZ3
 				writeABL3(0);        //XYZ3     -> ABL3
 				writeABL9(2);        //ABL3     -> ABL9
-				writeXYZ9(2);        //XYZ3     -> XYZ9								
+				//writeXYZ9(2);        //XYZ3     -> XYZ9								
 			}
-			else if (mode == 5)      //XYZ_9 control mode
+			/*else if (mode == 5)      //XYZ_9 control mode
 			{
 				writeXYZ9(1);        //joystick -> XYZ9
 				writeABL9(0);        //XYZ9     -> ABL9				
-			}
+			}*/
 
 			//WriteOpening();
 
@@ -948,23 +947,13 @@ int main(int argc, char **argv)
 		
 		origarm_ros::Command_ABL Cmd_ABL;	
 		origarm_ros::Command_Position Cmd_Position;	
-		//origarm_ros::SegOpening Cmd_Opening;
 		origarm_ros::modenumber modenumber;	
 		modenumber.modeNumber = mode;
 		modenumber.status     = status;
 
 		origarm_ros::segnumber segnumber;
-		segnumber.segmentNumber = segNumber;
-
-		/*
-		for (int i = 0; i < 6; i++)
-		{
-			Cmd_Opening.Op[i] = OpeningResult[i];
-		}*/
+		segnumber.segmentNumber = segNumber;		
 		
-		//control mode
-		//mode[0]: 1 abl; mode[1]: 3 abl; mode[2]: 9 abl; mode[3]: 1 xyz; mode[4]: 3 xyz; mode[5]: 9 xyz
-		//mode[0]: joyA;  mode[1]: joyB;  mode[2]: joyX;  mode[3]: joyY;  mode[4]: joyRB; mode[5]: joyLB
 		if (mode == 0)
 		{
 			Cmd_ABL.segment[0].A = alpha;
@@ -982,15 +971,6 @@ int main(int argc, char **argv)
 		}
 		else if (mode == 1)
 		{
-			/*for (int i = 0; i < seg; i++)
-			{
-				Cmd_ABL.segment[i].A = segAlpha_[int(i/3)]/3;
-				Cmd_ABL.segment[i].B = segBeta_[int(i/3)];
-				Cmd_ABL.segment[i].L = segLength_[int(i/3)]/3;
-				
-				printf("ABL3: %f, %f, %f\r\n", segAlpha_[int(i/3)]/3, segBeta_[int(i/3)], segLength_[int(i/3)]/3);	
-			}*/
-
 			for (int i = 0; i < 6; i++)
 			{
 				Cmd_ABL.segment[i].A = segAlpha_[int(i/2)]/2;
@@ -1047,7 +1027,7 @@ int main(int argc, char **argv)
 
 			pub3.publish(Cmd_Position);	
 		}
-		else if (mode == 5)
+		/*else if (mode == 5)
 		{
 			Cmd_Position.pose.position.x = segx;
 			Cmd_Position.pose.position.y = segy;
@@ -1056,7 +1036,7 @@ int main(int argc, char **argv)
 			Cmd_Position.pose.orientation.w = 1;
 
 			pub3.publish(Cmd_Position);	
-		}
+		}*/
 
 		pub4.publish(modenumber);
 		pub5.publish(segnumber);
