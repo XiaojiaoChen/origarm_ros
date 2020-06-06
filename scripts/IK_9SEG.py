@@ -43,7 +43,7 @@ class ik_solver:
         
 
     def inverse_kinematic(self, pts, quat, seg, mode):
-        def test_square(dst, seg, a, n):  # a1 a2 a3 b1 b2 b3 r1 r2 r3
+        def test_square(dst, a, n):  # a1 a2 a3 b1 b2 b3 r1 r2 r3
             def Pos2ABLD():
                 x = dst[0]
                 y = dst[1]
@@ -268,7 +268,7 @@ class ik_solver:
        
                 res = least_squares(string_type, x0_rosenbrock,
                                     bounds=([-1.5*pi, -2*pi, 0.09, -1.5*pi, -2*pi, 0.09, -1.5*pi, -2*pi, 0.09],
-                                            [1.5*pi, 2*pi, 0.24, 1.5*pi, 2*pi, 0.24, 1.5*pi, 2*pi, 0.24]))
+                                            [1.5*pi, 2*pi, 0.24, 1.5*pi, 2*pi, 0.24, 1.5*pi, 2*pi, 0.24]), ftol= 1e-4, xtol=1e-4)
                 new = np.array([res.x[0], res.x[1], res.x[2],
                                 res.x[3], res.x[4], res.x[5],
                                 res.x[6], res.x[7], res.x[8]
@@ -306,7 +306,7 @@ class ik_solver:
 
         n, a = self.quat_transform(quat)
         
-        self.desired = test_square(pts, seg, a, n)
+        self.desired = test_square(pts, a, n)
 
         return self.desired
 
