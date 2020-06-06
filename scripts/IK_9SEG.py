@@ -17,30 +17,13 @@ class ik_solver:
         self.ik_srv_setup()
 
     def handle_ik_srv(self, req):
-        # For one segment
-        # result = self.inverse_kinematic(
-        #     req.input.pose.position,
-        #     req.input.pose.orientation,
-        #     req.input.ABL.segments
-        # )
-        # For nine segment
-        test = Test()
-        for i in range(9):
-            test.segment[i].L = 0.7
-
         result = self.inverse_kinematic(
             req.input.pose.position,
             req.input.pose.orientation,
-            test.segment
+            req.input.ABL
         ) 
-
-        re = Command_ABL()
-        for i in range(len(re.segment)):
-            re.segment[i].A = result[i]
-            re.segment[i].B = result[i]
-            re.segment[i].L = result[i]
-            print(re.segment)
-        return re
+        print(result)
+        return result
 
     def ik_srv_setup(self):
         rospy.init_node('ik_srv')
@@ -240,7 +223,8 @@ class ik_solver:
                     result[3*i+2] = res[3*i+2] * res[3*i] / sin(res[3*i] / 2) / 2
                 return result
             now = time.time()
-
+            
+            re = Command_ABL()
             # string type
             print(len(seg))
             if len(seg) == 1:
@@ -248,41 +232,26 @@ class ik_solver:
                 result = [
                     res[0], res[1], res[2]
                 ]
+                # FOR 3 SEG
+                for i in range(1):
+                    for j in range(3):
+                        re.segment[2*i+j].A = result[3*i]/3
+                        re.segment[2*i+j].B = result[3*i+1]/3
+                        re.segment[2*i+j].L = result[3*i+2]/3
             elif len(seg) == 9:
-                print(pts)
                 # string type
-                if seg[0].A == 0 or seg[3].A == 0 or seg[6].A ==0:
-                    x0 = [
-                        seg[0].A*3, seg[0].B, seg[0].L, 
-                        seg[3].A*3, seg[3].B, seg[3].L, 
-                        seg[6].A*3, seg[6].B, seg[6].L
-                    ]
-                    # x0 = [
-                    #     seg[0].A*3, seg[3].A*3,seg[6].A*3,
-                    #     seg[0].B, seg[3].B, seg[6].B, 
-                    #     seg[0].L, seg[3].L, seg[6].L
-                    # ]
-                else:
-                    x0 = [
-                        seg[0].A*3, seg[0].B, seg[0].L/seg[0].A*sin(seg[0].A*3/2), 
-                        seg[3].A*3, seg[3].B, seg[3].L/seg[3].A*sin(seg[3].A*3/2), 
-                        seg[6].A*3, seg[6].B, seg[6].L/seg[6].A*sin(seg[6].A*3/2)
-                    ]
-                #    pos_now = [
-                #    seg[0].A * 3, seg[3].A * 3, seg[6].A * 3,
-                #    seg[0].B, seg[3].B, seg[6].B,
-                #    seg[0].L * 6 / seg[0].A * sin(seg[0].A / 2),
-                #    seg[3].L * 6 / seg[3].A * sin(seg[3].A / 2),
-                #    seg[6].L * 6 / seg[6].A * sin(seg[6].A / 2)
-                #    ]
+                # initial value for 9 SEG
+                # x0 = [
+                #     seg[0].A*3, seg[0].B, seg[0].L/seg[0].A*sin(seg[0].A*3/2), 
+                #     seg[3].A*3, seg[3].B, seg[3].L/seg[3].A*sin(seg[3].A*3/2), 
+                #     seg[6].A*3, seg[6].B, seg[6].L/seg[6].A*sin(seg[6].A*3/2)
+                # ]
+                x0 = [0, 0, 1,
+                        0, 0, 1,
+                        0, 0, 1]
+               
                 x0_rosenbrock = np.array(x0).astype('float64')
-                # res = least_squares(string_type, x0_rosenbrock,
-                #             bounds=([-pi, -pi, -pi, -2 * pi, -2 * pi, -2 * pi, 0.1, 0.1, 0.1],
-                #                     [pi, pi, pi, 2 * pi, 2 * pi, 2 * pi, 3, 3, 3]))
-                # new = np.array([res.x[0], res.x[3], res.x[6],
-                #         res.x[1], res.x[4], res.x[7],
-                #         res.x[2], res.x[5], res.x[8]
-                #         ]).astype('float64')  # a1 b1 l1 a2 b2 l2 a3 b3 l3
+       
                 res = least_squares(string_type, x0_rosenbrock,
                                     bounds=([-pi, -2*pi, 0.05, -pi, -2*pi, 0.05, -pi, -2*pi, 0.05],
                                             [pi, 2*pi, 3, pi, 2*pi, 3, pi, 2*pi, 3]))
@@ -291,6 +260,13 @@ class ik_solver:
                                 res.x[6], res.x[7], res.x[8]
                                 ]).astype('float64')  # a1 b1 l1 a2 b2 l2 a3 b3 l3
                 result = tranformation_string(new)
+                # FOR 6 SEG
+                for i in range(3):
+                    for j in range(2):
+                        re.segment[2*i+j].A = result[3*i]/2
+                        re.segment[2*i+j].B = result[3*i+1]/2
+                        re.segment[2*i+j].L = result[3*i+2]/2
+       
                 # print(self.position(result))
                 # print(np.degrees(result[0]))
                 # print(np.degrees(result[1]))
@@ -302,7 +278,7 @@ class ik_solver:
 
             print('time cost:', time.time() - now)
             # end
-            return result
+            return re
 
         # a1 a2 a3 b1 b2 b3 l1 l2 l3
         pts = [pts.x, pts.y, pts.z]
