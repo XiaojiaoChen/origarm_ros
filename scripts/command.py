@@ -22,9 +22,9 @@ class commander:
 
         # test code
         command = Command_Position()
-        command.pose.position.x = 1
-        command.pose.position.y = -1
-        command.pose.position.z = 3
+        command.pose.position.x = 2.0
+        command.pose.position.y = 3.0
+        command.pose.position.z = 4.0
         command.pose.orientation.x = 1
         command.pose.orientation.w = 1
 
