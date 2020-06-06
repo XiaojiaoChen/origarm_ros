@@ -21,6 +21,7 @@ class ik_solver:
             req.input.pose.position,
             req.input.pose.orientation,
             req.input.ABL
+            req.mode
         ) 
         print(result)
         return result
@@ -31,7 +32,7 @@ class ik_solver:
         print('ready for ik service')
         rospy.spin()
 
-    def inverse_kinematic(self, pts, quat, seg):
+    def inverse_kinematic(self, pts, quat, seg, mode):
         def test_square(dst, seg, a, n):  # a1 a2 a3 b1 b2 b3 r1 r2 r3
             def Pos2ABLD():
                 x = dst[0]
@@ -226,8 +227,7 @@ class ik_solver:
             
             re = Command_ABL()
             # string type
-            print(len(seg))
-            if len(seg) == 1:
+            if mode.modeNumber == 3:
                 res = Pos2ABLD()
                 result = [
                     res[0], res[1], res[2]
@@ -238,7 +238,12 @@ class ik_solver:
                         re.segment[2*i+j].A = result[3*i]/3
                         re.segment[2*i+j].B = result[3*i+1]/3
                         re.segment[2*i+j].L = result[3*i+2]/3
-            elif len(seg) == 9:
+                for i in range(3,9):
+                    re.segment[i].A = 0
+                    re.segment[i].B = 0
+                    re.segment[i].L = 0
+
+            elif mode.modeNumber == 4:
                 # string type
                 # initial value for 9 SEG
                 # x0 = [
@@ -246,15 +251,15 @@ class ik_solver:
                 #     seg[3].A*3, seg[3].B, seg[3].L/seg[3].A*sin(seg[3].A*3/2), 
                 #     seg[6].A*3, seg[6].B, seg[6].L/seg[6].A*sin(seg[6].A*3/2)
                 # ]
-                x0 = [0, 0, 1,
-                        0, 0, 1,
-                        0, 0, 1]
+                x0 = [0, 0, 0.055*3,
+                        0, 0, 0.055*3,
+                        0, 0, 0.055*3]
                
                 x0_rosenbrock = np.array(x0).astype('float64')
        
                 res = least_squares(string_type, x0_rosenbrock,
-                                    bounds=([-pi, -2*pi, 0.05, -pi, -2*pi, 0.05, -pi, -2*pi, 0.05],
-                                            [pi, 2*pi, 3, pi, 2*pi, 3, pi, 2*pi, 3]))
+                                    bounds=([-1.5*pi, -2*pi, 0.09, -1.5*pi, -2*pi, 0.09, -1.5*pi, -2*pi, 0.09],
+                                            [1.5*pi, 2*pi, 0.24, 1.5*pi, 2*pi, 0.24, 1.5*pi, 2*pi, 0.24]))
                 new = np.array([res.x[0], res.x[1], res.x[2],
                                 res.x[3], res.x[4], res.x[5],
                                 res.x[6], res.x[7], res.x[8]
@@ -266,6 +271,10 @@ class ik_solver:
                         re.segment[2*i+j].A = result[3*i]/2
                         re.segment[2*i+j].B = result[3*i+1]/2
                         re.segment[2*i+j].L = result[3*i+2]/2
+                for i in range(6,9):
+                    re.segment[i].A = 0
+                    re.segment[i].B = 0
+                    re.segment[i].L = 0
        
                 # print(self.position(result))
                 # print(np.degrees(result[0]))
@@ -292,10 +301,10 @@ class ik_solver:
 
     def quat_transform(self, qua): # alpha beta gamma
         R1 = Rotation.from_quat(qua).as_matrix()
-        N1 = [R1[0][0],R1[1][0],R1[2][0]]
+        N1 = [R1[0][0],R1[1][0],R1[2][0]]`
         A1 = [R1[0][2],R1[1][2],R1[2][2]]
-        return N1, A1
 
+        return N1, A1
     def position(self, result):
         a1 = result[0]
         a2 = result[3]

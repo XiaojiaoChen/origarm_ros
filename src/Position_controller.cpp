@@ -3,6 +3,7 @@
 #include "origarm_ros/ik.h"
 #include "origarm_ros/Command_Position.h"
 #include "origarm_ros/Command_ABL.h"
+#include "origarm_ros/modenumber.h"
 
 using namespace std;
 
@@ -14,6 +15,7 @@ class POSISTION_CONTROLLER
       pub_ = n_.advertise<origarm_ros::Command_ABL>("Cmd_ABL_ik", 100);
       sub1_ = n_.subscribe("States", 1, &POSISTION_CONTROLLER::States, this);
       sub2_ = n_.subscribe("Cmd_Position", 1, &POSISTION_CONTROLLER::Position, this);
+      sub3_ = n_.subscribe("modenumber", 1, &POSISTION_CONTROLLER::Mode, this);
       clt_ = n_.serviceClient<origarm_ros::ik>("ik");
     } 
 
@@ -29,11 +31,17 @@ class POSISTION_CONTROLLER
       IK();
     }
 
+    void Mode(const origarm_ros::modenumber& msg)
+    {
+      mode_ = msg;
+    }
+
     void IK()
     {
       origarm_ros::ik Desired;
-      Desired.request.input.pose = position_.pose; //desired;
+      Desired.request.input.pose = position_.pose; //desired
       Desired.request.input.ABL = states_.ABL;// present
+      Desired.request.mode = mode_ // mode
       //cout << clt_.call(Desired);
   
       if(clt_.call(Desired))
@@ -58,6 +66,7 @@ class POSISTION_CONTROLLER
     origarm_ros::States states_;
     origarm_ros::Command_Position position_;
     origarm_ros::Command_ABL Cmd_;
+    origarm_ros::modenumber mode_;
 };
 
 int main(int argc, char **argv)
