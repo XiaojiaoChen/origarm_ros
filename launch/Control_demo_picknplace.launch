@@ -1,0 +1,11 @@
+<launch>
+	<param name = "tp" type = "int" value = "1000"/>
+	<param name = "ts" type = "int" value = "10000"/> 
+	<param name = "repeat" type = "int" value = "2"/> 
+	<node pkg="origarm_ros" name="demo_picknplace" type="demo_picknplace"/>  
+	<node pkg="origarm_ros" name="Position_controller_node" type="Position_controller"/>
+	<node pkg="origarm_ros" name="ik_srv" type="ik.py"/>    
+    <node pkg="origarm_ros" name="ABL_controller_Node" type="ABL_controller"/> 
+    <node pkg="origarm_ros" name="spi_node" type="spi_node" output="screen"/>         
+    <node pkg="rqt_graph" name="rqt_graph_node" type="rqt_graph"/>    
+</launch>

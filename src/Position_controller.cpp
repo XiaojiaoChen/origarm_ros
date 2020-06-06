@@ -11,9 +11,9 @@ class POSISTION_CONTROLLER
   public:
     POSISTION_CONTROLLER()
     {
-      pub_ = n_.advertise<origarm_ros::Command_ABL>("Command_ABL", 300);
-      sub1_ = n_.subscribe("States", 300, &POSISTION_CONTROLLER::States, this);
-      sub2_ = n_.subscribe("Command_Position", 300, &POSISTION_CONTROLLER::Position, this);
+      pub_ = n_.advertise<origarm_ros::Command_ABL>("Cmd_ABL_ik", 100);
+      sub1_ = n_.subscribe("States", 1, &POSISTION_CONTROLLER::States, this);
+      sub2_ = n_.subscribe("Cmd_Position", 1, &POSISTION_CONTROLLER::Position, this);
       clt_ = n_.serviceClient<origarm_ros::ik>("ik");
     } 
 
@@ -35,10 +35,11 @@ class POSISTION_CONTROLLER
       Desired.request.input.pose = position_.pose; //desired;
       Desired.request.input.ABL = states_.ABL;// present
       //cout << clt_.call(Desired);
+  
       if(clt_.call(Desired))
       {
         Cmd_ = Desired.response.output;
-        cout << Desired.response.output;
+        //cout << Desired.response.output;
       }
     }
 
@@ -67,18 +68,19 @@ int main(int argc, char **argv)
 
   ROS_INFO("Ready to do POSISTION_CONTROLLER");
 
-  // ros::AsyncSpinner s(3);
-  // s.start();
+  ros::AsyncSpinner s(2);
+  s.start();
 
-  ros::Rate loop_rate(10); 
+  ros::Rate loop_rate(100); 
   
   while(ros::ok())
   {
     POSISTION_CONTROLLER_Node.pub();
-    ros::spinOnce();
+    //ros::spinOnce();
     loop_rate.sleep();
   }
-  
+
+  ros::waitForShutdown();
 
   return 0;
 }
