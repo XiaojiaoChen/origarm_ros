@@ -31,7 +31,7 @@ class ik_solver:
         rospy.init_node('ik_srv')
         s = rospy.Service('ik', ik, self.handle_ik_srv)
 
-        rospy.Subscriber("Command_ABL", Command_ABL, self.update_ABL)
+        rospy.Subscriber("Cmd_ABL_joy", Command_ABL, self.update_ABL)
 
         rospy.spin()
 
@@ -247,9 +247,9 @@ class ik_solver:
                 # string type
                 # initial value for 9 SEG
                 x0 = [
-                    seg[0].A*2, seg[0].B, 2*seg[0].L, 
-                    seg[2].A*2, seg[2].B, 2*seg[2].L, 
-                    seg[4].A*2, seg[4].B, 2*seg[4].L
+                    self.seg[0].A*2, self.seg[0].B, 2*self.seg[0].L, 
+                    self.seg[2].A*2, self.seg[2].B, 2*self.seg[2].L, 
+                    self.seg[4].A*2, self.seg[4].B, 2*self.seg[4].L
                 ]
                
                 x0_rosenbrock = np.array(x0).astype('float64')

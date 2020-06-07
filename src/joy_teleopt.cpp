@@ -655,6 +655,8 @@ Eigen::Vector3f FKtrans(float a[], float b[], float l[], int size)
 	posy = T(1,3);
 	posz = T(2,3);
 
+	
+
 	pos << posx,
 		   posy,
 		   posz;
@@ -758,7 +760,9 @@ void writeXYZ3(int joystickFLag)
 		int s = 3;
 		segx_ = FKtrans(segAlpha_, segBeta_, segLength_, s)(0);
 		segy_ = FKtrans(segAlpha_, segBeta_, segLength_, s)(1);	
-		segz_ = FKtrans(segAlpha_, segBeta_, segLength_, s)(2);			
+		segz_ = FKtrans(segAlpha_, segBeta_, segLength_, s)(2);	
+
+		//printf("%f\n", segx_, segy_, segz_);		
 	}
 
 	segx_ = CONSTRAIN(segx_, x_min, x_max);
