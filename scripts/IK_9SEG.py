@@ -16,6 +16,8 @@ class ik_solver:
     def __init__(self):
         self.seg = 0
         self.pts = [0,0,0]
+        self.A = 0
+        self.N = 0
         self.ik_srv_setup()
 
     def handle_ik_srv(self, req):
@@ -44,6 +46,7 @@ class ik_solver:
                     self.seg[4].A*2, self.seg[4].B, 2*self.seg[4].L
                 ]
         self.pts = self.position(x0)
+        self.N, self.A = self.forwarding_orientation(x0)
         print('update')
         print(self.pts)
 
@@ -205,14 +208,15 @@ class ik_solver:
                                 -sin(a1) * sin(a2) * sin(b1) * sin(b2) - sin(a1) * sin(a2) * cos(b1) * cos(b2) + cos(
                             a1) * cos(
                             a2)) * sin(a3) * cos(b3) - n[2],
-                        (l1-l2)/100,
-                        (l2-l3)/100
+                        (l1-l2)/10,
+                        (l2-l3)/10,
+                        1 / 3 * (((2 * a1 - pi * 2 / 4) / (pi * 2 / 4)) ** 2 + (
+                                    (2 * a2 - pi * 2 / 4) / (pi * 2 / 4)) ** 2 + (
+                                            (2 * a3 - pi * 2 / 4) / (pi * 2 / 4)) ** 2) / 200,
+                        1/3*((b1-b2)**2+(b1-b3)**2+(b3-b2)**2)/200,
                         ]
                 )
-                # 1 / 3 * (((2 * a1 - pi * 2 / 4) / (pi * 2 / 4)) ** 2 + (
-                #                     (2 * a2 - pi * 2 / 4) / (pi * 2 / 4)) ** 2 + (
-                #                             (2 * a3 - pi * 2 / 4) / (pi * 2 / 4)) ** 2) / 200,
-                #         1/3*((b1-b2)**2+(b1-b3)**2+(b3-b2)**2)/200,
+                
                 return result.astype('float64')
             
             def tranformation_string(res):
@@ -264,8 +268,8 @@ class ik_solver:
                 x0_rosenbrock = np.array(x0).astype('float64')
        
                 res = least_squares(string_type, x0_rosenbrock,
-                                    bounds=([-1.5*pi, -2*pi, 0.09, -1.5*pi, -2*pi, 0.09, -1.5*pi, -2*pi, 0.09],
-                                            [1.5*pi, 2*pi, 0.24, 1.5*pi, 2*pi, 0.24, 1.5*pi, 2*pi, 0.24]), ftol= 1e-2, xtol=1e-2)
+                                    bounds=([-pi, -2*pi, 0.03, -pi, -2*pi, 0.06, -pi, -2*pi, 0.06],
+                                            [pi, 2*pi, 0.16, pi, 2*pi, 0.16, pi, 2*pi, 0.16]), ftol= 1e-2, xtol=1e-2)
                 new = np.array([res.x[0], res.x[1], res.x[2],
                                 res.x[3], res.x[4], res.x[5],
                                 res.x[6], res.x[7], res.x[8]
@@ -306,9 +310,12 @@ class ik_solver:
         # a1 a2 a3 b1 b2 b3 l1 l2 l3
         print('z',pts.z)   
         pts = [self.pts[0]+pts.x, self.pts[1]+pts.y, self.pts[2]+pts.z]
+        self.pts = pts
         quat = [quat.x, quat.y, quat.z, quat.w]
 
-        n, a = self.quat_transform(quat)
+        # n, a = self.quat_transform(quat)
+        n = self.N
+        a = self.A
         
         self.desired = test_square(pts, a, n)
 
@@ -343,15 +350,15 @@ class ik_solver:
         b3 = float(x[7])
         lm3 = float(x[8])
 
-        if a1 == 0:
+        if -1e-4<a1 < 1e-4:
             l1 = lm1
         else:
             l1 = 2*lm1*a1/sin(a1/2)
-        if a2 == 0:
+        if -1e-4<a2 < 1e-4:
             l2 = lm2
         else:
             l2 = 2*lm2*a2/sin(a2/2)
-        if a3 == 0:
+        if -1e-4<a3 < 1e-4:
             l3 = lm3
         else:
             l3 = 2*lm3*a3/sin(a3/2)
@@ -427,8 +434,90 @@ class ik_solver:
         #         )
         return position
 
-    def outputPressure(self):
-        1
+    def forwarding_orientation(self, x):
+        a1 = x[0]
+        a2 = x[2]
+        a3 = x[4]
+        b1 = x[1]
+        b2 = x[3]
+        b3 = x[5]
+        R1 = np.array(
+            [[-(1 - cos(a3)) * (-(1 - cos(a1)) * (-(1 - cos(a2)) * sin(b2) ** 2 + 1) * sin(b1) * cos(b1) - (1 - cos(a2)) * (
+                        -(1 - cos(a1)) * cos(b1) ** 2 + 1) * sin(b2) * cos(b2) - sin(a1) * sin(a2) * sin(b2) * cos(
+                b1)) * sin(b3) * cos(b3) + (-(1 - cos(a3)) * cos(b3) ** 2 + 1) * (
+                          (1 - cos(a1)) * (1 - cos(a2)) * sin(b1) * sin(b2) * cos(b1) * cos(b2) + (
+                              -(1 - cos(a1)) * cos(b1) ** 2 + 1) * (-(1 - cos(a2)) * cos(b2) ** 2 + 1) - sin(a1) * sin(
+                      a2) * cos(b1) * cos(b2)) - (-(1 - cos(a1)) * sin(a2) * sin(b1) * sin(b2) * cos(b1) + (
+                        -(1 - cos(a1)) * cos(b1) ** 2 + 1) * sin(a2) * cos(b2) + sin(a1) * cos(a2) * cos(b1)) * sin(
+                a3) * cos(b3),
+              - (1 - cos(a3)) * ((1 - cos(a1)) * (1 - cos(a2)) * sin(b1) * sin(b2) * cos(b1) * cos(b2) + (
+                        -(1 - cos(a1)) * cos(b1) ** 2 + 1) * (-(1 - cos(a2)) * cos(b2) ** 2 + 1) - sin(a1) * sin(a2) * cos(
+                b1) * cos(b2)) * sin(b3) * cos(b3) + (-(1 - cos(a3)) * sin(b3) ** 2 + 1) * (
+                          -(1 - cos(a1)) * (-(1 - cos(a2)) * sin(b2) ** 2 + 1) * sin(b1) * cos(b1) - (1 - cos(a2)) * (
+                              -(1 - cos(a1)) * cos(b1) ** 2 + 1) * sin(b2) * cos(b2) - sin(a1) * sin(a2) * sin(b2) * cos(
+                      b1)) - (-(1 - cos(a1)) * sin(a2) * sin(b1) * sin(b2) * cos(b1) + (
+                        -(1 - cos(a1)) * cos(b1) ** 2 + 1) * sin(a2) * cos(b2) + sin(a1) * cos(a2) * cos(b1)) * sin(
+                a3) * sin(b3),
+              (-(1 - cos(a1)) * (-(1 - cos(a2)) * sin(b2) ** 2 + 1) * sin(b1) * cos(b1) - (1 - cos(a2)) * (
+                          -(1 - cos(a1)) * cos(b1) ** 2 + 1) * sin(b2) * cos(b2) - sin(a1) * sin(a2) * sin(b2) * cos(
+                  b1)) * sin(a3) * sin(b3) + (-(1 - cos(a1)) * sin(a2) * sin(b1) * sin(b2) * cos(b1) + (
+                        -(1 - cos(a1)) * cos(b1) ** 2 + 1) * sin(a2) * cos(b2) + sin(a1) * cos(a2) * cos(b1)) * cos(a3) + (
+                          (1 - cos(a1)) * (1 - cos(a2)) * sin(b1) * sin(b2) * cos(b1) * cos(b2) + (
+                              -(1 - cos(a1)) * cos(b1) ** 2 + 1) * (-(1 - cos(a2)) * cos(b2) ** 2 + 1) - sin(a1) * sin(
+                      a2) * cos(b1) * cos(b2)) * sin(a3) * cos(b3)],
+             [-(1 - cos(a3)) * ((1 - cos(a1)) * (1 - cos(a2)) * sin(b1) * sin(b2) * cos(b1) * cos(b2) + (
+                            -(1 - cos(a1)) * sin(b1) ** 2 + 1) * (-(1 - cos(a2)) * sin(b2) ** 2 + 1) - sin(a1) * sin(
+                    a2) * sin(b1) * sin(b2)) * sin(b3) * cos(b3) + (-(1 - cos(a3)) * cos(b3) ** 2 + 1) * (
+                          -(1 - cos(a1)) * (-(1 - cos(a2)) * cos(b2) ** 2 + 1) * sin(b1) * cos(b1) - (1 - cos(a2)) * (
+                              -(1 - cos(a1)) * sin(b1) ** 2 + 1) * sin(b2) * cos(b2) - sin(a1) * sin(a2) * sin(b1) * cos(
+                      b2)) - (-(1 - cos(a1)) * sin(a2) * sin(b1) * cos(b1) * cos(b2) + (
+                            -(1 - cos(a1)) * sin(b1) ** 2 + 1) * sin(a2) * sin(b2) + sin(a1) * sin(b1) * cos(a2)) * sin(
+                    a3) * cos(b3),
+              - (1 - cos(a3)) * (
+                          -(1 - cos(a1)) * (-(1 - cos(a2)) * cos(b2) ** 2 + 1) * sin(b1) * cos(b1) - (1 - cos(a2)) * (
+                              -(1 - cos(a1)) * sin(b1) ** 2 + 1) * sin(b2) * cos(b2) - sin(a1) * sin(a2) * sin(b1) * cos(
+                      b2)) * sin(b3) * cos(b3) + (-(1 - cos(a3)) * sin(b3) ** 2 + 1) * (
+                          (1 - cos(a1)) * (1 - cos(a2)) * sin(b1) * sin(b2) * cos(b1) * cos(b2) + (
+                              -(1 - cos(a1)) * sin(b1) ** 2 + 1) * (-(1 - cos(a2)) * sin(b2) ** 2 + 1) - sin(a1) * sin(
+                      a2) * sin(b1) * sin(b2)) - (-(1 - cos(a1)) * sin(a2) * sin(b1) * cos(b1) * cos(b2) + (
+                            -(1 - cos(a1)) * sin(b1) ** 2 + 1) * sin(a2) * sin(b2) + sin(a1) * sin(b1) * cos(a2)) * sin(
+                    a3) * sin(b3),
+              (-(1 - cos(a1)) * (-(1 - cos(a2)) * cos(b2) ** 2 + 1) * sin(b1) * cos(b1) - (1 - cos(a2)) * (
+                          -(1 - cos(a1)) * sin(b1) ** 2 + 1) * sin(b2) * cos(b2) - sin(a1) * sin(a2) * sin(b1) * cos(
+                  b2)) * sin(a3) * cos(b3) + (-(1 - cos(a1)) * sin(a2) * sin(b1) * cos(b1) * cos(b2) + (
+                            -(1 - cos(a1)) * sin(b1) ** 2 + 1) * sin(a2) * sin(b2) + sin(a1) * sin(b1) * cos(a2)) * cos(
+                    a3) + ((1 - cos(a1)) * (1 - cos(a2)) * sin(b1) * sin(b2) * cos(b1) * cos(b2) + (
+                            -(1 - cos(a1)) * sin(b1) ** 2 + 1) * (-(1 - cos(a2)) * sin(b2) ** 2 + 1) - sin(a1) * sin(
+                    a2) * sin(b1) * sin(b2)) * sin(a3) * sin(b3)],
+             [-(1 - cos(a3)) * ((1 - cos(a2)) * sin(a1) * sin(b2) * cos(b1) * cos(b2) - (
+                            -(1 - cos(a2)) * sin(b2) ** 2 + 1) * sin(a1) * sin(b1) - sin(a2) * sin(b2) * cos(a1)) * sin(
+                    b3) * cos(b3) + (-(1 - cos(a3)) * cos(b3) ** 2 + 1) * (
+                          (1 - cos(a2)) * sin(a1) * sin(b1) * sin(b2) * cos(b2) - (-(1 - cos(a2)) * cos(b2) ** 2 + 1) * sin(
+                      a1) * cos(b1) - sin(a2) * cos(a1) * cos(b2)) - (
+                          -sin(a1) * sin(a2) * sin(b1) * sin(b2) - sin(a1) * sin(a2) * cos(b1) * cos(b2) + cos(a1) * cos(
+                      a2)) * sin(a3) * cos(b3),
+              - (1 - cos(a3)) * (
+                          (1 - cos(a2)) * sin(a1) * sin(b1) * sin(b2) * cos(b2) - (-(1 - cos(a2)) * cos(b2) ** 2 + 1) * sin(
+                      a1) * cos(b1) - sin(a2) * cos(a1) * cos(b2)) * sin(b3) * cos(b3) + (
+                          -(1 - cos(a3)) * sin(b3) ** 2 + 1) * (
+                          (1 - cos(a2)) * sin(a1) * sin(b2) * cos(b1) * cos(b2) - (-(1 - cos(a2)) * sin(b2) ** 2 + 1) * sin(
+                      a1) * sin(b1) - sin(a2) * sin(b2) * cos(a1)) - (
+                          -sin(a1) * sin(a2) * sin(b1) * sin(b2) - sin(a1) * sin(a2) * cos(b1) * cos(b2) + cos(a1) * cos(
+                      a2)) * sin(a3) * sin(b3),
+              (-sin(a1) * sin(a2) * sin(b1) * sin(b2) - sin(a1) * sin(a2) * cos(b1) * cos(b2) + cos(a1) * cos(a2)) * cos(
+                    a3) + (
+                          (1 - cos(a2)) * sin(a1) * sin(b1) * sin(b2) * cos(b2) - (-(1 - cos(a2)) * cos(b2) ** 2 + 1) * sin(
+                      a1) * cos(b1) - sin(a2) * cos(a1) * cos(b2)) * sin(a3) * cos(b3) + (
+                          (1 - cos(a2)) * sin(a1) * sin(b2) * cos(b1) * cos(b2) - (-(1 - cos(a2)) * sin(b2) ** 2 + 1) * sin(
+                      a1) * sin(b1) - sin(a2) * sin(b2) * cos(a1)) * sin(a3) * sin(b3)]]
+        )
+        N1 = [R1[0][0],R1[1][0],R1[2][0]]
+        A1 = [R1[0][2],R1[1][2],R1[2][2]]
+        #N1 = [1, 0, 0]
+        #A1 = [0, 0, 1]
+        #print(R1)
+
+        return N1, A1
 
 if __name__ == '__main__':
     try:
