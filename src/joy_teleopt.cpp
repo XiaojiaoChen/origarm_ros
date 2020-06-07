@@ -24,7 +24,10 @@
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 using Eigen::Matrix4f;
+using Eigen::Matrix3f;
 using Eigen::Vector3f;
+using Eigen::VectorXf;
+using Eigen::Quaternionf;
 
 using namespace std;
 
@@ -112,7 +115,11 @@ float y = 0;
 float z = 0.055;
 float segx_ = 0;
 float segy_ = 0;
-float segz_ = 0.055;
+float segz_ = 0;
+float segqx_ = 1;
+float segqy_ = 0;
+float segqz_ = 0;
+float segqw_ = 1;
 float segx = 0;
 float segy = 0;
 float segz = 0.055;
@@ -626,10 +633,12 @@ Eigen::Vector3f FKtrans(float a[], float b[], float l[], int size)
 {
 	Matrix4f T = Matrix4f::Identity();
 	Matrix4f Tr;
-	Vector3f pos;
+	Matrix3f R;
+	VectorXf pos;
 	float posx;
 	float posy;
 	float posz;
+	Quaternionf q;
 
 	for (int i = 0; i < size; i++)
 	{
@@ -655,12 +664,19 @@ Eigen::Vector3f FKtrans(float a[], float b[], float l[], int size)
 	posy = T(1,3);
 	posz = T(2,3);
 
-	
+	R = T.block<3,3>(0,0);
+	q = R;
+
+	printf("%s\n", "FK");
 
 	pos << posx,
 		   posy,
-		   posz;
-
+		   posz,
+		   q.x(),
+		   q.y(),
+		   q.z(),
+		   q.w();
+	
 	return pos;
 }
 
@@ -728,7 +744,7 @@ void writeXYZ3(int joystickFLag)
 {
 	if (joystickFLag == 1)
 	{
-		if (joyRx > 0.05)
+		/*if (joyRx > 0.05)
 		{
 			segx_ = segx_ + x_scale;
 		}
@@ -753,21 +769,149 @@ void writeXYZ3(int joystickFLag)
 		else if (joyLy < -0.05)
 		{		
 			segz_ = segz_ - z_scale;	
+		}*/
+
+		if (joyRx > 0.05)
+		{
+			segx_ = x_scale;
+		}
+		else if (joyRx < -0.05)
+		{		
+			segx_ = - x_scale;		
+		}
+
+		if (joyRy > 0.05)
+		{
+			segy_ =  y_scale;	
+		}			
+		else if (joyRy < -0.05)
+		{
+			segy_ = - y_scale;			
+		}
+		
+		if (joyLy > 0.05)
+		{
+			segz_ =  z_scale;
+		}			
+		else if (joyLy < -0.05)
+		{		
+			segz_ = - z_scale;	
 		}
 	}
 	else if (joystickFLag == 0)
 	{
-		int s = 3;
+		/*int s = 3;
 		segx_ = FKtrans(segAlpha_, segBeta_, segLength_, s)(0);
 		segy_ = FKtrans(segAlpha_, segBeta_, segLength_, s)(1);	
 		segz_ = FKtrans(segAlpha_, segBeta_, segLength_, s)(2);	
+		segqx_ = FKtrans(segAlpha_, segBeta_, segLength_, s)(3);
+		segqy_ = FKtrans(segAlpha_, segBeta_, segLength_, s)(4);	
+		segqz_ = FKtrans(segAlpha_, segBeta_, segLength_, s)(5);
+		segqw_ = FKtrans(segAlpha_, segBeta_, segLength_, s)(6);*/
+		Matrix4f T = Matrix4f::Identity();
+		Matrix4f Tr;
+		Matrix3f R;
+	
+		Quaternionf q;
+		float a[3];
+		float b[3];
+		float l[3];
 
-		//printf("%f\n", segx_, segy_, segz_);		
+		for (int i = 0; i < 3; i++)
+		{
+			a[i] = segAlpha_[i];
+			b[i] = segBeta_[i];
+			l[i] = segLength_[i];
+		}
+
+		for (int i = 0; i < 3; i++)
+		{
+			if (abs(a[i]) < 1e-4)
+			{	
+				Tr << cos(b[i]), -sin(b[i]), 0,    0,
+			  	  	  sin(b[i]),  cos(b[i]), 0,    0,
+			  			  	  0,  		  0, 1, l[i],
+			  			  	  0,		  0, 0,	   1;
+			}
+			else
+			{
+				Tr << cos(b[i])*cos(a[i]), -sin(b[i]),  cos(b[i])*sin(a[i]), (l[i]*cos(b[i])*(1-cos(a[i])))/a[i],
+			  	  	  sin(b[i])*cos(a[i]),  cos(b[i]),  sin(b[i])*sin(a[i]), (l[i]*sin(b[i])*(1-cos(a[i])))/a[i],
+			  			   	   -sin(a[i]),  		0, 			  cos(a[i]), 				 l[i]*sin(a[i])/a[i],
+			  					        0,			0,					  0,								   1;
+			}
+		
+			T  = T*Tr;
+		}
+
+		/*segx_ = T(0,3);
+		segy_ = T(1,3);
+		segz_ = T(2,3);*/
+
+		/*float b1 = b[0];
+		float b2 = b[1];
+		float b3 = b[2];
+		float lm1 = l[0];
+		float lm2 = l[1];
+		float lm3 = l[2];
+
+		segx_ = -(1 - cos(a[0])) * (
+                            -lm3 * (1 - cos(a[1])) * (1 - cos(a[2])) * sin(b2) * cos(b2) * cos(b3) / a[2] + lm3 * (
+                                1 - cos(a[2])) * (
+                                    -(1 - cos(a[1])) * sin(b2) * sin(b2) + 1) * sin(b3) / a[2] + lm3 * sin(a[1]) * sin(a[2]) * sin(
+                        b2) / a[2] + lm2 * (1 - cos(a[1])) * sin(b2) / a[1]) * sin(b[0]) * cos(b[0]) + (
+                            -(1 - cos(a[0])) * cos(b[0])*cos(b[0]) + 1) * (
+                            -lm3 * (1 - cos(a[1])) * (1 - cos(a[2])) * sin(b2) * sin(b3) * cos(b2) / a[2] + lm3 * (
+                                1 - cos(a[2])) * (
+                                    -(1 - cos(a[1])) * cos(b2)*cos(b2) + 1) * cos(b3) / a[2] + lm3 * sin(a[1]) * sin(a[2]) * cos(
+                        b2) / a[2] + lm2 * (1 - cos(a[1])) * cos(b2) / a[1]) + (
+                            -lm3 * (1 - cos(a[2])) * sin(a[1]) * sin(b2) * sin(b3) / a[2] - lm3 * (1 - cos(a[2])) * sin(a[1]) * cos(
+                        b2) * cos(b3) / a[2] + lm3 * ((1 - cos(a[1])) * (-sin(b2)*sin(b2) - cos(b2)*cos(b2)) + 1) * sin(
+                        a[2]) / a[2] + lm2 * sin(a[1]) / a[1]) * sin(a[0]) * cos(b[0]) + lm1 * (1 - cos(a[0])) * cos(b[0]) / a[0];
+
+        segy_ = - (1 - cos(a[0])) * (
+                            -lm3 * (1 - cos(a[1])) * (1 - cos(a[2])) * sin(b2) * sin(b3) * cos(b2) / a[2] + lm3 * (
+                                1 - cos(a[2])) * (
+                                    -(1 - cos(a[1])) * cos(b2)*cos(b2) + 1) * cos(b3) / a[2] + lm3 * sin(a[1]) * sin(a[2]) * cos(
+                        b2) / a[2] + lm2 * (1 - cos(a[1])) * cos(b2) / a[1]) * sin(b[0]) * cos(b[0]) + (
+                            -(1 - cos(a[0])) * sin(b[0])*sin(b[0]) + 1) * (
+                            -lm3 * (1 - cos(a[1])) * (1 - cos(a[2])) * sin(b2) * cos(b2) * cos(b3) / a[2] + lm3 * (
+                                1 - cos(a[2])) * (
+                                    -(1 - cos(a[1])) * sin(b2)*sin(b2) + 1) * sin(b3) / a[2] + lm3 * sin(a[1]) * sin(a[2]) * sin(
+                        b2) / a[2] + lm2 * (1 - cos(a[1])) * sin(b2) / a[1]) + (
+                            -lm3 * (1 - cos(a[2])) * sin(a[1]) * sin(b2) * sin(b3) / a[2] - lm3 * (1 - cos(a[2])) * sin(a[1]) * cos(
+                        b2) * cos(b3) / a[2] + lm3 * ((1 - cos(a[1])) * (-sin(b2)*sin(b2) - cos(b2)*cos(b2)) + 1) * sin(
+                        a[2]) / a[2] + lm2 * sin(a[1]) / a[1]) * sin(a[0]) * sin(b1) + lm1 * (1 - cos(a[0])) * sin(b[0]) / a[0];
+
+
+        segz_ = ((1 - cos(a[0])) * (-sin(b[0])*sin(b[0])- cos(b[0])*cos(b[0])) + 1) * (
+                            -lm3 * (1 - cos(a[2])) * sin(a[1]) * sin(b2) * sin(b3) / a[2] - lm3 * (1 - cos(a[2])) * sin(a[1]) * cos(
+                        b2) * cos(b3) / a[2] + lm3 * ((1 - cos(a[1])) * (-sin(b2)*sin(b2) - cos(b2)*cos(b2)) + 1) * sin(
+                        a[2]) / a[2] + lm2 * sin(a[1]) / a[1]) - (
+                            -lm3 * (1 - cos(a[1])) * (1 - cos(a[2])) * sin(b2) * sin(b3) * cos(b2) / a[2] + lm3 * (
+                                1 - cos(a[2])) * (
+                                    -(1 - cos(a[1])) * cos(b2)*cos(b2) + 1) * cos(b3) / a[2] + lm3 * sin(a[1]) * sin(a[2]) * cos(
+                        b2) / a[2] + lm2 * (1 - cos(a[1])) * cos(b2) / a[1]) * sin(a[0]) * cos(b1) - (
+                            -lm3 * (1 - cos(a[1])) * (1 - cos(a[2])) * sin(b2) * cos(b2) * cos(b3) / a[2] + lm3 * (
+                                1 - cos(a[2])) * (
+                                    -(1 - cos(a[1])) * sin(b2)*sin(b2) + 1) * sin(b3) / a[2] + lm3 * sin(a[1]) * sin(a[2]) * sin(
+                        b2) / a[2] + lm2 * (1 - cos(a[1])) * sin(b2) / a[1]) * sin(a[0]) * sin(b[0]) + lm1 * sin(a[0]) / a[0];*/
+
+		R = T.block<3,3>(0,0);
+
+		//printf("%f, %f\r\n, %f, %f\r\n, %f, %f\r\n", R(0,0), R(0,2), R(1,0),R(1,2), R(2,0), R(2,2));
+
+		q = R;
+	
+		segqx_ = q.x();
+		segqy_ = q.y();	
+		segqz_ = q.z();
+		segqw_ = q.w();				
 	}
 
 	segx_ = CONSTRAIN(segx_, x_min, x_max);
 	segy_ = CONSTRAIN(segy_, y_min, y_max);
-	segz_ = CONSTRAIN(segz_, z_min6, z_max6);
+	segz_ = CONSTRAIN(segz_, -z_max6, z_max6);
 }
 
 void writeXYZ9(int joystickFLag)
@@ -831,6 +975,7 @@ void Init_parameter()
 	for (int i = 0; i < 3; i++)
 	{
 		segLength_[i] = 0.055*3;
+		//segLength_[i] = 0;
 	}
 
 	//for Write Opening
@@ -935,7 +1080,7 @@ int main(int argc, char **argv)
 
 			segx_ = 0;
 			segy_ = 0;
-			segz_ = 0.055*6; 
+			segz_ = 0; 
 
 			segx = 0;
 			segy = 0;
@@ -1026,8 +1171,10 @@ int main(int argc, char **argv)
 			Cmd_Position.pose.position.x = segx_;
 			Cmd_Position.pose.position.y = segy_;
 			Cmd_Position.pose.position.z = segz_;
-			Cmd_Position.pose.orientation.x = 1;
-			Cmd_Position.pose.orientation.w = 1;
+			Cmd_Position.pose.orientation.x = segqx_;
+			Cmd_Position.pose.orientation.y = segqy_;
+			Cmd_Position.pose.orientation.z = segqz_;
+			Cmd_Position.pose.orientation.w = segqw_;
 
 			pub3.publish(Cmd_Position);	
 		}

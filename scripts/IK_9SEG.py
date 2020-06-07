@@ -15,6 +15,7 @@ import traceback
 class ik_solver:
     def __init__(self):
         self.seg = 0
+        self.pts = [0,0,0]
         self.ik_srv_setup()
 
     def handle_ik_srv(self, req):
@@ -37,6 +38,14 @@ class ik_solver:
 
     def update_ABL(self, ABL):
         self.seg = ABL.segment
+        x0 = [
+                    self.seg[0].A*2, self.seg[0].B, 2*self.seg[0].L, 
+                    self.seg[2].A*2, self.seg[2].B, 2*self.seg[2].L, 
+                    self.seg[4].A*2, self.seg[4].B, 2*self.seg[4].L
+                ]
+        self.pts = self.position(x0)
+        print('update')
+        print(self.pts)
 
     def inverse_kinematic(self, pts, quat, seg, mode):
         def test_square(dst, a, n):  # a1 a2 a3 b1 b2 b3 r1 r2 r3
@@ -239,9 +248,7 @@ class ik_solver:
                 for i in range(1,9):
                     re.segment[i].A = 0
                     re.segment[i].B = 0
-                    re.segment[i].L = 0.055
-
-                print (re.segment)   
+                    re.segment[i].L = 0.055 
 
             elif mode.modeNumber == 4:
                 # string type
@@ -251,6 +258,8 @@ class ik_solver:
                     self.seg[2].A*2, self.seg[2].B, 2*self.seg[2].L, 
                     self.seg[4].A*2, self.seg[4].B, 2*self.seg[4].L
                 ]
+
+                # print(x0)
                
                 x0_rosenbrock = np.array(x0).astype('float64')
        
@@ -272,8 +281,14 @@ class ik_solver:
                     re.segment[i].A = 0
                     re.segment[i].B = 0
                     re.segment[i].L = 0.055
+                self.seg = re.segment
                 # Display the forward result #
-                # print(self.position(result))
+                print('IK')
+
+                print('pts',pts)
+                print('',self.position(result))
+                print('x0',x0)
+                print('result',result)
 
                 # Display the result directly
                 # print(np.degrees(result[0]))
@@ -289,7 +304,8 @@ class ik_solver:
             return re
 
         # a1 a2 a3 b1 b2 b3 l1 l2 l3
-        pts = [pts.x, pts.y, pts.z]
+        print('z',pts.z)   
+        pts = [self.pts[0]+pts.x, self.pts[1]+pts.y, self.pts[2]+pts.z]
         quat = [quat.x, quat.y, quat.z, quat.w]
 
         n, a = self.quat_transform(quat)
@@ -300,65 +316,116 @@ class ik_solver:
 
     def quat_transform(self, qua): # alpha beta gamma
         R1 = Rotation.from_quat(qua).as_matrix()
-        # N1 = [R1[0][0],R1[1][0],R1[2][0]]
-        # A1 = [R1[0][2],R1[1][2],R1[2][2]]
-        N1 = [1, 0, 0]
-        A1 = [0, 0, 1]
-
+        N1 = [R1[0][0],R1[1][0],R1[2][0]]
+        A1 = [R1[0][2],R1[1][2],R1[2][2]]
+        #N1 = [1, 0, 0]
+        #A1 = [0, 0, 1]
+        #print(R1)
 
         return N1, A1
-    def position(self, result):
-        a1 = result[0]
-        a2 = result[3]
-        a3 = result[6]
-        b1 = result[1]
-        b2 = result[4]
-        b3 = result[7]
-        lm1 = result[2]
-        lm2 = result[5]
-        lm3 = result[8]
-        
+    def position(self, x):
+        # a1 = result[0]
+        # a2 = result[3]
+        # a3 = result[6]
+        # b1 = result[1]
+        # b2 = result[4]
+        # b3 = result[7]
+        # lm1 = result[2]
+        # lm2 = result[5]
+        # lm3 = result[8]
+        a1 = float(x[0])
+        b1 = float(x[1])
+        lm1 = float(x[2])
+        a2 = float(x[3])
+        b2 = float(x[4])
+        lm2 = float(x[5])
+        a3 = float(x[6])
+        b3 = float(x[7])
+        lm3 = float(x[8])
+
+        if a1 == 0:
+            l1 = lm1
+        else:
+            l1 = 2*lm1*a1/sin(a1/2)
+        if a2 == 0:
+            l2 = lm2
+        else:
+            l2 = 2*lm2*a2/sin(a2/2)
+        if a3 == 0:
+            l3 = lm3
+        else:
+            l3 = 2*lm3*a3/sin(a3/2)
         position = np.array(
-                    [-(1 - cos(a1)) * (
-                            -lm3 * (1 - cos(a2)) * (1 - cos(a3)) * sin(b2) * cos(b2) * cos(b3) / a3 + lm3 * (
-                                1 - cos(a3)) * (
-                                    -(1 - cos(a2)) * sin(b2) ** 2 + 1) * sin(b3) / a3 + lm3 * sin(a2) * sin(a3) * sin(
-                        b2) / a3 + lm2 * (1 - cos(a2)) * sin(b2) / a2) * sin(b1) * cos(b1) + (
-                            -(1 - cos(a1)) * cos(b1) ** 2 + 1) * (
-                            -lm3 * (1 - cos(a2)) * (1 - cos(a3)) * sin(b2) * sin(b3) * cos(b2) / a3 + lm3 * (
-                                1 - cos(a3)) * (
-                                    -(1 - cos(a2)) * cos(b2) ** 2 + 1) * cos(b3) / a3 + lm3 * sin(a2) * sin(a3) * cos(
-                        b2) / a3 + lm2 * (1 - cos(a2)) * cos(b2) / a2) + (
-                            -lm3 * (1 - cos(a3)) * sin(a2) * sin(b2) * sin(b3) / a3 - lm3 * (1 - cos(a3)) * sin(a2) * cos(
-                        b2) * cos(b3) / a3 + lm3 * ((1 - cos(a2)) * (-sin(b2) ** 2 - cos(b2) ** 2) + 1) * sin(
-                        a3) / a3 + lm2 * sin(a2) / a2) * sin(a1) * cos(b1) + lm1 * (1 - cos(a1)) * cos(b1) / a1,
-                    - (1 - cos(a1)) * (
-                            -lm3 * (1 - cos(a2)) * (1 - cos(a3)) * sin(b2) * sin(b3) * cos(b2) / a3 + lm3 * (
-                                1 - cos(a3)) * (
-                                    -(1 - cos(a2)) * cos(b2) ** 2 + 1) * cos(b3) / a3 + lm3 * sin(a2) * sin(a3) * cos(
-                        b2) / a3 + lm2 * (1 - cos(a2)) * cos(b2) / a2) * sin(b1) * cos(b1) + (
-                            -(1 - cos(a1)) * sin(b1) ** 2 + 1) * (
-                            -lm3 * (1 - cos(a2)) * (1 - cos(a3)) * sin(b2) * cos(b2) * cos(b3) / a3 + lm3 * (
-                                1 - cos(a3)) * (
-                                    -(1 - cos(a2)) * sin(b2) ** 2 + 1) * sin(b3) / a3 + lm3 * sin(a2) * sin(a3) * sin(
-                        b2) / a3 + lm2 * (1 - cos(a2)) * sin(b2) / a2) + (
-                            -lm3 * (1 - cos(a3)) * sin(a2) * sin(b2) * sin(b3) / a3 - lm3 * (1 - cos(a3)) * sin(a2) * cos(
-                        b2) * cos(b3) / a3 + lm3 * ((1 - cos(a2)) * (-sin(b2) ** 2 - cos(b2) ** 2) + 1) * sin(
-                        a3) / a3 + lm2 * sin(a2) / a2) * sin(a1) * sin(b1) + lm1 * (1 - cos(a1)) * sin(b1) / a1,
-                    ((1 - cos(a1)) * (-sin(b1) ** 2 - cos(b1) ** 2) + 1) * (
-                            -lm3 * (1 - cos(a3)) * sin(a2) * sin(b2) * sin(b3) / a3 - lm3 * (1 - cos(a3)) * sin(a2) * cos(
-                        b2) * cos(b3) / a3 + lm3 * ((1 - cos(a2)) * (-sin(b2) ** 2 - cos(b2) ** 2) + 1) * sin(
-                        a3) / a3 + lm2 * sin(a2) / a2) - (
-                            -lm3 * (1 - cos(a2)) * (1 - cos(a3)) * sin(b2) * sin(b3) * cos(b2) / a3 + lm3 * (
-                                1 - cos(a3)) * (
-                                    -(1 - cos(a2)) * cos(b2) ** 2 + 1) * cos(b3) / a3 + lm3 * sin(a2) * sin(a3) * cos(
-                        b2) / a3 + lm2 * (1 - cos(a2)) * cos(b2) / a2) * sin(a1) * cos(b1) - (
-                            -lm3 * (1 - cos(a2)) * (1 - cos(a3)) * sin(b2) * cos(b2) * cos(b3) / a3 + lm3 * (
-                                1 - cos(a3)) * (
-                                    -(1 - cos(a2)) * sin(b2) ** 2 + 1) * sin(b3) / a3 + lm3 * sin(a2) * sin(a3) * sin(
-                        b2) / a3 + lm2 * (1 - cos(a2)) * sin(b2) / a2) * sin(a1) * sin(b1) + lm1 * sin(a1) / a1]
-                )
-        print(position)
+            [lm1 * sin(a1 / 2) * cos(b1) - (1 - cos(a1)) * (
+                    lm2 * sin(a2 / 2) * sin(b2) - lm3 * (1 - cos(a2)) * sin(a3 / 2) * sin(b2) * cos(b2) * cos(
+                b3) + lm3 * (-(1 - cos(a2)) * sin(b2) ** 2 + 1) * sin(a3 / 2) * sin(b3) + lm3 * sin(a2) * sin(
+                b2) * cos(
+                a3 / 2)) * sin(b1) * cos(b1) + (-(1 - cos(a1)) * cos(b1) ** 2 + 1) * (
+                        lm2 * sin(a2 / 2) * cos(b2) - lm3 * (1 - cos(a2)) * sin(a3 / 2) * sin(b2) * sin(b3) * cos(
+                    b2) + lm3 * (-(1 - cos(a2)) * cos(b2) ** 2 + 1) * sin(a3 / 2) * cos(b3) + lm3 * sin(a2) * cos(
+                    a3 / 2) * cos(b2)) + (
+                        lm2 * cos(a2 / 2) - lm3 * sin(a2) * sin(a3 / 2) * sin(b2) * sin(b3) - lm3 * sin(a2) * sin(
+                    a3 / 2) * cos(b2) * cos(b3) + lm3 * cos(a2) * cos(a3 / 2)) * sin(a1) * cos(b1),
+                lm1 * sin(a1 / 2) * sin(b1) - (1 - cos(a1)) * (
+                        lm2 * sin(a2 / 2) * cos(b2) - lm3 * (1 - cos(a2)) * sin(a3 / 2) * sin(b2) * sin(b3) * cos(
+                    b2) + lm3 * (-(1 - cos(a2)) * cos(b2) ** 2 + 1) * sin(a3 / 2) * cos(b3) + lm3 * sin(a2) * cos(
+                    a3 / 2) * cos(b2)) * sin(b1) * cos(b1) + (-(1 - cos(a1)) * sin(b1) ** 2 + 1) * (
+                        lm2 * sin(a2 / 2) * sin(b2) - lm3 * (1 - cos(a2)) * sin(a3 / 2) * sin(b2) * cos(b2) * cos(
+                    b3) + lm3 * (-(1 - cos(a2)) * sin(b2) ** 2 + 1) * sin(a3 / 2) * sin(b3) + lm3 * sin(a2) * sin(
+                    b2) * cos(a3 / 2)) + (
+                        lm2 * cos(a2 / 2) - lm3 * sin(a2) * sin(a3 / 2) * sin(b2) * sin(b3) - lm3 * sin(a2) * sin(
+                    a3 / 2) * cos(b2) * cos(b3) + lm3 * cos(a2) * cos(a3 / 2)) * sin(a1) * sin(b1),
+                lm1 * cos(a1 / 2) + (
+                            lm2 * cos(a2 / 2) - lm3 * sin(a2) * sin(a3 / 2) * sin(b2) * sin(b3) - lm3 * sin(
+                        a2) * sin(
+                        a3 / 2) * cos(b2) * cos(b3) + lm3 * cos(a2) * cos(a3 / 2)) * cos(a1) - (
+                        lm2 * sin(a2 / 2) * sin(b2) - lm3 * (1 - cos(a2)) * sin(a3 / 2) * sin(b2) * cos(b2) * cos(
+                    b3) + lm3 * (-(1 - cos(a2)) * sin(b2) ** 2 + 1) * sin(a3 / 2) * sin(b3) + lm3 * sin(a2) * sin(
+                    b2) * cos(a3 / 2)) * sin(a1) * sin(b1) - (
+                        lm2 * sin(a2 / 2) * cos(b2) - lm3 * (1 - cos(a2)) * sin(a3 / 2) * sin(b2) * sin(b3) * cos(
+                    b2) + lm3 * (-(1 - cos(a2)) * cos(b2) ** 2 + 1) * sin(a3 / 2) * cos(b3) + lm3 * sin(a2) * cos(
+                    a3 / 2) * cos(b2)) * sin(a1) * cos(b1)])
+        # position = np.array(
+        #             [-(1 - cos(a1)) * (
+        #                     -lm3 * (1 - cos(a2)) * (1 - cos(a3)) * sin(b2) * cos(b2) * cos(b3) / a3 + lm3 * (
+        #                         1 - cos(a3)) * (
+        #                             -(1 - cos(a2)) * sin(b2) ** 2 + 1) * sin(b3) / a3 + lm3 * sin(a2) * sin(a3) * sin(
+        #                 b2) / a3 + lm2 * (1 - cos(a2)) * sin(b2) / a2) * sin(b1) * cos(b1) + (
+        #                     -(1 - cos(a1)) * cos(b1) ** 2 + 1) * (
+        #                     -lm3 * (1 - cos(a2)) * (1 - cos(a3)) * sin(b2) * sin(b3) * cos(b2) / a3 + lm3 * (
+        #                         1 - cos(a3)) * (
+        #                             -(1 - cos(a2)) * cos(b2) ** 2 + 1) * cos(b3) / a3 + lm3 * sin(a2) * sin(a3) * cos(
+        #                 b2) / a3 + lm2 * (1 - cos(a2)) * cos(b2) / a2) + (
+        #                     -lm3 * (1 - cos(a3)) * sin(a2) * sin(b2) * sin(b3) / a3 - lm3 * (1 - cos(a3)) * sin(a2) * cos(
+        #                 b2) * cos(b3) / a3 + lm3 * ((1 - cos(a2)) * (-sin(b2) ** 2 - cos(b2) ** 2) + 1) * sin(
+        #                 a3) / a3 + lm2 * sin(a2) / a2) * sin(a1) * cos(b1) + lm1 * (1 - cos(a1)) * cos(b1) / a1,
+        #             - (1 - cos(a1)) * (
+        #                     -lm3 * (1 - cos(a2)) * (1 - cos(a3)) * sin(b2) * sin(b3) * cos(b2) / a3 + lm3 * (
+        #                         1 - cos(a3)) * (
+        #                             -(1 - cos(a2)) * cos(b2) ** 2 + 1) * cos(b3) / a3 + lm3 * sin(a2) * sin(a3) * cos(
+        #                 b2) / a3 + lm2 * (1 - cos(a2)) * cos(b2) / a2) * sin(b1) * cos(b1) + (
+        #                     -(1 - cos(a1)) * sin(b1) ** 2 + 1) * (
+        #                     -lm3 * (1 - cos(a2)) * (1 - cos(a3)) * sin(b2) * cos(b2) * cos(b3) / a3 + lm3 * (
+        #                         1 - cos(a3)) * (
+        #                             -(1 - cos(a2)) * sin(b2) ** 2 + 1) * sin(b3) / a3 + lm3 * sin(a2) * sin(a3) * sin(
+        #                 b2) / a3 + lm2 * (1 - cos(a2)) * sin(b2) / a2) + (
+        #                     -lm3 * (1 - cos(a3)) * sin(a2) * sin(b2) * sin(b3) / a3 - lm3 * (1 - cos(a3)) * sin(a2) * cos(
+        #                 b2) * cos(b3) / a3 + lm3 * ((1 - cos(a2)) * (-sin(b2) ** 2 - cos(b2) ** 2) + 1) * sin(
+        #                 a3) / a3 + lm2 * sin(a2) / a2) * sin(a1) * sin(b1) + lm1 * (1 - cos(a1)) * sin(b1) / a1,
+        #             ((1 - cos(a1)) * (-sin(b1) ** 2 - cos(b1) ** 2) + 1) * (
+        #                     -lm3 * (1 - cos(a3)) * sin(a2) * sin(b2) * sin(b3) / a3 - lm3 * (1 - cos(a3)) * sin(a2) * cos(
+        #                 b2) * cos(b3) / a3 + lm3 * ((1 - cos(a2)) * (-sin(b2) ** 2 - cos(b2) ** 2) + 1) * sin(
+        #                 a3) / a3 + lm2 * sin(a2) / a2) - (
+        #                     -lm3 * (1 - cos(a2)) * (1 - cos(a3)) * sin(b2) * sin(b3) * cos(b2) / a3 + lm3 * (
+        #                         1 - cos(a3)) * (
+        #                             -(1 - cos(a2)) * cos(b2) ** 2 + 1) * cos(b3) / a3 + lm3 * sin(a2) * sin(a3) * cos(
+        #                 b2) / a3 + lm2 * (1 - cos(a2)) * cos(b2) / a2) * sin(a1) * cos(b1) - (
+        #                     -lm3 * (1 - cos(a2)) * (1 - cos(a3)) * sin(b2) * cos(b2) * cos(b3) / a3 + lm3 * (
+        #                         1 - cos(a3)) * (
+        #                             -(1 - cos(a2)) * sin(b2) ** 2 + 1) * sin(b3) / a3 + lm3 * sin(a2) * sin(a3) * sin(
+        #                 b2) / a3 + lm2 * (1 - cos(a2)) * sin(b2) / a2) * sin(a1) * sin(b1) + lm1 * sin(a1) / a1]
+        #         )
+        return position
 
     def outputPressure(self):
         1
