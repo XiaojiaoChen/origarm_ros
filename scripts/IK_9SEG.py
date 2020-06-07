@@ -247,9 +247,9 @@ class ik_solver:
                 # string type
                 # initial value for 9 SEG
                 x0 = [
-                    seg[0].A*3, seg[0].B, 2*seg[0].L/seg[0].A*sin(seg[0].A*3/2), 
-                    seg[2].A*3, seg[2].B, 2*seg[2].L/seg[2].A*sin(seg[2].A*3/2), 
-                    seg[4].A*3, seg[4].B, 2*seg[4].L/seg[4].A*sin(seg[4].A*3/2)
+                    seg[0].A*2, seg[0].B, 2*seg[0].L, 
+                    seg[2].A*2, seg[2].B, 2*seg[2].L, 
+                    seg[4].A*2, seg[4].B, 2*seg[4].L
                 ]
                
                 x0_rosenbrock = np.array(x0).astype('float64')
