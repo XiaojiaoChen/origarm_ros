@@ -14,7 +14,7 @@ import traceback
 
 class ik_solver:
     def __init__(self):
-        self.init_ABL = np.array([0]*9)
+        self.seg = 0
         self.ik_srv_setup()
 
     def handle_ik_srv(self, req):
@@ -36,11 +36,7 @@ class ik_solver:
         rospy.spin()
 
     def update_ABL(self, ABL):
-        for i in range(3):
-            self.init_ABL[3*i] = ABL.segment[2*i].A*2
-            self.init_ABL[3*i+1] = ABL.segment[2*i].B
-            self.init_ABL[3*i+2] = ABL.segment[2*i].L*2
-        
+        self.seg = ABL.segment
 
     def inverse_kinematic(self, pts, quat, seg, mode):
         def test_square(dst, a, n):  # a1 a2 a3 b1 b2 b3 r1 r2 r3
@@ -99,15 +95,7 @@ class ik_solver:
                 a3 = float(x[6])
                 b3 = float(x[7])
                 lm3 = float(x[8])
-                # a1 = float(x[0])
-                # a2 = float(x[1])
-                # a3 = float(x[2])
-                # b1 = float(x[3])
-                # b2 = float(x[4])
-                # b3 = float(x[5])
-                # lm1 = float(x[6])
-                # lm2 = float(x[7])
-                # lm3 = float(x[8])
+
                 if a1 == 0:
                     l1 = lm1
                 else:
@@ -208,14 +196,14 @@ class ik_solver:
                                 -sin(a1) * sin(a2) * sin(b1) * sin(b2) - sin(a1) * sin(a2) * cos(b1) * cos(b2) + cos(
                             a1) * cos(
                             a2)) * sin(a3) * cos(b3) - n[2],
-                        1 / 3 * (((2 * a1 - pi * 2 / 4) / (pi * 2 / 4)) ** 2 + (
-                                    (2 * a2 - pi * 2 / 4) / (pi * 2 / 4)) ** 2 + (
-                                            (2 * a3 - pi * 2 / 4) / (pi * 2 / 4)) ** 2) / 200,
-                        1/3*((b1-b2)**2+(b1-b3)**2+(b3-b2)**2)/200,
                         (l1-l2)/100,
                         (l2-l3)/100
                         ]
                 )
+                # 1 / 3 * (((2 * a1 - pi * 2 / 4) / (pi * 2 / 4)) ** 2 + (
+                #                     (2 * a2 - pi * 2 / 4) / (pi * 2 / 4)) ** 2 + (
+                #                             (2 * a3 - pi * 2 / 4) / (pi * 2 / 4)) ** 2) / 200,
+                #         1/3*((b1-b2)**2+(b1-b3)**2+(b3-b2)**2)/200,
                 return result.astype('float64')
             
             def tranformation_string(res):
@@ -258,13 +246,13 @@ class ik_solver:
             elif mode.modeNumber == 4:
                 # string type
                 # initial value for 9 SEG
-                # x0 = [
-                #     seg[0].A*3, seg[0].B, seg[0].L/seg[0].A*sin(seg[0].A*3/2), 
-                #     seg[3].A*3, seg[3].B, seg[3].L/seg[3].A*sin(seg[3].A*3/2), 
-                #     seg[6].A*3, seg[6].B, seg[6].L/seg[6].A*sin(seg[6].A*3/2)
-                # ]
+                x0 = [
+                    seg[0].A*3, seg[0].B, 2*seg[0].L/seg[0].A*sin(seg[0].A*3/2), 
+                    seg[2].A*3, seg[2].B, 2*seg[2].L/seg[2].A*sin(seg[2].A*3/2), 
+                    seg[4].A*3, seg[4].B, 2*seg[4].L/seg[4].A*sin(seg[4].A*3/2)
+                ]
                
-                x0_rosenbrock = np.array(self.init_ABL).astype('float64')
+                x0_rosenbrock = np.array(x0).astype('float64')
        
                 res = least_squares(string_type, x0_rosenbrock,
                                     bounds=([-1.5*pi, -2*pi, 0.09, -1.5*pi, -2*pi, 0.09, -1.5*pi, -2*pi, 0.09],
