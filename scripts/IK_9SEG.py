@@ -272,6 +272,8 @@ class ik_solver:
                     re.segment[i].A = 0
                     re.segment[i].B = 0
                     re.segment[i].L = 0.055
+                    
+                self.seg = re.segment
                 # Display the forward result #
                 # print(self.position(result))
 
