@@ -289,19 +289,13 @@ void ABLCallback(const origarm_ros::Command_ABL& msg)
 	betad   = msg.segment[0].B;
 	lengthd = msg.segment[0].L;
 
-	for (int i = 0; i < 6; i++)
+	for (int i = 0; i < 3; i++)
 	{
-		segAlphad_[i]  = msg.segment[i].A;
-		segBetad_[i]   = msg.segment[i].B;
-		segLengthd_[i] = msg.segment[i].L;
+		segAlphad_[i]  = msg.segment[int(i*2)].A;
+		segBetad_[i]   = msg.segment[int(i*2)].B;
+		segLengthd_[i] = msg.segment[int(i*2)].L;
 	}
 
-	for (int i = 0; i < 6; i++)
-	{
-		segAlphad_[i]  = CONSTRAIN(segAlphad_[i], a_min, a_max);
-		segBetad_[i]   = CONSTRAIN(segBetad_[i], b_min, b_max);
-		segLengthd_[i] = CONSTRAIN(segLengthd_[i], l_min, l_max);
-	}
 }
 
 //Joystick->ABL (joyLy->alpha, joyRx->beta, joyLT & joyRT->length)
@@ -456,9 +450,9 @@ void writeABL3(int joystickFLag)
 	{
 		for (int i = 0; i < 3; i++)
 		{
-			segAlpha_[i]  = segAlphad_[int(i*2)]*2;
-			segBeta_[i]   = segBetad_[int(i*2)];
-			segLength_[i] = segLengthd_[int(i*2)]*2;
+			segAlpha_[i]  = segAlphad_[i]*2;
+			segBeta_[i]   = segBetad_[i];
+			segLength_[i] = segLengthd_[i]*2;
 		}		
 	}
 
@@ -773,11 +767,15 @@ void writeXYZ3(int joystickFLag)
 
 		if (joyRx > 0.05)
 		{
-			segx_ = x_scale;
+			segx_ = x_scale*10;
 		}
 		else if (joyRx < -0.05)
 		{		
-			segx_ = - x_scale;		
+			segx_ = - x_scale*10;		
+		}
+		else
+		{
+			segx_ = 0;
 		}
 
 		if (joyRy > 0.05)
@@ -786,16 +784,24 @@ void writeXYZ3(int joystickFLag)
 		}			
 		else if (joyRy < -0.05)
 		{
-			segy_ = - y_scale;			
+			segy_ = - y_scale*10;			
+		}
+		else
+		{
+			segy_ = 0;
 		}
 		
 		if (joyLy > 0.05)
 		{
-			segz_ =  z_scale;
+			segz_ =  z_scale*10;
 		}			
 		else if (joyLy < -0.05)
 		{		
-			segz_ = - z_scale;	
+			segz_ = - z_scale*10;	
+		}
+		else
+		{
+			segz_ = 0;
 		}
 	}
 	else if (joystickFLag == 0)
