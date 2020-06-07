@@ -256,7 +256,7 @@ class ik_solver:
        
                 res = least_squares(string_type, x0_rosenbrock,
                                     bounds=([-1.5*pi, -2*pi, 0.09, -1.5*pi, -2*pi, 0.09, -1.5*pi, -2*pi, 0.09],
-                                            [1.5*pi, 2*pi, 0.24, 1.5*pi, 2*pi, 0.24, 1.5*pi, 2*pi, 0.24]), ftol= 1e-4, xtol=1e-4)
+                                            [1.5*pi, 2*pi, 0.24, 1.5*pi, 2*pi, 0.24, 1.5*pi, 2*pi, 0.24]), ftol= 1e-2, xtol=1e-2)
                 new = np.array([res.x[0], res.x[1], res.x[2],
                                 res.x[3], res.x[4], res.x[5],
                                 res.x[6], res.x[7], res.x[8]
