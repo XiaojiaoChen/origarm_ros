@@ -19,6 +19,7 @@ class ik_solver:
         self.A = 0
         self.N = 0
         self.flag = 0
+        self.desired = 0
         self.ik_srv_setup()
 
     def handle_ik_srv(self, req):
@@ -48,8 +49,6 @@ class ik_solver:
                 ]
         self.pts = self.position(x0)
         self.N, self.A = self.forwarding_orientation(x0)
-        if mode != 4:
-            self.flag = 0
         # print('update')
         # print(self.pts)
 
@@ -335,6 +334,7 @@ class ik_solver:
                 a = self.A
                 
                 self.desired = test_square(pts, a, n)
+                self.flag = 0
                 return self.desired
             else:
                 return self.desired
