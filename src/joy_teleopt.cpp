@@ -621,59 +621,6 @@ void WriteOpening()
 }
 
 //Joystick->XYZ (joyRx->x, joyRy->y, joyLy->z)
-
-//FK
-Eigen::Vector3f FKtrans(float a[], float b[], float l[], int size)
-{
-	Matrix4f T = Matrix4f::Identity();
-	Matrix4f Tr;
-	Matrix3f R;
-	VectorXf pos;
-	float posx;
-	float posy;
-	float posz;
-	Quaternionf q;
-
-	for (int i = 0; i < size; i++)
-	{
-		if (abs(a[i]) < 1e-4)
-		{	
-			Tr << cos(b[i]), -sin(b[i]), 0,    0,
-			  	  sin(b[i]),  cos(b[i]), 0,    0,
-			  			  0,  		  0, 1, l[i],
-			  			  0,		  0, 0,	   1;
-		}
-		else
-		{
-			Tr << cos(b[i])*cos(a[i]), -sin(b[i]),  cos(b[i])*sin(a[i]), (l[i]*cos(b[i])*(1-cos(a[i])))/a[i],
-			  	  sin(b[i])*cos(a[i]),  cos(b[i]),  sin(b[i])*sin(a[i]), (l[i]*sin(b[i])*(1-cos(a[i])))/a[i],
-			  			   -sin(a[i]),  		0, 			  cos(a[i]), 				 l[i]*sin(a[i])/a[i],
-			  					    0,			0,					  0,								   1;
-		}
-		
-		T  = T*Tr;
-	}
-
-	posx = T(0,3);
-	posy = T(1,3);
-	posz = T(2,3);
-
-	R = T.block<3,3>(0,0);
-	q = R;
-
-	printf("%s\n", "FK");
-
-	pos << posx,
-		   posy,
-		   posz,
-		   q.x(),
-		   q.y(),
-		   q.z(),
-		   q.w();
-	
-	return pos;
-}
-
 void writeXYZ1(int joystickFLag)
 {
 	if (joystickFLag == 1)
@@ -718,15 +665,7 @@ void writeXYZ1(int joystickFLag)
 			x = length*cos(beta)*(1-cos(alpha))/alpha;
 			y = length*sin(beta)*(1-cos(alpha))/alpha;
 			z = length*sin(alpha)/alpha;
-		}
-
-		/*float a[1] = {alpha};
-		float b[1] = {beta};
-		float l[1] = {length};
-		int n = 1;
-		x = FKtrans(a, b, l, n)(0);
-		y = FKtrans(a, b, l, n)(1);
-		z = FKtrans(a, b, l, n)(2);*/	
+		}	
 	}
 
 	x = CONSTRAIN(x, x_min, x_max);
@@ -806,14 +745,6 @@ void writeXYZ3(int joystickFLag)
 	}
 	else if (joystickFLag == 0)
 	{
-		/*int s = 3;
-		segx_ = FKtrans(segAlpha_, segBeta_, segLength_, s)(0);
-		segy_ = FKtrans(segAlpha_, segBeta_, segLength_, s)(1);	
-		segz_ = FKtrans(segAlpha_, segBeta_, segLength_, s)(2);	
-		segqx_ = FKtrans(segAlpha_, segBeta_, segLength_, s)(3);
-		segqy_ = FKtrans(segAlpha_, segBeta_, segLength_, s)(4);	
-		segqz_ = FKtrans(segAlpha_, segBeta_, segLength_, s)(5);
-		segqw_ = FKtrans(segAlpha_, segBeta_, segLength_, s)(6);*/
 		Matrix4f T = Matrix4f::Identity();
 		Matrix4f Tr;
 		Matrix3f R;
@@ -854,58 +785,7 @@ void writeXYZ3(int joystickFLag)
 		segy_ = T(1,3);
 		segz_ = T(2,3);*/
 
-		/*float b1 = b[0];
-		float b2 = b[1];
-		float b3 = b[2];
-		float lm1 = l[0];
-		float lm2 = l[1];
-		float lm3 = l[2];
-
-		segx_ = -(1 - cos(a[0])) * (
-                            -lm3 * (1 - cos(a[1])) * (1 - cos(a[2])) * sin(b2) * cos(b2) * cos(b3) / a[2] + lm3 * (
-                                1 - cos(a[2])) * (
-                                    -(1 - cos(a[1])) * sin(b2) * sin(b2) + 1) * sin(b3) / a[2] + lm3 * sin(a[1]) * sin(a[2]) * sin(
-                        b2) / a[2] + lm2 * (1 - cos(a[1])) * sin(b2) / a[1]) * sin(b[0]) * cos(b[0]) + (
-                            -(1 - cos(a[0])) * cos(b[0])*cos(b[0]) + 1) * (
-                            -lm3 * (1 - cos(a[1])) * (1 - cos(a[2])) * sin(b2) * sin(b3) * cos(b2) / a[2] + lm3 * (
-                                1 - cos(a[2])) * (
-                                    -(1 - cos(a[1])) * cos(b2)*cos(b2) + 1) * cos(b3) / a[2] + lm3 * sin(a[1]) * sin(a[2]) * cos(
-                        b2) / a[2] + lm2 * (1 - cos(a[1])) * cos(b2) / a[1]) + (
-                            -lm3 * (1 - cos(a[2])) * sin(a[1]) * sin(b2) * sin(b3) / a[2] - lm3 * (1 - cos(a[2])) * sin(a[1]) * cos(
-                        b2) * cos(b3) / a[2] + lm3 * ((1 - cos(a[1])) * (-sin(b2)*sin(b2) - cos(b2)*cos(b2)) + 1) * sin(
-                        a[2]) / a[2] + lm2 * sin(a[1]) / a[1]) * sin(a[0]) * cos(b[0]) + lm1 * (1 - cos(a[0])) * cos(b[0]) / a[0];
-
-        segy_ = - (1 - cos(a[0])) * (
-                            -lm3 * (1 - cos(a[1])) * (1 - cos(a[2])) * sin(b2) * sin(b3) * cos(b2) / a[2] + lm3 * (
-                                1 - cos(a[2])) * (
-                                    -(1 - cos(a[1])) * cos(b2)*cos(b2) + 1) * cos(b3) / a[2] + lm3 * sin(a[1]) * sin(a[2]) * cos(
-                        b2) / a[2] + lm2 * (1 - cos(a[1])) * cos(b2) / a[1]) * sin(b[0]) * cos(b[0]) + (
-                            -(1 - cos(a[0])) * sin(b[0])*sin(b[0]) + 1) * (
-                            -lm3 * (1 - cos(a[1])) * (1 - cos(a[2])) * sin(b2) * cos(b2) * cos(b3) / a[2] + lm3 * (
-                                1 - cos(a[2])) * (
-                                    -(1 - cos(a[1])) * sin(b2)*sin(b2) + 1) * sin(b3) / a[2] + lm3 * sin(a[1]) * sin(a[2]) * sin(
-                        b2) / a[2] + lm2 * (1 - cos(a[1])) * sin(b2) / a[1]) + (
-                            -lm3 * (1 - cos(a[2])) * sin(a[1]) * sin(b2) * sin(b3) / a[2] - lm3 * (1 - cos(a[2])) * sin(a[1]) * cos(
-                        b2) * cos(b3) / a[2] + lm3 * ((1 - cos(a[1])) * (-sin(b2)*sin(b2) - cos(b2)*cos(b2)) + 1) * sin(
-                        a[2]) / a[2] + lm2 * sin(a[1]) / a[1]) * sin(a[0]) * sin(b1) + lm1 * (1 - cos(a[0])) * sin(b[0]) / a[0];
-
-
-        segz_ = ((1 - cos(a[0])) * (-sin(b[0])*sin(b[0])- cos(b[0])*cos(b[0])) + 1) * (
-                            -lm3 * (1 - cos(a[2])) * sin(a[1]) * sin(b2) * sin(b3) / a[2] - lm3 * (1 - cos(a[2])) * sin(a[1]) * cos(
-                        b2) * cos(b3) / a[2] + lm3 * ((1 - cos(a[1])) * (-sin(b2)*sin(b2) - cos(b2)*cos(b2)) + 1) * sin(
-                        a[2]) / a[2] + lm2 * sin(a[1]) / a[1]) - (
-                            -lm3 * (1 - cos(a[1])) * (1 - cos(a[2])) * sin(b2) * sin(b3) * cos(b2) / a[2] + lm3 * (
-                                1 - cos(a[2])) * (
-                                    -(1 - cos(a[1])) * cos(b2)*cos(b2) + 1) * cos(b3) / a[2] + lm3 * sin(a[1]) * sin(a[2]) * cos(
-                        b2) / a[2] + lm2 * (1 - cos(a[1])) * cos(b2) / a[1]) * sin(a[0]) * cos(b1) - (
-                            -lm3 * (1 - cos(a[1])) * (1 - cos(a[2])) * sin(b2) * cos(b2) * cos(b3) / a[2] + lm3 * (
-                                1 - cos(a[2])) * (
-                                    -(1 - cos(a[1])) * sin(b2)*sin(b2) + 1) * sin(b3) / a[2] + lm3 * sin(a[1]) * sin(a[2]) * sin(
-                        b2) / a[2] + lm2 * (1 - cos(a[1])) * sin(b2) / a[1]) * sin(a[0]) * sin(b[0]) + lm1 * sin(a[0]) / a[0];*/
-
 		R = T.block<3,3>(0,0);
-
-		//printf("%f, %f\r\n, %f, %f\r\n, %f, %f\r\n", R(0,0), R(0,2), R(1,0),R(1,2), R(2,0), R(2,2));
 
 		q = R;
 	
@@ -920,56 +800,6 @@ void writeXYZ3(int joystickFLag)
 	segz_ = CONSTRAIN(segz_, -z_max6, z_max6);
 }
 
-void writeXYZ9(int joystickFLag)
-{
-	if (joystickFLag == 1)
-	{
-		if (joyRx > 0.05)
-		{
-			segx = segx + x_scale;
-		}
-		else if (joyRx < -0.05)
-		{		
-			segx = segx - x_scale;		
-		}
-
-		if (joyRy > 0.05)
-		{
-			segy = segy + y_scale;	
-		}			
-		else if (joyRy < -0.05)
-		{
-			segy = segy - y_scale;			
-		}
-		
-		if (joyLy > 0.05)
-		{
-			segz = segz + z_scale;
-		}			
-		else if (joyLy < -0.05)
-		{		
-			segz = segz - z_scale;	
-		}
-	}
-	else if (joystickFLag == 0)
-	{
-		int s = 9;
-		segx = FKtrans(segAlpha, segBeta, segLength, s)(0);
-		segy = FKtrans(segAlpha, segBeta, segLength, s)(1);	
-		segz = FKtrans(segAlpha, segBeta, segLength, s)(2);
-	}
-	else if (joystickFLag == 2) //XYZ3->XYZ9
-	{
-		segx = segx_;
-		segy = segy_;
-		segz = segz_;
-	}
-
-	segx = CONSTRAIN(segx, x_min, x_max);
-	segy = CONSTRAIN(segy, y_min, y_max);
-	segz = CONSTRAIN(segz, z_min6, z_max6);
-}
-
 void Init_parameter()
 {
 	//for Write ABL
@@ -981,7 +811,6 @@ void Init_parameter()
 	for (int i = 0; i < 3; i++)
 	{
 		segLength_[i] = 0.055*3;
-		//segLength_[i] = 0;
 	}
 
 	//for Write Opening
@@ -1028,12 +857,10 @@ int main(int argc, char **argv)
 				writeABL3(1);        //joystick -> ABL3
 				writeABL9(2);        //ABL3     -> ABL9
 				writeXYZ3(0);		 //ABL3     -> XYZ3
-				//writeXYZ9(2);        //XYZ3     -> XYZ9
 			}
 			else if (mode == 2)      //ABL_9 control mode
 			{
 				writeABL9(1);        //joystick -> ABL9
-				//writeXYZ9(0);        //ABL9     -> XYZ9
 			}
 			else if (mode == 3)      //XYZ_1 control mode
 			{
@@ -1044,14 +871,8 @@ int main(int argc, char **argv)
 			{
 				writeXYZ3(1);        //joystick -> XYZ3
 				writeABL3(0);        //XYZ3     -> ABL3
-				writeABL9(2);        //ABL3     -> ABL9
-				//writeXYZ9(2);        //XYZ3     -> XYZ9								
+				writeABL9(2);        //ABL3     -> ABL9					
 			}
-			/*else if (mode == 5)      //XYZ_9 control mode
-			{
-				writeXYZ9(1);        //joystick -> XYZ9
-				writeABL9(0);        //XYZ9     -> ABL9				
-			}*/
 
 			//WriteOpening();
 
@@ -1184,16 +1005,6 @@ int main(int argc, char **argv)
 
 			pub3.publish(Cmd_Position);	
 		}
-		/*else if (mode == 5)
-		{
-			Cmd_Position.pose.position.x = segx;
-			Cmd_Position.pose.position.y = segy;
-			Cmd_Position.pose.position.z = segz;
-			Cmd_Position.pose.orientation.x = 1;
-			Cmd_Position.pose.orientation.w = 1;
-
-			pub3.publish(Cmd_Position);	
-		}*/
 
 		pub4.publish(modenumber);
 		pub5.publish(segnumber);
