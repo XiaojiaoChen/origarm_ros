@@ -290,9 +290,7 @@ class ik_solver:
                 self.seg = re.segment
                 # Display the forward result #
                 print('IK')
-
-                print('pts',pts)
-                print('pts by result',self.position(result))
+                print('result error',self.position(result)-pts)
                 print('x0',x0)
                 print('result',result)
 
@@ -350,7 +348,7 @@ class ik_solver:
             
         #     self.desired = test_square(pts, a, n)
         #     return self.desired
-        # else:
+        # else:/
         #     return self.desired
 
         pts = [pts.x, pts.y, pts.z]
