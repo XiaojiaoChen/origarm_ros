@@ -312,32 +312,32 @@ class ik_solver:
         # a1 a2 a3 b1 b2 b3 l1 l2 l3
         # print('z',pts.z)   
 
-        if not self.flag:
-            pts = [pts.x, pts.y, pts.z]
-            self.pts = pts
-            quat = [quat.x, quat.y, quat.z, quat.w]
+        # if not self.flag:
+        #     pts = [pts.x, pts.y, pts.z]
+        #     self.pts = pts
+        #     quat = [quat.x, quat.y, quat.z, quat.w]
 
-            # n, a = self.quat_transform(quat)
-            n = self.N
-            a = self.A
+        #     # n, a = self.quat_transform(quat)
+        #     n = self.N
+        #     a = self.A
             
-            self.desired = test_square(pts, a, n)
-            self.flag = 1
-        elif self.flag:
-            if (pts.x != self.pts[0]) or (pts.y != self.pts[1]) or (pts.z != self.pts[2]): 
-                pts = [pts.x, pts.y, pts.z]
-                self.pts = pts
-                quat = [quat.x, quat.y, quat.z, quat.w]
+        #     self.desired = test_square(pts, a, n)
+        #     self.flag = 1
+        # elif self.flag:
+        #     if (pts.x != self.pts[0]) or (pts.y != self.pts[1]) or (pts.z != self.pts[2]): 
+        #         pts = [pts.x, pts.y, pts.z]
+        #         self.pts = pts
+        #         quat = [quat.x, quat.y, quat.z, quat.w]
 
-                # n, a = self.quat_transform(quat)
-                n = self.N
-                a = self.A
+        #         # n, a = self.quat_transform(quat)
+        #         n = self.N
+        #         a = self.A
                 
-                self.desired = test_square(pts, a, n)
-                self.flag = 0
-                return self.desired
-            else:
-                return self.desired
+        #         self.desired = test_square(pts, a, n)
+        #         self.flag = 0
+        #         return self.desired
+        #     else:
+        #         return self.desired
 
         # if pts.x != 0 or pts.y != 0 or pts.z != 0: 
         #     pts = [self.pts[0]+pts.x, self.pts[1]+pts.y, self.pts[2]+pts.z]
@@ -352,6 +352,17 @@ class ik_solver:
         #     return self.desired
         # else:
         #     return self.desired
+
+        pts = [pts.x, pts.y, pts.z]
+        self.pts = pts
+        quat = [quat.x, quat.y, quat.z, quat.w]
+
+        # n, a = self.quat_transform(quat)
+        n = self.N
+        a = self.A
+        
+        self.desired = test_square(pts, a, n)
+        return self.desired
    
 
     def quat_transform(self, qua): # alpha beta gamma
