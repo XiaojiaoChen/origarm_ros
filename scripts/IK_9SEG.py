@@ -268,8 +268,8 @@ class ik_solver:
                 x0_rosenbrock = np.array(x0).astype('float64')
        
                 res = least_squares(string_type, x0_rosenbrock,
-                                    bounds=([-pi, -2*pi, 0.03, -pi, -2*pi, 0.06, -pi, -2*pi, 0.06],
-                                            [pi, 2*pi, 0.16, pi, 2*pi, 0.16, pi, 2*pi, 0.16]), ftol= 1e-2, xtol=1e-2)
+                                    bounds=([-1.1*pi, -2*pi, 0.03, -1.1*pi, -2*pi, 0.06, -1.1*pi, -2*pi, 0.06],
+                                            [1.1*pi, 2*pi, 0.16, 1.1*pi, 2*pi, 0.16, 1.1*pi, 2*pi, 0.16]))
                 new = np.array([res.x[0], res.x[1], res.x[2],
                                 res.x[3], res.x[4], res.x[5],
                                 res.x[6], res.x[7], res.x[8]
