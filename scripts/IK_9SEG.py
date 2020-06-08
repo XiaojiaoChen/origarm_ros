@@ -220,96 +220,6 @@ class ik_solver:
                 )
                 
                 return result.astype('float64')
-
-             def string_type_onlyZ(x):
-                a1 = float(x[0])
-                b1 = float(x[1])
-                lm1 = float(x[2])
-                a2 = float(x[3])
-                b2 = float(x[4])
-                lm2 = float(x[5])
-                a3 = float(x[6])
-                b3 = float(x[7])
-                lm3 = float(x[8])
-
-                if a1 == 0:
-                    l1 = lm1
-                else:
-                    l1 = 2*lm1*a1/sin(a1/2)
-                if a2 == 0:
-                    l2 = lm2
-                else:
-                    l2 = 2*lm2*a2/sin(a2/2)
-                if a3 == 0:
-                    l3 = lm3
-                else:
-                    l3 = 2*lm3*a3/sin(a3/2)
-                result = np.array(
-                    [lm1 * sin(a1 / 2) * cos(b1) - (1 - cos(a1)) * (
-                            lm2 * sin(a2 / 2) * sin(b2) - lm3 * (1 - cos(a2)) * sin(a3 / 2) * sin(b2) * cos(b2) * cos(
-                        b3) + lm3 * (-(1 - cos(a2)) * sin(b2) ** 2 + 1) * sin(a3 / 2) * sin(b3) + lm3 * sin(a2) * sin(
-                        b2) * cos(
-                        a3 / 2)) * sin(b1) * cos(b1) + (-(1 - cos(a1)) * cos(b1) ** 2 + 1) * (
-                                lm2 * sin(a2 / 2) * cos(b2) - lm3 * (1 - cos(a2)) * sin(a3 / 2) * sin(b2) * sin(b3) * cos(
-                            b2) + lm3 * (-(1 - cos(a2)) * cos(b2) ** 2 + 1) * sin(a3 / 2) * cos(b3) + lm3 * sin(a2) * cos(
-                            a3 / 2) * cos(b2)) + (
-                                lm2 * cos(a2 / 2) - lm3 * sin(a2) * sin(a3 / 2) * sin(b2) * sin(b3) - lm3 * sin(a2) * sin(
-                            a3 / 2) * cos(b2) * cos(b3) + lm3 * cos(a2) * cos(a3 / 2)) * sin(a1) * cos(b1)-dst[0],
-                        lm1 * sin(a1 / 2) * sin(b1) - (1 - cos(a1)) * (
-                                lm2 * sin(a2 / 2) * cos(b2) - lm3 * (1 - cos(a2)) * sin(a3 / 2) * sin(b2) * sin(b3) * cos(
-                            b2) + lm3 * (-(1 - cos(a2)) * cos(b2) ** 2 + 1) * sin(a3 / 2) * cos(b3) + lm3 * sin(a2) * cos(
-                            a3 / 2) * cos(b2)) * sin(b1) * cos(b1) + (-(1 - cos(a1)) * sin(b1) ** 2 + 1) * (
-                                lm2 * sin(a2 / 2) * sin(b2) - lm3 * (1 - cos(a2)) * sin(a3 / 2) * sin(b2) * cos(b2) * cos(
-                            b3) + lm3 * (-(1 - cos(a2)) * sin(b2) ** 2 + 1) * sin(a3 / 2) * sin(b3) + lm3 * sin(a2) * sin(
-                            b2) * cos(a3 / 2)) + (
-                                lm2 * cos(a2 / 2) - lm3 * sin(a2) * sin(a3 / 2) * sin(b2) * sin(b3) - lm3 * sin(a2) * sin(
-                            a3 / 2) * cos(b2) * cos(b3) + lm3 * cos(a2) * cos(a3 / 2)) * sin(a1) * sin(b1)-dst[1],
-                        lm1 * cos(a1 / 2) + (
-                                    lm2 * cos(a2 / 2) - lm3 * sin(a2) * sin(a3 / 2) * sin(b2) * sin(b3) - lm3 * sin(
-                                a2) * sin(
-                                a3 / 2) * cos(b2) * cos(b3) + lm3 * cos(a2) * cos(a3 / 2)) * cos(a1) - (
-                                lm2 * sin(a2 / 2) * sin(b2) - lm3 * (1 - cos(a2)) * sin(a3 / 2) * sin(b2) * cos(b2) * cos(
-                            b3) + lm3 * (-(1 - cos(a2)) * sin(b2) ** 2 + 1) * sin(a3 / 2) * sin(b3) + lm3 * sin(a2) * sin(
-                            b2) * cos(a3 / 2)) * sin(a1) * sin(b1) - (
-                                lm2 * sin(a2 / 2) * cos(b2) - lm3 * (1 - cos(a2)) * sin(a3 / 2) * sin(b2) * sin(b3) * cos(
-                            b2) + lm3 * (-(1 - cos(a2)) * cos(b2) ** 2 + 1) * sin(a3 / 2) * cos(b3) + lm3 * sin(a2) * cos(
-                            a3 / 2) * cos(b2)) * sin(a1) * cos(b1)-dst[2],
-                        (-(1 - cos(a1)) * (-(1 - cos(a2)) * sin(b2) ** 2 + 1) * sin(b1) * cos(b1) - (1 - cos(a2)) * (
-                                -(1 - cos(a1)) * cos(b1) ** 2 + 1) * sin(b2) * cos(b2) - sin(a1) * sin(a2) * sin(b2) * cos(
-                            b1)) * sin(a3) * sin(b3) + (-(1 - cos(a1)) * sin(a2) * sin(b1) * sin(b2) * cos(b1) + (
-                                -(1 - cos(a1)) * cos(b1) ** 2 + 1) * sin(a2) * cos(b2) + sin(a1) * cos(a2) * cos(
-                            b1)) * cos(
-                            a3) + (
-                                (1 - cos(a1)) * (1 - cos(a2)) * sin(b1) * sin(b2) * cos(b1) * cos(b2) + (
-                                -(1 - cos(a1)) * cos(b1) ** 2 + 1) * (-(1 - cos(a2)) * cos(b2) ** 2 + 1) - sin(a1) * sin(
-                            a2) * cos(b1) * cos(b2)) * sin(a3) * cos(b3) - a[0],
-                        (-(1 - cos(a1)) * (-(1 - cos(a2)) * cos(b2) ** 2 + 1) * sin(b1) * cos(b1) - (1 - cos(a2)) * (
-                                -(1 - cos(a1)) * sin(b1) ** 2 + 1) * sin(b2) * cos(b2) - sin(a1) * sin(a2) * sin(b1) * cos(
-                            b2)) * sin(a3) * cos(b3) + (-(1 - cos(a1)) * sin(a2) * sin(b1) * cos(b1) * cos(b2) + (
-                                -(1 - cos(a1)) * sin(b1) ** 2 + 1) * sin(a2) * sin(b2) + sin(a1) * sin(b1) * cos(
-                            a2)) * cos(
-                            a3) + ((1 - cos(a1)) * (1 - cos(a2)) * sin(b1) * sin(b2) * cos(b1) * cos(b2) + (
-                                -(1 - cos(a1)) * sin(b1) ** 2 + 1) * (-(1 - cos(a2)) * sin(b2) ** 2 + 1) - sin(a1) * sin(
-                            a2) * sin(b1) * sin(b2)) * sin(a3) * sin(b3) - a[1],
-                        (-sin(a1) * sin(a2) * sin(b1) * sin(b2) - sin(a1) * sin(a2) * cos(b1) * cos(b2) + cos(a1) * cos(
-                            a2)) * cos(
-                            a3) + (
-                                (1 - cos(a2)) * sin(a1) * sin(b1) * sin(b2) * cos(b2) - (
-                                -(1 - cos(a2)) * cos(b2) ** 2 + 1) * sin(
-                            a1) * cos(b1) - sin(a2) * cos(a1) * cos(b2)) * sin(a3) * cos(b3) + (
-                                (1 - cos(a2)) * sin(a1) * sin(b2) * cos(b1) * cos(b2) - (
-                                -(1 - cos(a2)) * sin(b2) ** 2 + 1) * sin(
-                            a1) * sin(b1) - sin(a2) * sin(b2) * cos(a1)) * sin(a3) * sin(b3) - a[2]
-                        (l1-l2)/10,
-                        (l2-l3)/10,
-                        1 / 3 * (((2 * a1 - pi * 2 / 4) / (pi * 2 / 4)) ** 2 + (
-                                    (2 * a2 - pi * 2 / 4) / (pi * 2 / 4)) ** 2 + (
-                                            (2 * a3 - pi * 2 / 4) / (pi * 2 / 4)) ** 2) / 200,
-                        1/3*((b1-b2)**2+(b1-b3)**2+(b3-b2)**2)/200,
-                        ]
-                )
-                
-                return result.astype('float64')
             
             def tranformation_string(res):
                 result = [0]*len(res)
@@ -360,7 +270,7 @@ class ik_solver:
                 x0_rosenbrock = np.array(x0).astype('float64')
        
                 res = least_squares(string_type, x0_rosenbrock,
-                                    bounds=([-1.1*pi, -2*pi, 0.06, -1.1*pi, -2*pi, 0.06, -1.1*pi, -2*pi, 0.06],
+                                    bounds=([-1.1*pi, -2*pi, 0.03, -1.1*pi, -2*pi, 0.06, -1.1*pi, -2*pi, 0.06],
                                             [1.1*pi, 2*pi, 0.16, 1.1*pi, 2*pi, 0.16, 1.1*pi, 2*pi, 0.16]))
                 new = np.array([res.x[0], res.x[1], res.x[2],
                                 res.x[3], res.x[4], res.x[5],
