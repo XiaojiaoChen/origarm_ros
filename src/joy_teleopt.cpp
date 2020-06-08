@@ -295,7 +295,6 @@ void ABLCallback(const origarm_ros::Command_ABL& msg)
 		segBetad_[i]   = msg.segment[int(i*2)].B;
 		segLengthd_[i] = msg.segment[int(i*2)].L;
 	}
-
 }
 
 //Joystick->ABL (joyLy->alpha, joyRx->beta, joyLT & joyRT->length)
@@ -677,7 +676,7 @@ void writeXYZ3(int joystickFLag)
 {
 	if (joystickFLag == 1)
 	{
-		/*if (joyRx > 0.05)
+		if (joyRx > 0.05)
 		{
 			segx_ = segx_ + x_scale;
 		}
@@ -702,9 +701,9 @@ void writeXYZ3(int joystickFLag)
 		else if (joyLy < -0.05)
 		{		
 			segz_ = segz_ - z_scale;	
-		}*/
+		}
 
-		if (joyRx > 0.05)
+		/*if (joyRx > 0.05)
 		{
 			segx_ = x_scale*10;
 		}
@@ -741,7 +740,7 @@ void writeXYZ3(int joystickFLag)
 		else
 		{
 			segz_ = 0;
-		}
+		}*/
 	}
 	else if (joystickFLag == 0)
 	{
@@ -772,21 +771,20 @@ void writeXYZ3(int joystickFLag)
 			}
 			else
 			{
-				Tr << cos(b[i])*cos(a[i]), -sin(b[i]),  cos(b[i])*sin(a[i]), (l[i]*cos(b[i])*(1-cos(a[i])))/a[i],
-			  	  	  sin(b[i])*cos(a[i]),  cos(b[i]),  sin(b[i])*sin(a[i]), (l[i]*sin(b[i])*(1-cos(a[i])))/a[i],
-			  			   	   -sin(a[i]),  		0, 			  cos(a[i]), 				 l[i]*sin(a[i])/a[i],
-			  					        0,			0,					  0,								   1;
+			  	Tr << cos(b[i])*cos(b[i])*(cos(a[i])-1)+1,       0.5*sin(2*b[i])*(cos(a[i])-1),  cos(b[i])*sin(a[i]), (l[i]*cos(b[i])*(1-cos(a[i])))/a[i],
+			  	  	        0.5*sin(2*b[i])*(cos(a[i])-1), sin(b[i])*sin(b[i])*(cos(a[i])-1)+1,  sin(b[i])*sin(a[i]), (l[i]*sin(b[i])*(1-cos(a[i])))/a[i],
+			  			   	         -sin(a[i])*cos(b[i]),  		      -sin(a[i])*sin(b[i]), 		   cos(a[i]), 				  l[i]*sin(a[i])/a[i],
+			  					                        0,			                         0,					   0,								    1;
 			}
 		
 			T  = T*Tr;
 		}
 
-		/*segx_ = T(0,3);
+		segx_ = T(0,3);
 		segy_ = T(1,3);
-		segz_ = T(2,3);*/
+		segz_ = T(2,3);
 
 		R = T.block<3,3>(0,0);
-
 		q = R;
 	
 		segqx_ = q.x();
@@ -907,7 +905,7 @@ int main(int argc, char **argv)
 
 			segx_ = 0;
 			segy_ = 0;
-			segz_ = 0; 
+			segz_ = 0.055*6; 
 
 			segx = 0;
 			segy = 0;

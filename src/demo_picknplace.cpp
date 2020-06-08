@@ -14,22 +14,22 @@ int ts = 10000;  //time sleep at each step
 int repeat = 2; //cycles A->B, B->A
 int flag = 1;
 
-int mode_ = 3;
+int mode_ = 4;
 int segment_ = 0;
 
 float demo_x;
 float demo_y;
-float demo_z = length0;
+float demo_z = length0*6;
 
 float xorigin = 0.0;
 float yorigin = 0.0;
-float zorigin = length0;
+float zorigin = length0*6;
 
-float xa = 0.06;
+float xa = 0.02;
 float ya = 0.02;
 float za = 0.07;
 
-float xb = -0.04;
+float xb = -0.02;
 float yb = 0.04;
 float zb = 0.05;
 

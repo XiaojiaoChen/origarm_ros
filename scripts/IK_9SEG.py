@@ -47,8 +47,8 @@ class ik_solver:
                 ]
         self.pts = self.position(x0)
         self.N, self.A = self.forwarding_orientation(x0)
-        # print('update')
-        # print(self.pts)
+        print('update')
+        print(self.pts)
 
     def inverse_kinematic(self, pts, quat, seg, mode):
         def test_square(dst, a, n):  # a1 a2 a3 b1 b2 b3 r1 r2 r3
@@ -287,12 +287,12 @@ class ik_solver:
                     re.segment[i].L = 0.055
                 self.seg = re.segment
                 # Display the forward result #
+                print('IK')
 
-                # print('IK')
-                # print('desired pts',pts)
-                # print('position new',self.position(result))
-                # print('x0',x0)
-                # print('result',result)
+                print('pts',pts)
+                print('',self.position(result))
+                print('x0',x0)
+                print('result',result)
 
                 # Display the result directly
                 # print(np.degrees(result[0]))
@@ -308,11 +308,9 @@ class ik_solver:
             return re
 
         # a1 a2 a3 b1 b2 b3 l1 l2 l3
-
+        print('z',pts.z)   
         pts = [self.pts[0]+pts.x, self.pts[1]+pts.y, self.pts[2]+pts.z]
         self.pts = pts
-        if self.pts == pts:
-            return self.desired
         quat = [quat.x, quat.y, quat.z, quat.w]
 
         # n, a = self.quat_transform(quat)
@@ -333,6 +331,15 @@ class ik_solver:
 
         return N1, A1
     def position(self, x):
+        # a1 = result[0]
+        # a2 = result[3]
+        # a3 = result[6]
+        # b1 = result[1]
+        # b2 = result[4]
+        # b3 = result[7]
+        # lm1 = result[2]
+        # lm2 = result[5]
+        # lm3 = result[8]
         a1 = float(x[0])
         b1 = float(x[1])
         lm1 = float(x[2])
