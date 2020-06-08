@@ -18,6 +18,7 @@ class ik_solver:
         self.pts = [0,0,0]
         self.A = 0
         self.N = 0
+        self.flag = 0
         self.ik_srv_setup()
 
     def handle_ik_srv(self, req):
@@ -47,8 +48,8 @@ class ik_solver:
                 ]
         self.pts = self.position(x0)
         self.N, self.A = self.forwarding_orientation(x0)
-        print('update')
-        print(self.pts)
+        # print('update')
+        # print(self.pts)
 
     def inverse_kinematic(self, pts, quat, seg, mode):
         def test_square(dst, a, n):  # a1 a2 a3 b1 b2 b3 r1 r2 r3
@@ -290,7 +291,7 @@ class ik_solver:
                 print('IK')
 
                 print('pts',pts)
-                print('',self.position(result))
+                print('pts by result',self.position(result))
                 print('x0',x0)
                 print('result',result)
 
@@ -309,6 +310,20 @@ class ik_solver:
 
         # a1 a2 a3 b1 b2 b3 l1 l2 l3
         # print('z',pts.z)   
+        if mode != 4:
+            self.flag = 0
+
+        if not self.flag:
+            pts = [pts.x, pts.y, pts.z]
+            self.pts = pts
+            quat = [quat.x, quat.y, quat.z, quat.w]
+
+            # n, a = self.quat_transform(quat)
+            n = self.N
+            a = self.A
+            
+            self.desired = test_square(pts, a, n)
+            self.flag = 1
 
         if (pts.x != self.pts[0]) or (pts.y != self.pts[1]) or (pts.z != self.pts[2]): 
             pts = [pts.x, pts.y, pts.z]
@@ -341,13 +356,14 @@ class ik_solver:
 
     def quat_transform(self, qua): # alpha beta gamma
         R1 = Rotation.from_quat(qua).as_matrix()
-        N1 = [R1[0][0],R1[1][0],R1[2][0]]
-        A1 = [R1[0][2],R1[1][2],R1[2][2]]
-        #N1 = [1, 0, 0]
-        #A1 = [0, 0, 1]
+        # N1 = [R1[0][0],R1[1][0],R1[2][0]]
+        # A1 = [R1[0][2],R1[1][2],R1[2][2]]
+        N1 = [1, 0, 0]
+        A1 = [0, 0, 1]
         #print(R1)
 
         return N1, A1
+
     def position(self, x):
         # a1 = result[0]
         # a2 = result[3]
