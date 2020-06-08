@@ -311,6 +311,7 @@ class ik_solver:
         # print('z',pts.z)   
 
         if pts.x != 0 or pts.y != 0 or pts.z != 0: 
+            pts = [pts.x, pts.y, pts.z]
             self.pts = pts
             quat = [quat.x, quat.y, quat.z, quat.w]
 
