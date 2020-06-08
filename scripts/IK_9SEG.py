@@ -223,7 +223,7 @@ class ik_solver:
                 result = [0]*len(res)
                 for i in range(int(len(res)/3)):
                     if 0 > res[3*i]:
-                        result[3*i] = -res[3*i]
+                        result[3*i] = -res[3*i ]
                         result[3*i+1] = res[3*i+1] + pi
                     elif 0 < res[3*i]:
                         result[3*i] = res[3*i]  # a1
@@ -310,7 +310,7 @@ class ik_solver:
         # a1 a2 a3 b1 b2 b3 l1 l2 l3
         # print('z',pts.z)   
 
-        if pts.x != 0 or pts.y != 0 or pts.z != 0: 
+        if pts.x != self.pts.x or pts.y != self.pts.y or pts.z != self.pts.z: 
             pts = [pts.x, pts.y, pts.z]
             self.pts = pts
             quat = [quat.x, quat.y, quat.z, quat.w]
