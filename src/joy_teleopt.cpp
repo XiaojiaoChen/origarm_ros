@@ -702,45 +702,6 @@ void writeXYZ3(int joystickFLag)
 		{		
 			segz_ = segz_ - z_scale;	
 		}
-
-		/*if (joyRx > 0.05)
-		{
-			segx_ = x_scale*10;
-		}
-		else if (joyRx < -0.05)
-		{		
-			segx_ = - x_scale*10;		
-		}
-		else
-		{
-			segx_ = 0;
-		}
-
-		if (joyRy > 0.05)
-		{
-			segy_ =  y_scale;	
-		}			
-		else if (joyRy < -0.05)
-		{
-			segy_ = - y_scale*10;			
-		}
-		else
-		{
-			segy_ = 0;
-		}
-		
-		if (joyLy > 0.05)
-		{
-			segz_ =  z_scale*10;
-		}			
-		else if (joyLy < -0.05)
-		{		
-			segz_ = - z_scale*10;	
-		}
-		else
-		{
-			segz_ = 0;
-		}*/
 	}
 	else if (joystickFLag == 0)
 	{
