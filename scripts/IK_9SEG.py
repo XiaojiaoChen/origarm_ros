@@ -308,18 +308,21 @@ class ik_solver:
             return re
 
         # a1 a2 a3 b1 b2 b3 l1 l2 l3
-        print('z',pts.z)   
-        pts = [self.pts[0]+pts.x, self.pts[1]+pts.y, self.pts[2]+pts.z]
-        self.pts = pts
-        quat = [quat.x, quat.y, quat.z, quat.w]
+        # print('z',pts.z)   
+        if pts.x != 0 or pts.y != 0 or pts.z != 0: 
+            pts = [self.pts[0]+pts.x, self.pts[1]+pts.y, self.pts[2]+pts.z]
+            self.pts = pts
+            quat = [quat.x, quat.y, quat.z, quat.w]
 
-        # n, a = self.quat_transform(quat)
-        n = self.N
-        a = self.A
-        
-        self.desired = test_square(pts, a, n)
-
-        return self.desired
+            # n, a = self.quat_transform(quat)
+            n = self.N
+            a = self.A
+            
+            self.desired = test_square(pts, a, n)
+            return self.desired
+        else:
+            return self.desired
+   
 
     def quat_transform(self, qua): # alpha beta gamma
         R1 = Rotation.from_quat(qua).as_matrix()
