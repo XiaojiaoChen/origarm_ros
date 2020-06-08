@@ -310,7 +310,7 @@ class ik_solver:
         # a1 a2 a3 b1 b2 b3 l1 l2 l3
         # print('z',pts.z)   
 
-        if pts.x != self.pts.x or pts.y != self.pts.y or pts.z != self.pts.z: 
+        if (pts.x != self.pts[0]) or (pts.y != self.pts[1]) or (pts.z != self.pts[2]): 
             pts = [pts.x, pts.y, pts.z]
             self.pts = pts
             quat = [quat.x, quat.y, quat.z, quat.w]
