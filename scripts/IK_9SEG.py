@@ -354,7 +354,7 @@ class ik_solver:
         #     return self.desired
 
         pts = [pts.x, pts.y, pts.z]
-        self.pts = pts
+        
         quat = [quat.x, quat.y, quat.z, quat.w]
 
         # n, a = self.quat_transform(quat)
