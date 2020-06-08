@@ -48,6 +48,8 @@ class ik_solver:
                 ]
         self.pts = self.position(x0)
         self.N, self.A = self.forwarding_orientation(x0)
+        if mode != 4:
+            self.flag = 0
         # print('update')
         # print(self.pts)
 
@@ -310,8 +312,6 @@ class ik_solver:
 
         # a1 a2 a3 b1 b2 b3 l1 l2 l3
         # print('z',pts.z)   
-        if mode != 4:
-            self.flag = 0
 
         if not self.flag:
             pts = [pts.x, pts.y, pts.z]
@@ -324,7 +324,7 @@ class ik_solver:
             
             self.desired = test_square(pts, a, n)
             self.flag = 1
-        else if self.flag:
+        elif self.flag:
             if (pts.x != self.pts[0]) or (pts.y != self.pts[1]) or (pts.z != self.pts[2]): 
                 pts = [pts.x, pts.y, pts.z]
                 self.pts = pts
