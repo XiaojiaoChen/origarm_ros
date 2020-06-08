@@ -115,7 +115,7 @@ float y = 0;
 float z = 0.055;
 float segx_ = 0;
 float segy_ = 0;
-float segz_ = 0;
+float segz_ = 0.055;
 float segqx_ = 1;
 float segqy_ = 0;
 float segqz_ = 0;
@@ -795,7 +795,7 @@ void writeXYZ3(int joystickFLag)
 
 	segx_ = CONSTRAIN(segx_, x_min, x_max);
 	segy_ = CONSTRAIN(segy_, y_min, y_max);
-	segz_ = CONSTRAIN(segz_, -z_max6, z_max6);
+	segz_ = CONSTRAIN(segz_, z_min6, z_max6);
 }
 
 void Init_parameter()
@@ -808,7 +808,7 @@ void Init_parameter()
 
 	for (int i = 0; i < 3; i++)
 	{
-		segLength_[i] = 0.055*3;
+		segLength_[i] = 0.055*2;
 	}
 
 	//for Write Opening
