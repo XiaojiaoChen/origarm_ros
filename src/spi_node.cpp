@@ -268,7 +268,7 @@ int main(int argc, char* argv[])
 	int ret = 0;
 	int fd;
 
-	/*parse_opts(argc, argv);
+	parse_opts(argc, argv);
 
 	//fd = open(device, O_RDWR);
 	fd = open(std::string("/dev/spidev0.0").c_str(), O_RDWR);	
@@ -304,7 +304,7 @@ int main(int argc, char* argv[])
 
 	printf("spi mode: 0x%x\n", mode);
 	printf("bits per word: %d\n", bits);
-	printf("max speed: %d Hz (%d KHz)\n", speed, speed/1000);*/
+	printf("max speed: %d Hz (%d KHz)\n", speed, speed/1000);
 
 
   int t = 0;
@@ -323,7 +323,7 @@ int main(int argc, char* argv[])
 		
 		//transfer(fd, (uint8_t *)(&commandData[0][0]), (uint8_t *)(&sensorData[0][0]), sizeof(sensorData));
 		
-		//transfer(fd, (uint8_t *)(&commandData), (uint8_t *)(&sensorData), sizeof(SPIDATA_R));
+		transfer(fd, (uint8_t *)(&commandData), (uint8_t *)(&sensorData), sizeof(SPIDATA_R));
 
 
 		/*for (int i = 0; i < seg; i++)
