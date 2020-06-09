@@ -916,7 +916,7 @@ int main(int argc, char **argv)
 				OpeningResult[i] = 0;
 			}
 			
-			ROS_INFO("status: %d", status);	
+			//ROS_INFO("status: %d", status);	
 		}
 		
 		origarm_ros::Command_ABL Cmd_ABL;	
