@@ -14,6 +14,7 @@
 using namespace std;
 
 int ts = 10000;  //time sleep at each step
+int repeat = 5;
 
 int mode_in;
 float x_in, y_in, z_in;
@@ -44,6 +45,15 @@ int main(int argc, char **argv)
 		ts = 10000;
 	}
 
+	if (nh.getParam("repeat", repeat))
+	{
+		ROS_INFO("repeat is set to %d\r\n", repeat);
+	}
+	else
+	{
+		repeat = 10;
+	}
+
 	ros::Publisher  pub1 = nh.advertise<origarm_ros::Command_ABL>("Cmd_ABL_joy", 100);
 	ros::Publisher  pub2 = nh.advertise<origarm_ros::modenumber>("modenumber", 100);	
 
@@ -52,7 +62,7 @@ int main(int argc, char **argv)
 		origarm_ros::modenumber moden;
 		origarm_ros::Command_ABL Command_ABL_demo;
 
-		if (!inFile.eof())
+		if (!inFile.eof() && repeat > 0)
 		{				
 			inFile>>mode_in>>x_in>>y_in>>z_in>>a_in[0]>>b_in[0]>>l_in[0]>>a_in[1]>>b_in[1]>>l_in[1]>>a_in[2]>>b_in[2]>>l_in[2]>>a_in[3]>>b_in[3]>>l_in[3]>>a_in[4]>>b_in[4]>>l_in[4]>>a_in[5]>>b_in[5]>>l_in[5];
 
@@ -77,6 +87,27 @@ int main(int argc, char **argv)
 			
 			printf("Receiving: %d, %f, %f, %f, %f, %f, %f\n", mode_in, x_in, y_in, z_in, a_in[0], b_in[0], l_in[0]);
 			usleep(ts);								
+		}
+		else if (repeat > 0)
+		{
+			inFile.clear();
+			printf("eof:%d\n", inFile.eof());
+			inFile.seekg(0, ios::beg);
+			repeat = repeat - 1;
+		}
+		else
+		{
+			moden.modeNumber = 2;
+
+			for (int i = 0; i < 9; i++)
+			{
+				Command_ABL_demo.segment[i].A = 0;
+				Command_ABL_demo.segment[i].B = 0;
+				Command_ABL_demo.segment[i].L = 0.055;
+			}
+			
+			pub1.publish(Command_ABL_demo);
+			pub2.publish(moden);
 		}
 
 		r.sleep();
