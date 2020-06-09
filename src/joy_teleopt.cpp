@@ -5,6 +5,7 @@
 #include <math.h>
 #include <time.h>
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,6 +31,9 @@ using Eigen::VectorXf;
 using Eigen::Quaternionf;
 
 using namespace std;
+
+//save into files
+int save_flag = 0;
 
 //keyboard mapping
 int key_no[10];
@@ -246,6 +250,16 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 	else if (joyRB == 1 && last_joyRB == 0)
 	{
 		mode = 4;
+	}
+
+	//save into files
+	if (joyLB == 1 && last_joyLB == 0)
+	{
+		save_flag = 1;
+	}
+	else
+	{
+		save_flag = 0;
 	}
 
 	//only when joyRT && joyLT pressed together, joystick starts to control
@@ -786,6 +800,9 @@ int main(int argc, char **argv)
 	ros::NodeHandle nh;	
 	ros::Rate r(100);     //Hz
 
+	ofstream savedata;
+    savedata.open("/home/lijing/catkin_ws/src/origarm_ros/savedata.txt", ios::app);
+
 	ros::Subscriber sub1 = nh.subscribe("joy", 1, joyCallback);	
 	ros::Subscriber sub2 = nh.subscribe("key_number", 1, keyCallback);
 	ros::Subscriber sub3 = nh.subscribe("Cmd_ABL_ik",1, ABLCallback);
@@ -925,7 +942,7 @@ int main(int argc, char **argv)
 			pub1.publish(Cmd_ABL);
 		}
 		else if (mode == 2)
-		{			
+		{
 			for (int i = 0; i < 6; i++)
 			{
 				Cmd_ABL.segment[i].A = segAlpha[i];
@@ -965,6 +982,45 @@ int main(int argc, char **argv)
 			pub3.publish(Cmd_Position);	
 		}
 
+		//write into files
+		if (save_flag == 1)
+		{
+			if (mode == 1)
+			{
+				savedata<<1<<" "<<10000<<" "<<10000<<" "<<10000<<" "<<segAlpha_[0]/2<<" "<<segBeta_[0]<<" "<<segLength_[0]/2
+						   <<" "<<segAlpha_[0]/2<<" "<<segBeta_[0]<<" "<<segLength_[0]/2
+						   <<" "<<segAlpha_[1]/2<<" "<<segBeta_[1]<<" "<<segLength_[1]/2
+						   <<" "<<segAlpha_[1]/2<<" "<<segBeta_[1]<<" "<<segLength_[1]/2
+						   <<" "<<segAlpha_[2]/2<<" "<<segBeta_[2]<<" "<<segLength_[2]/2
+						   <<" "<<segAlpha_[2]/2<<" "<<segBeta_[2]<<" "<<segLength_[2]/2
+						   <<endl;
+				printf("%s\n", "write mode 1 data");
+			}			
+			else if (mode == 2)
+			{				
+				savedata<<2<<" "<<10000<<" "<<10000<<" "<<10000<<" "<<segAlpha[0]<<" "<<segBeta[0]<<" "<<segLength[0]
+						   <<" "<<segAlpha[1]<<" "<<segBeta[1]<<" "<<segLength[1]
+						   <<" "<<segAlpha[2]<<" "<<segBeta[2]<<" "<<segLength[2]
+						   <<" "<<segAlpha[3]<<" "<<segBeta[3]<<" "<<segLength[3]
+						   <<" "<<segAlpha[4]<<" "<<segBeta[4]<<" "<<segLength[4]
+						   <<" "<<segAlpha[5]<<" "<<segBeta[5]<<" "<<segLength[5]
+						   <<endl;
+
+				printf("%s\n", "write mode 2 data");
+			}
+			else if (mode == 4)
+			{
+				savedata<<4<<" "<<segx_<<" "<<segy_<<" "<<segz_<<" "<<segAlphad_[0]<<" "<<segBetad_[0]<<" "<<segLengthd_[0]
+						   <<" "<<segAlphad_[0]<<" "<<segBetad_[0]<<" "<<segLengthd_[0]
+						   <<" "<<segAlphad_[1]<<" "<<segBetad_[1]<<" "<<segLengthd_[1]
+						   <<" "<<segAlphad_[1]<<" "<<segBetad_[1]<<" "<<segLengthd_[1]
+						   <<" "<<segAlphad_[2]<<" "<<segBetad_[2]<<" "<<segLengthd_[2]
+						   <<" "<<segAlphad_[2]<<" "<<segBetad_[2]<<" "<<segLengthd_[2]
+						   <<endl;
+				printf("%s\n", "write mode 4 data");
+			}			
+		}
+
 		pub4.publish(modenumber);
 		pub5.publish(segnumber);
 
@@ -973,6 +1029,7 @@ int main(int argc, char **argv)
 		//usleep(10000); // N*us
 	}
 
+	savedata.close();
 	return 0;
 }
 
