@@ -28,7 +28,7 @@ int main(int argc, char **argv)
 	ros::NodeHandle nh;	
 	ros::Rate r(100);     //Hz
 	
-	inFile.open("/home/lijing/catkin_ws/src/origarm_ros/savedata.txt", ios::in);
+	inFile.open("/home/ubuntu/catkin_ws/src/origarm_ros/savedata.txt", ios::in);
 
 	if (!inFile)
 	{
