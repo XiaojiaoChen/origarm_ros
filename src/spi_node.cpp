@@ -325,16 +325,6 @@ int main(int argc, char* argv[])
 		
 		//transfer(fd, (uint8_t *)(&commandData), (uint8_t *)(&sensorData), sizeof(SPIDATA_R));
 
-
-		/*for (int i = 0; i < seg; i++)
-		{
-			for (int j = 0; j < act; j++)
-			{
-				printf("Command[%d][%d]: %hd\r\n", i, j, commandData[i][j].values[0]);
-				//printf("Sensor[%d][%d] : %hu %hu\r\n", i, j, sensorData[i][j].pressure, sensorData[i][j].distance);
-			}			
-		}*/
-
 		printf("time:%d, segN:%d, mode:%d, status: %d\r\n", t, segNumber, controlmode, status); 
 		//printf("CommandPressure        | sensorData\r\n"); 
 		for (int i = 0; i < seg; i++)

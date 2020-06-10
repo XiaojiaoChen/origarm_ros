@@ -794,6 +794,25 @@ void Init_parameter()
 	}
 }
 
+void help_menu()
+{
+	cout<<"==============================================================================="<<endl;
+	cout<<"                              JOYSCTIK USER MENU                               "<<endl;
+	cout<<"-------------------------------------------------------------------------------"<<endl;
+	cout<<"           MODE         |"<<" KEY |                    KEYCODE                 "<<endl;
+	cout<<" 0: 1 segment abl(test) |"<<" A   |"<<"  alpha  +: joyLy +, alpha  -: joyLy -; "<<endl;
+	cout<<" 1: 3 segment abl       |"<<" B   |"<<"  beta   +: joyRx +, beta   -: joyRx -; "<<endl;
+	cout<<" 2: 6 segment abl       |"<<" X   |"<<"  length +: joyLT  , length -: joyRT  ; "<<endl;
+	cout<<"                                                                               "<<endl;
+	cout<<" 3: 1 segment xyz(test) |"<<" Y   |"<<"  x+: joyRx +, x-: joyRx -;             "<<endl;
+	cout<<" 4: 6 segment xyz       |"<<" RB  |"<<"  y+: joyRy +, y-: joyRy -;             "<<endl;
+	cout<<"                        |"<<"     |"<<"  z+: joyLy +, z-: joyLy -;             "<<endl;
+	cout<<"                                                                               "<<endl;
+	cout<<" save data into file    |"<<" LB  |"<<"                                        "<<endl;
+	cout<<"                                                                               "<<endl;
+	cout<<"==============================================================================="<<endl;
+}
+
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "joy_teleopt");
@@ -815,7 +834,10 @@ int main(int argc, char **argv)
 	Init_parameter();
 
 	while (ros::ok())
-	{		
+	{
+		//print help menu
+		help_menu();
+
 		//check whether joystick is available
 		if (status == 1)
 		{
@@ -929,7 +951,7 @@ int main(int argc, char **argv)
 				Cmd_ABL.segment[i].B = segBeta_[int(i/2)];
 				Cmd_ABL.segment[i].L = segLength_[int(i/2)]/2;
 				
-				printf("ABL3: %f, %f, %f\r\n", segAlpha_[int(i/2)]/2, segBeta_[int(i/2)], segLength_[int(i/2)]/2);	
+				printf("ABL3: alpha: %f, beta: %f, length: %f\r\n", segAlpha_[int(i/2)]/2, segBeta_[int(i/2)], segLength_[int(i/2)]/2);	
 			}
 
 			for (int i = 6; i < seg; i++)
@@ -947,7 +969,9 @@ int main(int argc, char **argv)
 			{
 				Cmd_ABL.segment[i].A = segAlpha[i];
 				Cmd_ABL.segment[i].B = segBeta[i];
-				Cmd_ABL.segment[i].L = segLength[i];	
+				Cmd_ABL.segment[i].L = segLength[i];
+
+				printf("ABL6: alpha: %f, beta: %f, length: %f\r\n", segAlpha[i], segBeta[i], segLength[i]);	
 			}
 
 			for (int i = 6; i < seg; i++)
@@ -967,6 +991,8 @@ int main(int argc, char **argv)
 			Cmd_Position.pose.orientation.x = 1;
 			Cmd_Position.pose.orientation.w = 1;
 
+			printf("XYZ1: x: %f, y: %f, z: %f\r\n", x, y, z);
+
 			pub3.publish(Cmd_Position);	
 		}
 		else if (mode == 4)
@@ -978,6 +1004,8 @@ int main(int argc, char **argv)
 			Cmd_Position.pose.orientation.y = segqy_;
 			Cmd_Position.pose.orientation.z = segqz_;
 			Cmd_Position.pose.orientation.w = segqw_;
+
+			printf("XYZ6: x: %f, y: %f, z: %f\r\n", segx_, segy_, segz_);
 
 			pub3.publish(Cmd_Position);	
 		}
