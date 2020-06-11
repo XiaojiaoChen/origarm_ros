@@ -88,7 +88,7 @@ float segBeta[9];
 float segLength[9];
 
 float a_scale = 0.003;
-float b_scale = 0.001;
+float b_scale = 0.002;
 float l_scale = 0.00001;
 
 float l_max =  0.08;
@@ -884,9 +884,9 @@ int main(int argc, char **argv)
 
 			//WriteOpening();
 
-			ROS_INFO("status: %d", status);
-			ROS_INFO("segment:%d", segNumber);
-			ROS_INFO("mode   :%d", mode);						
+			//ROS_INFO("status: %d", status);
+			//ROS_INFO("segment:%d", segNumber);
+			//ROS_INFO("mode   :%d", mode);						
 		}						
 		else if (status == 0)
 		{
@@ -922,7 +922,7 @@ int main(int argc, char **argv)
 				OpeningResult[i] = 0;
 			}
 			
-			ROS_INFO("status: %d", status);	
+			//ROS_INFO("status: %d", status);	
 		}
 		
 		origarm_ros::Command_ABL Cmd_ABL;	
@@ -946,6 +946,8 @@ int main(int argc, char **argv)
 				Cmd_ABL.segment[i].B = 0;
 				Cmd_ABL.segment[i].L = length0;
 			}
+
+			printf("ABL1: alpha: %f, beta: %f, length: %f\r\n", alpha, beta, length);
 
 			pub1.publish(Cmd_ABL);
 		}
