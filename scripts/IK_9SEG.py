@@ -271,7 +271,7 @@ class ik_solver:
        
                 res = least_squares(string_type, x0_rosenbrock,
                                     bounds=([-1.1*pi, -2*pi, 0.03, -1.1*pi, -2*pi, 0.06, -1.1*pi, -2*pi, 0.06],
-                                            [1.1*pi, 2*pi, 0.2, 1.1*pi, 2*pi, 0.2, 1.1*pi, 2*pi, 0.2]))
+                                            [1.1*pi, 2*pi, 0.2, 1.1*pi, 2*pi, 0.2, 1.1*pi, 2*pi, 0.2]), ftol = 1e-4, xtol = 1e-4)
                 new = np.array([res.x[0], res.x[1], res.x[2],
                                 res.x[3], res.x[4], res.x[5],
                                 res.x[6], res.x[7], res.x[8]
@@ -557,10 +557,10 @@ class ik_solver:
                           (1 - cos(a2)) * sin(a1) * sin(b2) * cos(b1) * cos(b2) - (-(1 - cos(a2)) * sin(b2) ** 2 + 1) * sin(
                       a1) * sin(b1) - sin(a2) * sin(b2) * cos(a1)) * sin(a3) * sin(b3)]]
         )
-        N1 = [R1[0][0],R1[1][0],R1[2][0]]
-        A1 = [R1[0][2],R1[1][2],R1[2][2]]
-        #N1 = [1, 0, 0]
-        #A1 = [0, 0, 1]
+        # N1 = [R1[0][0],R1[1][0],R1[2][0]]
+        # A1 = [R1[0][2],R1[1][2],R1[2][2]]
+        N1 = [1, 0, 0]
+        A1 = [0, 0, 1]
         #print(R1)
 
         return N1, A1
