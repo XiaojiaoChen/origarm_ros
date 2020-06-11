@@ -91,7 +91,33 @@ int main(int argc, char **argv)
  			for (int i = 0; i < tp; i++)
  			{
  				demo_a = M_PI*0.5;
- 				demo_b = i*2*M_PI/(tp-1);
+ 				demo_b = i*M_PI/(tp-1);  //0->pi
+ 				demo_l = length0*6;
+
+ 				for (int i = 0; i < 6; i++)
+ 				{
+ 					Command_ABL_demo.segment[i].A = demo_a/6;
+ 					Command_ABL_demo.segment[i].B = demo_b;
+ 					Command_ABL_demo.segment[i].L = demo_l/6;
+ 				}
+
+ 				for (int i = 6; i < seg; i++)
+ 				{
+ 					Command_ABL_demo.segment[i].A = 0;
+ 					Command_ABL_demo.segment[i].B = 0;
+ 					Command_ABL_demo.segment[i].L = length0;
+ 				}
+
+ 				pub1.publish(Command_ABL_demo);
+ 				printf("A: %f, B: %f, L: %f\r\n", demo_a, demo_b, demo_l);
+ 			
+ 				usleep(ts);
+ 			}
+
+ 			for (int i = 0; i < tp; i++)
+ 			{
+ 				demo_a = M_PI*0.5;
+ 				demo_b = -M_PI + i*M_PI/(tp-1); //-pi->0
  				demo_l = length0*6;
 
  				for (int i = 0; i < 6; i++)

@@ -46,5 +46,9 @@ float radr = 0.02;
 float crossA = 0.00126;           //M_PI*radr^2
 float C1 = 6*k0*radR*0.5/crossA;
 
+//initial parameters for one segment
+float x_origin = 0;
+float y_origin = 0;
+float z_origin = 0.055;
 
 #endif // MYDATA_H__

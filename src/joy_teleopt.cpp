@@ -79,7 +79,7 @@ int status;
 int segNumber;
 float alpha;
 float beta;
-float length = 0.055;
+float length = length0;
 float segAlpha_[3];
 float segBeta_[3];
 float segLength_[3];
@@ -87,7 +87,7 @@ float segAlpha[9];
 float segBeta[9];
 float segLength[9];
 
-float a_scale = 0.001;
+float a_scale = 0.003;
 float b_scale = 0.001;
 float l_scale = 0.00001;
 
@@ -114,28 +114,20 @@ float openingBase;
 float OpeningResult[6];
 
 //Write XYZ unit:m
-float x = 0;
-float y = 0;
-float z = 0.055;
-float segx_ = 0;
-float segy_ = 0;
-float segz_ = 0.055;
+float x = x_origin;
+float y = y_origin;
+float z = z_origin;
+float segx_ = x_origin;
+float segy_ = y_origin;
+float segz_ = z_origin*6;
 float segqx_ = 1;
 float segqy_ = 0;
 float segqz_ = 0;
 float segqw_ = 1;
-float segx = 0;
-float segy = 0;
-float segz = 0.055;
 
 float x_scale = 0.00001;
 float y_scale = 0.00001;
 float z_scale = 0.0001;
-
-/*float x_max =  0.01;
-float x_min = -0.01;
-float y_max =  0.01;
-float y_min = -0.01;*/
 
 float x_max =  0.06;
 float x_min = -0.06;
@@ -311,6 +303,20 @@ void ABLCallback(const origarm_ros::Command_ABL& msg)
 	}
 }
 
+float constrain2PI (float s)
+{
+	if (s > M_PI)
+	{
+		s = s - 2*M_PI;
+	}
+	else if (s < -M_PI)
+	{
+		s = s + 2*M_PI;
+	}
+
+	return s;
+}
+
 //Joystick->ABL (joyLy->alpha, joyRx->beta, joyLT & joyRT->length)
 void writeABL1(int joystickFLag)
 {
@@ -384,6 +390,8 @@ void writeABL1(int joystickFLag)
 		beta   = betad;
 		length = lengthd;
 	}
+
+	beta = constrain2PI(beta);
 
 	alpha  = CONSTRAIN(alpha, a_min, a_max);
 	beta   = CONSTRAIN(beta, b_min, b_max);
@@ -471,6 +479,7 @@ void writeABL3(int joystickFLag)
 
 	for (int i = 0; i < 3; i++)
 	{
+		segBeta_[i]   = constrain2PI(segBeta_[i]);
 		segAlpha_[i]  = CONSTRAIN(segAlpha_[i], a_min*2, a_max*2);
 		segBeta_[i]   = CONSTRAIN(segBeta_[i], b_min, b_max);
 		segLength_[i] = CONSTRAIN(segLength_[i], l_min*2, l_max*2);
@@ -564,6 +573,7 @@ void writeABL9(int joystickFLag)
 
 	for (int i = 0; i < 9; i++)
 	{
+		segBeta[i]  = constrain2PI(segBeta[i]);
 		segAlpha[i]  = CONSTRAIN(segAlpha[i], a_min, a_max);
 		segBeta[i]   = CONSTRAIN(segBeta[i], b_min, b_max);
 		segLength[i] = CONSTRAIN(segLength[i], l_min, l_max);
@@ -778,12 +788,12 @@ void Init_parameter()
 	//for Write ABL
 	for (int i = 0; i < 9; i++)
 	{
-		segLength[i] = 0.055;
+		segLength[i] = length0;
 	}
 
 	for (int i = 0; i < 3; i++)
 	{
-		segLength_[i] = 0.055*2;
+		segLength_[i] = length0*2;
 	}
 
 	//for Write Opening
@@ -885,38 +895,34 @@ int main(int argc, char **argv)
 			{
 				segAlpha[i]  = 0;
 				segBeta[i]   = 0;
-				segLength[i] = 0.055;
+				segLength[i] = length0;
 			}
 
 			for (int i = 0; i < 3; i++)
 			{
 				segAlpha_[i]  = 0;
 				segBeta_[i]   = 0;
-				segLength_[i] = 0.055*2;
+				segLength_[i] = length0*2;
 			}
 
 			alpha = 0;
 			beta = 0;
-			length = 0.055;		
+			length = length0;		
 
 			x = 0;
 			y = 0;
-			z = 0.055; 
+			z = z_origin; 
 
 			segx_ = 0;
 			segy_ = 0;
-			segz_ = 0.055*6; 
-
-			segx = 0;
-			segy = 0;
-			segz = 0.055*6; 
+			segz_ = z_origin*6; 
 
 			for (int i = 0; i < 6; i++)
 			{
 				OpeningResult[i] = 0;
 			}
 			
-			//ROS_INFO("status: %d", status);	
+			ROS_INFO("status: %d", status);	
 		}
 		
 		origarm_ros::Command_ABL Cmd_ABL;	
@@ -938,7 +944,7 @@ int main(int argc, char **argv)
 			{
 				Cmd_ABL.segment[i].A = 0;
 				Cmd_ABL.segment[i].B = 0;
-				Cmd_ABL.segment[i].L = 0.055;
+				Cmd_ABL.segment[i].L = length0;
 			}
 
 			pub1.publish(Cmd_ABL);
@@ -993,7 +999,7 @@ int main(int argc, char **argv)
 
 			printf("XYZ1: x: %f, y: %f, z: %f\r\n", x, y, z);
 
-			pub3.publish(Cmd_Position);	
+			pub3.publish(Cmd_Position);
 		}
 		else if (mode == 4)
 		{
