@@ -14,15 +14,19 @@ import traceback
 
 class ik_solver:
     def __init__(self):
-        self.seg = 0
+        self.seg = Command_ABL().segment
         self.pts = [0,0,0]
         self.A = 0
         self.N = 0
         self.flag = 0
-        self.desired = 0
+        self.desired = Command_ABL()
+        for i in range(9):
+            self.desired.segment[i].L = 0.055
+            self.seg[i].L = 0.055
         self.ik_srv_setup()
 
     def handle_ik_srv(self, req):
+
         result = self.inverse_kinematic(
             req.input.pose.position,
             req.input.pose.orientation,
@@ -30,6 +34,7 @@ class ik_solver:
             req.mode
         ) 
         # return Command_ABL
+
         return result
 
     def ik_srv_setup(self):
@@ -48,10 +53,10 @@ class ik_solver:
                     self.seg[4].A*2, self.seg[4].B, 2*self.seg[4].L
                 ]
         self.desired = ABL
+        self.detect = ABL
+        print('update', self.desired.segment[0].L)
         self.pts = self.position(x0)
         self.N, self.A = self.forwarding_orientation(x0)
-        # print('update')
-        # print(self.pts)
 
     def inverse_kinematic(self, pts, quat, seg, mode):
         def test_square(dst, a, n):  # a1 a2 a3 b1 b2 b3 r1 r2 r3
@@ -272,7 +277,7 @@ class ik_solver:
         
                     res = least_squares(string_type, x0_rosenbrock,
                                         bounds=([-1.1*pi, -2*pi, 0.03, -1.1*pi, -2*pi, 0.06, -1.1*pi, -2*pi, 0.06],
-                                                [1.1*pi, 2*pi, 0.16, 1.1*pi, 2*pi, 0.16, 1.1*pi, 2*pi, 0.16]), ftol = 1e-4, xtol = 1e-4)
+                                                [1.1*pi, 2*pi, 0.16, 1.1*pi, 2*pi, 0.16, 1.1*pi, 2*pi, 0.16]))
                     new = np.array([res.x[0], res.x[1], res.x[2],
                                     res.x[3], res.x[4], res.x[5],
                                     res.x[6], res.x[7], res.x[8]
@@ -289,40 +294,39 @@ class ik_solver:
                         re.segment[i].B = 0
                         re.segment[i].L = 0.055
                     self.seg = re.segment
+                    self.desired = re
+                    print('result error',self.position(result)-pts)
+                    # print('x0',x0)
+                    # print('result',result)
                 except:
                     for i in range(9):
                         self.seg[i].L = 0.07
-                
-                # Display the forward result #
-                print('IK')
-                print('result error',self.position(result)-pts)
-                print('x0',x0)
-                print('result',result)
-
-            # print('time cost:', time.time() - now)
+                    return self.desired
             # end
-            return re
+            return self.desired
 
         # a1 a2 a3 b1 b2 b3 l1 l2 l3
         # print('z',pts.z)   
 
         #--------------new version-------------------
         pts = [pts.x, pts.y, pts.z]
-        self.pts = pts
-        if self.pts != pts:
+
+        if (self.pts[0] != pts[0])or(self.pts[1] != pts[1])or(self.pts[2] != pts[2]):
             # quat = [quat.x, quat.y, quat.z, quat.w]
 
             # n, a = self.quat_transform(quat)
             # n = self.N
             # a = self.A
+            self.pts = pts
+
             n = [1, 0, 0]
             a = [0, 0, 1]
             
             self.desired = test_square(pts, a, n)
             return self.desired
-        else:/
+        else:
             return self.desired
-            #---------------------------------------
+        #---------------------------------------
 
         #--------------past version----------------
         # pts = [pts.x, pts.y, pts.z]
@@ -335,8 +339,6 @@ class ik_solver:
         
         # self.desired = test_square(pts, a, n)
         #------------------------------------------
-
-        return self.desired
    
 
     def quat_transform(self, qua): # alpha beta gamma
