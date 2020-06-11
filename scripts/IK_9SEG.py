@@ -271,23 +271,26 @@ class ik_solver:
        
                 res = least_squares(string_type, x0_rosenbrock,
                                     bounds=([-1.1*pi, -2*pi, 0.03, -1.1*pi, -2*pi, 0.06, -1.1*pi, -2*pi, 0.06],
-                                            [1.1*pi, 2*pi, 0.16, 1.1*pi, 2*pi, 0.16, 1.1*pi, 2*pi, 0.16]))
+                                            [1.1*pi, 2*pi, 0.2, 1.1*pi, 2*pi, 0.2, 1.1*pi, 2*pi, 0.2]))
                 new = np.array([res.x[0], res.x[1], res.x[2],
                                 res.x[3], res.x[4], res.x[5],
                                 res.x[6], res.x[7], res.x[8]
                                 ]).astype('float64')  # a1 b1 l1 a2 b2 l2 a3 b3 l3
                 result = tranformation_string(new)
                 # FOR 6 SEG
-                for i in range(3):
-                    for j in range(2):
-                        re.segment[2*i+j].A = result[3*i]/2
-                        re.segment[2*i+j].B = result[3*i+1]/2
-                        re.segment[2*i+j].L = result[3*i+2]/2
-                for i in range(6,9):
-                    re.segment[i].A = 0
-                    re.segment[i].B = 0
-                    re.segment[i].L = 0.055
-                self.seg = re.segment
+                if (pts.x != self.pts[0]) or (pts.y != self.pts[1]) or (pts.z != self.pts[2]): 
+                    for i in range(3):
+                        for j in range(2):
+                            re.segment[2*i+j].A = result[3*i]/2
+                            re.segment[2*i+j].B = result[3*i+1]/2
+                            re.segment[2*i+j].L = result[3*i+2]/2
+                    for i in range(6,9):
+                        re.segment[i].A = 0
+                        re.segment[i].B = 0
+                        re.segment[i].L = 0.055
+                    self.seg = re.segment
+                else:
+                    re.segment = self.seg
                 # Display the forward result #
                 print('IK')
                 print('result error',self.position(result)-pts)
