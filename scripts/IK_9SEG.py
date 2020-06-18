@@ -14,15 +14,19 @@ import traceback
 
 class ik_solver:
     def __init__(self):
-        self.seg = 0
+        self.seg = Command_ABL().segment
         self.pts = [0,0,0]
         self.A = 0
         self.N = 0
         self.flag = 0
-        self.desired = 0
+        self.desired = Command_ABL()
+        for i in range(9):
+            self.desired.segment[i].L = 0.055
+            self.seg[i].L = 0.055
         self.ik_srv_setup()
 
     def handle_ik_srv(self, req):
+
         result = self.inverse_kinematic(
             req.input.pose.position,
             req.input.pose.orientation,
@@ -30,6 +34,7 @@ class ik_solver:
             req.mode
         ) 
         # return Command_ABL
+
         return result
 
     def ik_srv_setup(self):
@@ -47,10 +52,11 @@ class ik_solver:
                     self.seg[2].A*2, self.seg[2].B, 2*self.seg[2].L, 
                     self.seg[4].A*2, self.seg[4].B, 2*self.seg[4].L
                 ]
+        self.desired = ABL
+        self.detect = ABL
+        print('update', self.desired.segment[0].L)
         self.pts = self.position(x0)
         self.N, self.A = self.forwarding_orientation(x0)
-        # print('update')
-        # print(self.pts)
 
     def inverse_kinematic(self, pts, quat, seg, mode):
         def test_square(dst, a, n):  # a1 a2 a3 b1 b2 b3 r1 r2 r3
@@ -266,101 +272,73 @@ class ik_solver:
                 ]
 
                 # print(x0)
-               
-                x0_rosenbrock = np.array(x0).astype('float64')
-       
-                res = least_squares(string_type, x0_rosenbrock,
-                                    bounds=([-1.1*pi, -2*pi, 0.03, -1.1*pi, -2*pi, 0.06, -1.1*pi, -2*pi, 0.06],
-                                            [1.1*pi, 2*pi, 0.16, 1.1*pi, 2*pi, 0.16, 1.1*pi, 2*pi, 0.16]))
-                new = np.array([res.x[0], res.x[1], res.x[2],
-                                res.x[3], res.x[4], res.x[5],
-                                res.x[6], res.x[7], res.x[8]
-                                ]).astype('float64')  # a1 b1 l1 a2 b2 l2 a3 b3 l3
-                result = tranformation_string(new)
-                # FOR 6 SEG
-                for i in range(3):
-                    for j in range(2):
-                        re.segment[2*i+j].A = result[3*i]/2
-                        re.segment[2*i+j].B = result[3*i+1]/2
-                        re.segment[2*i+j].L = result[3*i+2]/2
-                for i in range(6,9):
-                    re.segment[i].A = 0
-                    re.segment[i].B = 0
-                    re.segment[i].L = 0.055
-                self.seg = re.segment
-                # Display the forward result #
-                print('IK')
-                print('result error',self.position(result)-pts)
-                print('x0',x0)
-                print('result',result)
-
-                # Display the result directly
-                # print(np.degrees(result[0]))
-                # print(np.degrees(result[1]))
-                # print(np.degrees(result[3]))
-                # print(np.degrees(result[4]))
-                # print(np.degrees(result[6]))
-                # print(np.degrees(result[7]))
-                # print(result[8])
-
-            # print('time cost:', time.time() - now)
+                try:
+                    x0_rosenbrock = np.array(x0).astype('float64')
+        
+                    res = least_squares(string_type, x0_rosenbrock,
+                                        bounds=([-1.1*pi, -2*pi, 0.03, -1.1*pi, -2*pi, 0.06, -1.1*pi, -2*pi, 0.06],
+                                                [1.1*pi, 2*pi, 0.16, 1.1*pi, 2*pi, 0.16, 1.1*pi, 2*pi, 0.16]))
+                    new = np.array([res.x[0], res.x[1], res.x[2],
+                                    res.x[3], res.x[4], res.x[5],
+                                    res.x[6], res.x[7], res.x[8]
+                                    ]).astype('float64')  # a1 b1 l1 a2 b2 l2 a3 b3 l3
+                    result = tranformation_string(new)
+                    # FOR 6 SEG
+                    for i in range(3):
+                        for j in range(2):
+                            re.segment[2*i+j].A = result[3*i]/2
+                            re.segment[2*i+j].B = result[3*i+1]/2
+                            re.segment[2*i+j].L = result[3*i+2]/2
+                    for i in range(6,9):
+                        re.segment[i].A = 0
+                        re.segment[i].B = 0
+                        re.segment[i].L = 0.055
+                    self.seg = re.segment
+                    self.desired = re
+                    print('result error',self.position(result)-pts)
+                    # print('x0',x0)
+                    # print('result',result)
+                except:
+                    for i in range(9):
+                        self.seg[i].L = 0.07
+                    return self.desired
             # end
-            return re
+            return self.desired
 
         # a1 a2 a3 b1 b2 b3 l1 l2 l3
         # print('z',pts.z)   
 
-        # if not self.flag:
-        #     pts = [pts.x, pts.y, pts.z]
-        #     self.pts = pts
-        #     quat = [quat.x, quat.y, quat.z, quat.w]
-
-        #     # n, a = self.quat_transform(quat)
-        #     n = self.N
-        #     a = self.A
-            
-        #     self.desired = test_square(pts, a, n)
-        #     self.flag = 1
-        # elif self.flag:
-        #     if (pts.x != self.pts[0]) or (pts.y != self.pts[1]) or (pts.z != self.pts[2]): 
-        #         pts = [pts.x, pts.y, pts.z]
-        #         self.pts = pts
-        #         quat = [quat.x, quat.y, quat.z, quat.w]
-
-        #         # n, a = self.quat_transform(quat)
-        #         n = self.N
-        #         a = self.A
-                
-        #         self.desired = test_square(pts, a, n)
-        #         self.flag = 0
-        #         return self.desired
-        #     else:
-        #         return self.desired
-
-        # if pts.x != 0 or pts.y != 0 or pts.z != 0: 
-        #     pts = [self.pts[0]+pts.x, self.pts[1]+pts.y, self.pts[2]+pts.z]
-        #     self.pts = pts
-        #     quat = [quat.x, quat.y, quat.z, quat.w]
-
-        #     # n, a = self.quat_transform(quat)
-        #     n = self.N
-        #     a = self.A
-            
-        #     self.desired = test_square(pts, a, n)
-        #     return self.desired
-        # else:/
-        #     return self.desired
-
+        #--------------new version-------------------
         pts = [pts.x, pts.y, pts.z]
-        
-        quat = [quat.x, quat.y, quat.z, quat.w]
 
-        # n, a = self.quat_transform(quat)
-        n = self.N
-        a = self.A
+        if (self.pts[0] != pts[0])or(self.pts[1] != pts[1])or(self.pts[2] != pts[2]):
+            # quat = [quat.x, quat.y, quat.z, quat.w]
+
+            # n, a = self.quat_transform(quat)
+            # n = self.N
+            # a = self.A
+            self.pts = pts
+
+            n = [1, 0, 0]
+            a = [0, 0, 1]
+            
+            self.desired = test_square(pts, a, n)
+            return self.desired
+        else:
+            return self.desired
+        #---------------------------------------
+
+        #--------------past version----------------
+        # pts = [pts.x, pts.y, pts.z]
         
-        self.desired = test_square(pts, a, n)
-        return self.desired
+        # quat = [quat.x, quat.y, quat.z, quat.w]
+
+        # # n, a = self.quat_transform(quat)
+        # n = self.N
+        # a = self.A
+        
+        # self.desired = test_square(pts, a, n)
+        #------------------------------------------
    
 
     def quat_transform(self, qua): # alpha beta gamma
@@ -554,10 +532,10 @@ class ik_solver:
                           (1 - cos(a2)) * sin(a1) * sin(b2) * cos(b1) * cos(b2) - (-(1 - cos(a2)) * sin(b2) ** 2 + 1) * sin(
                       a1) * sin(b1) - sin(a2) * sin(b2) * cos(a1)) * sin(a3) * sin(b3)]]
         )
-        N1 = [R1[0][0],R1[1][0],R1[2][0]]
-        A1 = [R1[0][2],R1[1][2],R1[2][2]]
-        #N1 = [1, 0, 0]
-        #A1 = [0, 0, 1]
+        # N1 = [R1[0][0],R1[1][0],R1[2][0]]
+        # A1 = [R1[0][2],R1[1][2],R1[2][2]]
+        N1 = [1, 0, 0]
+        A1 = [0, 0, 1]
         #print(R1)
 
         return N1, A1
