@@ -28,8 +28,12 @@
 #include <linux/spi/spidev.h>
 #include <inttypes.h> //printf uint16_t
 #include <time.h>
+#include <fstream>
+#include <sys/time.h>
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+
+using namespace std;
 
 static void pabort(const char *s)
 {
@@ -51,6 +55,13 @@ bool commandType_[seg][act];
 int segNumber;
 int controlmode;
 int status;
+
+time_t rawtime;
+struct tm * timeinfo;
+int time_day;
+int time_hor;
+int time_min;
+int time_sec;
 
 void pressureCallback(const origarm_ros::Command_Pre_Open& pressured)
 {	
@@ -308,6 +319,9 @@ int main(int argc, char* argv[])
 
 
   int t = 0;
+
+  ofstream data;
+  data.open("/home/ubuntu/Desktop/data.txt", ios::app);
 	
   ros::Subscriber sub1 = nh.subscribe("Command_Pre_Open", 1, pressureCallback);
   ros::Subscriber sub2 = nh.subscribe("modenumber", 1, modeNumberCallback);	
@@ -364,7 +378,24 @@ int main(int argc, char* argv[])
 			}
 		}
 		pub1.publish(Sensor);
-						
+		
+		time(&rawtime);
+		timeinfo = localtime(&rawtime);
+		time_day = timeinfo->tm_mday;
+		time_hor = timeinfo->tm_hour;
+		time_min = timeinfo->tm_min;
+		time_sec = timeinfo->tm_sec;
+		
+		for (int p = 0; p < seg; p++)
+		{
+			for (int q = 0; q < act; q++)
+			{
+				data << time_day <<" "<<time_hor<<" "<<time_min<<" "<<time_sec<<" "<<commandData.data[p][q].values[0]<<" "<< sensorData.data[p][q].pressure <<" "<< sensorData.data[p][q].distance 
+						 <<" "<< sensorData.data[p][q].quaternion.imuData[0]/32768.0 <<" "<< sensorData.data[p][q].quaternion.imuData[1]/32768.0 <<" "<< sensorData.data[p][q].quaternion.imuData[2]/32768.0 <<" "<< sensorData.data[p][q].quaternion.imuData[3]/32768.0
+						 << endl;
+			}
+		}
+				
 		t = t+1;
 		
 		//sleep(1); //wait for 1 second
@@ -375,7 +406,7 @@ int main(int argc, char* argv[])
 	}
 
 	close(fd);
-
+	data.close();
 	return ret;
 
 }

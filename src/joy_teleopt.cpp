@@ -830,7 +830,7 @@ int main(int argc, char **argv)
 	ros::Rate r(100);     //Hz
 
 	ofstream savedata;
-    savedata.open("/home/ubuntu/catkin_ws/src/origarm_ros/savedata.txt", ios::app);
+    savedata.open("/home/ubuntu/Desktop/demo_traj.txt", ios::app);
 
 	ros::Subscriber sub1 = nh.subscribe("joy", 1, joyCallback);	
 	ros::Subscriber sub2 = nh.subscribe("key_number", 1, keyCallback);
