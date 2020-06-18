@@ -13,8 +13,11 @@
 
 using namespace std;
 
-int ts = 10000;  //time sleep at each step
-int repeat = 5;
+int ts = 2000000;     //time sleep at each step
+const int mt = 1000; //1ms
+int tstep[]={1000*mt, 5000*mt, 3000*mt, 3000*mt, 2000*mt, 3000*mt, 3000*mt, 3000*mt, 2000*mt, 3000*mt, 3000*mt, 3000*mt, 2000*mt, 3000*mt, 3000*mt, 3000*mt, 2000*mt, 3000*mt, 3000*mt, 3000*mt};
+int k = 0;
+int repeat = 1;
 
 int mode_in;
 float x_in, y_in, z_in;
@@ -28,7 +31,7 @@ int main(int argc, char **argv)
 	ros::NodeHandle nh;	
 	ros::Rate r(100);     //Hz
 	
-	inFile.open("/home/ubuntu/catkin_ws/src/origarm_ros/savedata.txt", ios::in);
+	inFile.open("/home/ubuntu/Desktop/demo_traj_1.txt", ios::in);
 
 	if (!inFile)
 	{
@@ -42,7 +45,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		ts = 10000;
+		ts = 1000000;
 	}
 
 	if (nh.getParam("repeat", repeat))
@@ -51,7 +54,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		repeat = 10;
+		repeat = 1;
 	}
 
 	ros::Publisher  pub1 = nh.advertise<origarm_ros::Command_ABL>("Cmd_ABL_joy", 100);
@@ -66,7 +69,7 @@ int main(int argc, char **argv)
 		{				
 			inFile>>mode_in>>x_in>>y_in>>z_in>>a_in[0]>>b_in[0]>>l_in[0]>>a_in[1]>>b_in[1]>>l_in[1]>>a_in[2]>>b_in[2]>>l_in[2]>>a_in[3]>>b_in[3]>>l_in[3]>>a_in[4]>>b_in[4]>>l_in[4]>>a_in[5]>>b_in[5]>>l_in[5];
 
-			moden.modeNumber = 2;
+			moden.modeNumber = 0;
 
 			for (int i = 0; i < 6; i++)
 			{
@@ -85,8 +88,9 @@ int main(int argc, char **argv)
 			pub1.publish(Command_ABL_demo);
 			pub2.publish(moden);
 			
-			printf("Receiving: %d, %f, %f, %f, %f, %f, %f\n", mode_in, x_in, y_in, z_in, a_in[0], b_in[0], l_in[0]);
-			usleep(ts);								
+			printf("Receiving: %d, %f, %f, %f, %f, %f, %f, %f, %f, %f\r\n", mode_in, a_in[0], b_in[0], l_in[0], a_in[2], b_in[2], l_in[2], a_in[4], b_in[4], l_in[4]);
+			usleep(tstep[k]);	
+			k++;							
 		}
 		else if (repeat > 0)
 		{
@@ -97,7 +101,7 @@ int main(int argc, char **argv)
 		}
 		else
 		{
-			moden.modeNumber = 2;
+			moden.modeNumber = 0;
 
 			for (int i = 0; i < 9; i++)
 			{
