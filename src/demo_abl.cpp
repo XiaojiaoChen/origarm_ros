@@ -9,7 +9,18 @@
 #include "myData.h"
 
 int tp = 1000;  //timestep
+
+/*[0]arm: length: l0->lmax->l0->lmin->l0
+	[1]arm: alpha:  0->pi/2->0->-pi/2
+	[2]arm: beta:   0->4pi(0->pi(-pi)->0)->0
+*/
+
+int t_step[] = {1000, 1000, 4000};
+
 int ts = 10000; //time sleep at each step
+const int ms = 1000; //1ms
+int t_sleep[] = {10*ms};
+
 int flag = 1;
 
 int mode_ = 0;
@@ -73,7 +84,7 @@ int main(int argc, char **argv)
 	ros::NodeHandle nh;	
 	ros::Rate r(100);     //Hz
 
-	if (nh.getParam("tp", tp))
+	/*if (nh.getParam("tp", tp))
 	{
 		ROS_INFO("tp is set to %d\r\n", tp);
 	}
@@ -90,7 +101,7 @@ int main(int argc, char **argv)
 	else
 	{
 		ts = 10000;
-	}
+	}*/
 
 	ros::Publisher  pub1 = nh.advertise<origarm_ros::Command_ABL>("Cmd_ABL_joy", 100);
 	ros::Publisher  pub2 = nh.advertise<origarm_ros::modenumber>("modenumber", 100);
@@ -426,11 +437,11 @@ int main(int argc, char **argv)
  			//second segment, beta: 0->-pi
  			for (int i = 0; i < tp; i++)
  			{
- 				a_seg2[0] = M_PI*0.5;
+ 				a_seg2[0] = M_PI/6;
  				b_seg2[0] = genetraj(0, M_PI, i, tp);
  				l_seg2[0] = length0*3;
 
- 				a_seg2[1] = -M_PI*0.5;
+ 				a_seg2[1] = -M_PI/6;
  				b_seg2[1] = genetraj(0, -M_PI, i, tp);
  				l_seg2[1] = length0*3;
 
@@ -465,11 +476,11 @@ int main(int argc, char **argv)
  			//second segment, beta: -pi->0			
  			for (int i = 0; i < tp; i++)
  			{
- 				a_seg2[0] = M_PI*0.5;
+ 				a_seg2[0] = M_PI/6;
  				b_seg2[0] = genetraj(M_PI, 0, i, tp);
  				l_seg2[0] = length0*3;
 
- 				a_seg2[1] = -M_PI*0.5;
+ 				a_seg2[1] = -M_PI/6;
  				b_seg2[1] = genetraj(-M_PI, 0, i, tp);
  				l_seg2[1] = length0*3;
 
@@ -537,6 +548,9 @@ int main(int argc, char **argv)
  			
  				usleep(ts); 			
  			}
+
+			//pause for a while
+ 			usleep(5000000);
  			
  			flag = 3; 			
 		}
@@ -797,6 +811,9 @@ int main(int argc, char **argv)
  				usleep(ts); 			
  			}
 
+			//pause for a while
+ 			usleep(5000000);
+
  			flag = 6;
 		}
 		else if (flag == 6)//writeSixSegments
@@ -1022,7 +1039,7 @@ int main(int argc, char **argv)
 			pub1.publish(Command_ABL_demo);
 		}	
 				
-		ros::spinOnce();
+		//ros::spinOnce();
 		r.sleep();
 	}
 
