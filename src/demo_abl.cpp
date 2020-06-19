@@ -25,12 +25,12 @@ int tp = 1000;  //timestep
 	[12]unit segment beta
 */
 
-float a_useg = 0.7;
+const float a_useg = 0.7;
 
 int t_step[] = {500, 500, 1500, 500, 1500, 1500, 500, 750, 500, 500, 1500, 250, 1500};
 
-int ts = 10000; //time sleep at each step
 const int ms = 1000; //1ms
+int ts = 10*ms; //time sleep at each step
 int t_sleep[] = {10*ms, 5000*ms, 1000*ms};
 
 int flag = 1;
@@ -1306,213 +1306,6 @@ int main(int argc, char **argv)
 		}
 		else if (flag == 6)//writeSixSegments
 		{		
-			//alpha
-			for (int i = 0; i < t_step[9]; i++)
- 			{
- 				a_seg6[0] = genetraj(0, a_useg, i, t_step[9]);
- 				b_seg6[0] = 0;
- 				l_seg6[0] = length0;
-
- 				a_seg6[1] = genetraj(0, -a_useg, i, t_step[9]);
- 				b_seg6[1] = 0;
- 				l_seg6[1] = length0;
-
- 				a_seg6[2] = genetraj(0, a_useg, i, t_step[9]);
- 				b_seg6[2] = 0;
- 				l_seg6[2] = length0;
-
- 				a_seg6[3] = genetraj(0, -a_useg, i, t_step[9]);
- 				b_seg6[3] = 0;
- 				l_seg6[3] = length0;
-
- 				a_seg6[4] = genetraj(0, a_useg, i, t_step[9]);
- 				b_seg6[4] = 0;
- 				l_seg6[4] = length0;
-
- 				a_seg6[5] = genetraj(0, -a_useg, i, t_step[9]);
- 				b_seg6[5] = 0;
- 				l_seg6[5] = length0;
- 				 				
- 				for (int i = 0; i < 6; i++)
- 				{
- 					Command_ABL_demo.segment[i].A = a_seg6[i];
- 					Command_ABL_demo.segment[i].B = b_seg6[i];
- 					Command_ABL_demo.segment[i].L = l_seg6[i];
- 				}
- 				for (int i = 6; i < seg; i++)
- 				{
- 					Command_ABL_demo.segment[i].A = 0;
- 					Command_ABL_demo.segment[i].B = 0;
- 					Command_ABL_demo.segment[i].L = length0;
- 				}
-				
- 				pub1.publish(Command_ABL_demo);
- 				for(int i = 0; i < 6; i++)
- 				{
- 					printf("A[%d]: %f, B[%d]: %f, L[%d]: %f\r\n", i, a_seg6[i], i, b_seg6[i], i, l_seg6[i]);
- 				}
-
- 				usleep(ts); 			
- 			}
-
- 			//beta
- 			for (int i = 0; i < t_step[10]; i++)
- 			{
- 				a_seg6[0] = a_useg;
- 				b_seg6[0] = genetraj(0, M_PI/3, i, t_step[10]);				
- 				l_seg6[0] = length0;
-
- 				a_seg6[1] = -a_useg;
- 				b_seg6[1] = genetraj(0, 2*M_PI/3, i, t_step[10]);				
- 				l_seg6[1] = length0;
-
- 				a_seg6[2] = a_useg;
- 				b_seg6[2] = genetraj(0, 3*M_PI/3, i, t_step[10]);				
- 				l_seg6[2] = length0;
-
- 				a_seg6[3] = -a_useg;
- 				b_seg6[3] = genetraj(0, 4*M_PI/3, i, t_step[10]);				
- 				l_seg6[3] = length0;
-
- 				a_seg6[4] = a_useg;
- 				b_seg6[4] = genetraj(0, 5*M_PI/3, i, t_step[10]);				
- 				l_seg6[4] = length0;
-
- 				a_seg6[5] = -a_useg;
- 				b_seg6[5] = genetraj(0, 6*M_PI/3, i, t_step[10]);				
- 				l_seg6[5] = length0;
- 				
- 				for (int i = 0; i < 6; i++)
- 				{
- 					b_seg6[i] = constrainb(b_seg6[i]);
- 				}				
-
- 				for (int i = 0; i < 6; i++)
- 				{
- 					Command_ABL_demo.segment[i].A = a_seg6[i];
- 					Command_ABL_demo.segment[i].B = b_seg6[i];
- 					Command_ABL_demo.segment[i].L = l_seg6[i];
- 				}
- 				for (int i = 6; i < seg; i++)
- 				{
- 					Command_ABL_demo.segment[i].A = 0;
- 					Command_ABL_demo.segment[i].B = 0;
- 					Command_ABL_demo.segment[i].L = length0;
- 				}
-				
- 				pub1.publish(Command_ABL_demo);
- 				for(int i = 0; i < 6; i++)
- 				{
- 					printf("A[%d]: %f, B[%d]: %f, L[%d]: %f\r\n", i, a_seg6[i], i, b_seg6[i], i, l_seg6[i]);
- 				}
-
- 				usleep(ts); 			
- 			}
-
- 			//reverse
- 			//beta
- 			for (int i = 0; i < t_step[10]; i++)
- 			{ 
- 				a_seg6[0] = a_useg;
- 				b_seg6[0] = genetraj(M_PI/3, 0, i, t_step[10]);				
- 				l_seg6[0] = length0;
-
- 				a_seg6[1] = -a_useg;
- 				b_seg6[1] = genetraj(2*M_PI/3, 0, i, t_step[10]);				
- 				l_seg6[1] = length0;
-
- 				a_seg6[2] = a_useg;
- 				b_seg6[2] = genetraj(3*M_PI/3, 0, i, t_step[10]);				
- 				l_seg6[2] = length0;
-
- 				a_seg6[3] = -a_useg;
- 				b_seg6[3] = genetraj(4*M_PI/3, 0, i, t_step[10]);				
- 				l_seg6[3] = length0;
-
- 				a_seg6[4] = a_useg;
- 				b_seg6[4] = genetraj(5*M_PI/3, 0, i, t_step[10]);				
- 				l_seg6[4] = length0;
-
- 				a_seg6[5] = -a_useg;
- 				b_seg6[5] = genetraj(6*M_PI/3, 0, i, t_step[10]);				
- 				l_seg6[5] = length0;
- 				
- 				for (int i = 0; i < 6; i++)
- 				{
- 					b_seg6[i] = constrainb(b_seg6[i]);
- 				}				
-
- 				for (int i = 0; i < 6; i++)
- 				{
- 					Command_ABL_demo.segment[i].A = a_seg6[i];
- 					Command_ABL_demo.segment[i].B = b_seg6[i];
- 					Command_ABL_demo.segment[i].L = l_seg6[i];
- 				}
- 				for (int i = 6; i < seg; i++)
- 				{
- 					Command_ABL_demo.segment[i].A = 0;
- 					Command_ABL_demo.segment[i].B = 0;
- 					Command_ABL_demo.segment[i].L = length0;
- 				}
-				
- 				pub1.publish(Command_ABL_demo);
- 				for(int i = 0; i < 6; i++)
- 				{
- 					printf("A[%d]: %f, B[%d]: %f, L[%d]: %f\r\n", i, a_seg6[i], i, b_seg6[i], i, l_seg6[i]);
- 				}
-
- 				usleep(ts); 			
- 			}
-
- 			//alpha
- 			for (int i = 0; i < t_step[9]; i++)
- 			{
- 				a_seg6[0] = genetraj(a_useg, 0, i, t_step[9]);
- 				b_seg6[0] = 0;
- 				l_seg6[0] = length0;
-
- 				a_seg6[1] = genetraj(-a_useg, 0, i, t_step[9]);
- 				b_seg6[1] = 0;
- 				l_seg6[1] = length0;
-
- 				a_seg6[2] = genetraj(a_useg, 0, i, t_step[9]);
- 				b_seg6[2] = 0;
- 				l_seg6[2] = length0;
-
- 				a_seg6[3] = genetraj(-a_useg, 0, i, t_step[9]);
- 				b_seg6[3] = 0;
- 				l_seg6[3] = length0;
-
- 				a_seg6[4] = genetraj(a_useg, 0, i, t_step[9]);
- 				b_seg6[4] = 0;
- 				l_seg6[4] = length0;
-
- 				a_seg6[5] = genetraj(-a_useg, 0, i, t_step[9]);
- 				b_seg6[5] = 0;
- 				l_seg6[5] = length0;
- 				 				
- 				for (int i = 0; i < 6; i++)
- 				{
- 					Command_ABL_demo.segment[i].A = a_seg6[i];
- 					Command_ABL_demo.segment[i].B = b_seg6[i];
- 					Command_ABL_demo.segment[i].L = l_seg6[i];
- 				}
- 				for (int i = 6; i < seg; i++)
- 				{
- 					Command_ABL_demo.segment[i].A = 0;
- 					Command_ABL_demo.segment[i].B = 0;
- 					Command_ABL_demo.segment[i].L = length0;
- 				}
-				
- 				pub1.publish(Command_ABL_demo);
- 				for(int i = 0; i < 6; i++)
- 				{
- 					printf("A[%d]: %f, B[%d]: %f, L[%d]: %f\r\n", i, a_seg6[i], i, b_seg6[i], i, l_seg6[i]);
- 				}
-
- 				usleep(ts); 			
- 			}
-			
 			/************************************************seg1*******************************************/
 			//seg1, alpha->a_useg
 			for (int i = 0; i < t_step[11]; i++)
@@ -2163,6 +1956,216 @@ int main(int argc, char **argv)
  			}
  			//usleep(t_sleep[2]); 						
 			/*******************************************************************************************/
+
+
+			//alpha
+			for (int i = 0; i < t_step[9]; i++)
+ 			{
+ 				a_seg6[0] = genetraj(0, a_useg, i, t_step[9]);
+ 				b_seg6[0] = 0;
+ 				l_seg6[0] = length0;
+
+ 				a_seg6[1] = genetraj(0, -a_useg, i, t_step[9]);
+ 				b_seg6[1] = 0;
+ 				l_seg6[1] = length0;
+
+ 				a_seg6[2] = genetraj(0, a_useg, i, t_step[9]);
+ 				b_seg6[2] = 0;
+ 				l_seg6[2] = length0;
+
+ 				a_seg6[3] = genetraj(0, -a_useg, i, t_step[9]);
+ 				b_seg6[3] = 0;
+ 				l_seg6[3] = length0;
+
+ 				a_seg6[4] = genetraj(0, a_useg, i, t_step[9]);
+ 				b_seg6[4] = 0;
+ 				l_seg6[4] = length0;
+
+ 				a_seg6[5] = genetraj(0, -a_useg, i, t_step[9]);
+ 				b_seg6[5] = 0;
+ 				l_seg6[5] = length0;
+ 				 				
+ 				for (int i = 0; i < 6; i++)
+ 				{
+ 					Command_ABL_demo.segment[i].A = a_seg6[i];
+ 					Command_ABL_demo.segment[i].B = b_seg6[i];
+ 					Command_ABL_demo.segment[i].L = l_seg6[i];
+ 				}
+ 				for (int i = 6; i < seg; i++)
+ 				{
+ 					Command_ABL_demo.segment[i].A = 0;
+ 					Command_ABL_demo.segment[i].B = 0;
+ 					Command_ABL_demo.segment[i].L = length0;
+ 				}
+				
+ 				pub1.publish(Command_ABL_demo);
+ 				for(int i = 0; i < 6; i++)
+ 				{
+ 					printf("A[%d]: %f, B[%d]: %f, L[%d]: %f\r\n", i, a_seg6[i], i, b_seg6[i], i, l_seg6[i]);
+ 				}
+
+ 				usleep(ts); 			
+ 			}
+
+ 			//beta
+ 			for (int i = 0; i < t_step[10]; i++)
+ 			{
+ 				a_seg6[0] = a_useg;
+ 				b_seg6[0] = genetraj(0, M_PI/3, i, t_step[10]);				
+ 				l_seg6[0] = length0;
+
+ 				a_seg6[1] = -a_useg;
+ 				b_seg6[1] = genetraj(0, 2*M_PI/3, i, t_step[10]);				
+ 				l_seg6[1] = length0;
+
+ 				a_seg6[2] = a_useg;
+ 				b_seg6[2] = genetraj(0, 3*M_PI/3, i, t_step[10]);				
+ 				l_seg6[2] = length0;
+
+ 				a_seg6[3] = -a_useg;
+ 				b_seg6[3] = genetraj(0, 4*M_PI/3, i, t_step[10]);				
+ 				l_seg6[3] = length0;
+
+ 				a_seg6[4] = a_useg;
+ 				b_seg6[4] = genetraj(0, 5*M_PI/3, i, t_step[10]);				
+ 				l_seg6[4] = length0;
+
+ 				a_seg6[5] = -a_useg;
+ 				b_seg6[5] = genetraj(0, 6*M_PI/3, i, t_step[10]);				
+ 				l_seg6[5] = length0;
+ 				
+ 				for (int i = 0; i < 6; i++)
+ 				{
+ 					b_seg6[i] = constrainb(b_seg6[i]);
+ 				}				
+
+ 				for (int i = 0; i < 6; i++)
+ 				{
+ 					Command_ABL_demo.segment[i].A = a_seg6[i];
+ 					Command_ABL_demo.segment[i].B = b_seg6[i];
+ 					Command_ABL_demo.segment[i].L = l_seg6[i];
+ 				}
+ 				for (int i = 6; i < seg; i++)
+ 				{
+ 					Command_ABL_demo.segment[i].A = 0;
+ 					Command_ABL_demo.segment[i].B = 0;
+ 					Command_ABL_demo.segment[i].L = length0;
+ 				}
+				
+ 				pub1.publish(Command_ABL_demo);
+ 				for(int i = 0; i < 6; i++)
+ 				{
+ 					printf("A[%d]: %f, B[%d]: %f, L[%d]: %f\r\n", i, a_seg6[i], i, b_seg6[i], i, l_seg6[i]);
+ 				}
+
+ 				usleep(ts); 			
+ 			}
+
+ 			//reverse
+ 			//beta
+ 			for (int i = 0; i < t_step[10]; i++)
+ 			{ 
+ 				a_seg6[0] = a_useg;
+ 				b_seg6[0] = genetraj(M_PI/3, 0, i, t_step[10]);				
+ 				l_seg6[0] = length0;
+
+ 				a_seg6[1] = -a_useg;
+ 				b_seg6[1] = genetraj(2*M_PI/3, 0, i, t_step[10]);				
+ 				l_seg6[1] = length0;
+
+ 				a_seg6[2] = a_useg;
+ 				b_seg6[2] = genetraj(3*M_PI/3, 0, i, t_step[10]);				
+ 				l_seg6[2] = length0;
+
+ 				a_seg6[3] = -a_useg;
+ 				b_seg6[3] = genetraj(4*M_PI/3, 0, i, t_step[10]);				
+ 				l_seg6[3] = length0;
+
+ 				a_seg6[4] = a_useg;
+ 				b_seg6[4] = genetraj(5*M_PI/3, 0, i, t_step[10]);				
+ 				l_seg6[4] = length0;
+
+ 				a_seg6[5] = -a_useg;
+ 				b_seg6[5] = genetraj(6*M_PI/3, 0, i, t_step[10]);				
+ 				l_seg6[5] = length0;
+ 				
+ 				for (int i = 0; i < 6; i++)
+ 				{
+ 					b_seg6[i] = constrainb(b_seg6[i]);
+ 				}				
+
+ 				for (int i = 0; i < 6; i++)
+ 				{
+ 					Command_ABL_demo.segment[i].A = a_seg6[i];
+ 					Command_ABL_demo.segment[i].B = b_seg6[i];
+ 					Command_ABL_demo.segment[i].L = l_seg6[i];
+ 				}
+ 				for (int i = 6; i < seg; i++)
+ 				{
+ 					Command_ABL_demo.segment[i].A = 0;
+ 					Command_ABL_demo.segment[i].B = 0;
+ 					Command_ABL_demo.segment[i].L = length0;
+ 				}
+				
+ 				pub1.publish(Command_ABL_demo);
+ 				for(int i = 0; i < 6; i++)
+ 				{
+ 					printf("A[%d]: %f, B[%d]: %f, L[%d]: %f\r\n", i, a_seg6[i], i, b_seg6[i], i, l_seg6[i]);
+ 				}
+
+ 				usleep(ts); 			
+ 			}
+
+ 			//alpha
+ 			for (int i = 0; i < t_step[9]; i++)
+ 			{
+ 				a_seg6[0] = genetraj(a_useg, 0, i, t_step[9]);
+ 				b_seg6[0] = 0;
+ 				l_seg6[0] = length0;
+
+ 				a_seg6[1] = genetraj(-a_useg, 0, i, t_step[9]);
+ 				b_seg6[1] = 0;
+ 				l_seg6[1] = length0;
+
+ 				a_seg6[2] = genetraj(a_useg, 0, i, t_step[9]);
+ 				b_seg6[2] = 0;
+ 				l_seg6[2] = length0;
+
+ 				a_seg6[3] = genetraj(-a_useg, 0, i, t_step[9]);
+ 				b_seg6[3] = 0;
+ 				l_seg6[3] = length0;
+
+ 				a_seg6[4] = genetraj(a_useg, 0, i, t_step[9]);
+ 				b_seg6[4] = 0;
+ 				l_seg6[4] = length0;
+
+ 				a_seg6[5] = genetraj(-a_useg, 0, i, t_step[9]);
+ 				b_seg6[5] = 0;
+ 				l_seg6[5] = length0;
+ 				 				
+ 				for (int i = 0; i < 6; i++)
+ 				{
+ 					Command_ABL_demo.segment[i].A = a_seg6[i];
+ 					Command_ABL_demo.segment[i].B = b_seg6[i];
+ 					Command_ABL_demo.segment[i].L = l_seg6[i];
+ 				}
+ 				for (int i = 6; i < seg; i++)
+ 				{
+ 					Command_ABL_demo.segment[i].A = 0;
+ 					Command_ABL_demo.segment[i].B = 0;
+ 					Command_ABL_demo.segment[i].L = length0;
+ 				}
+				
+ 				pub1.publish(Command_ABL_demo);
+ 				for(int i = 0; i < 6; i++)
+ 				{
+ 					printf("A[%d]: %f, B[%d]: %f, L[%d]: %f\r\n", i, a_seg6[i], i, b_seg6[i], i, l_seg6[i]);
+ 				}
+
+ 				usleep(ts); 			
+ 			}
+			
+
 
 
 			flag = 0;

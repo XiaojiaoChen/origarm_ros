@@ -2,6 +2,7 @@
     <node pkg="joy" name="joy_node" type="joy_node" /> 
     <node pkg="origarm_ros" name="keyboard_node" type="keyboard" />
     <node pkg="origarm_ros" name="joystick_node" type="joy_teleopt" launch-prefix="xterm -e"/>
+    <!-- <node pkg="origarm_ros" name="joystick_node" type="joy_teleopt" launch-prefix="gnome-terminal -e"/> -->
     <node pkg="origarm_ros" name="Position_controller_node" type="Position_controller" />   
     <node pkg="origarm_ros" name="ABL_controller" type="ABL_controller"/>
     <node pkg="origarm_ros" name="spi_node" type="spi_node"  output="screen"/>
