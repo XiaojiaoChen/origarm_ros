@@ -11,10 +11,10 @@
 int tp = 1000;  //timestep
 
 /*[0]arm:  length: l0->lmax->l0->lmin->l0
-	[1]arm:  alpha:  0->pi/2->0->-pi/2 [->0]
-	[2]arm:  beta:   0->2pi(0->pi(-pi)->0->pi(-pi)->0->-pi->0)->0
+	[1]arm:  alpha:  0->0.7*6->0->-0.7*6 [->0]
+	[2]arm:  beta:   0->2pi->0
 	[3]2seg: alpha:  seg[0] 0->0.7*3; seg[1] 0->-0.7*3 [reverse]
-	[4]2seg: beta:   seg[0] 0->pi; seg[1] 0->-pi  [reverse]
+	[4]2seg: beta:   seg[0] 0->2pi; seg[1] 0->-2pi  [reverse]
 	[5]3seg:     :   seg[0] 0->0.7*2; seg[1] l->lmax; seg[2] 0->-0.7*2 
 	[6]3seg:     :   seg[0] 0.7; seg[1] l->l0; seg[2] -0.7 
 	[7]3seg:     :   seg[0] beta 0->pi; seg[2] beta 0->-pi [reverse]//beta,l
@@ -27,7 +27,7 @@ int tp = 1000;  //timestep
 
 const float a_useg = 0.7;
 
-int t_step[] = {500, 500, 1500, 500, 1500, 1500, 500, 750, 500, 500, 1500, 250, 1500};
+int t_step[] = {500, 500, 1500, 500, 1500, 500, 500, 750, 500, 500, 1500, 250, 1500};
 
 const int ms = 1000; //1ms
 int ts = 10*ms; //time sleep at each step
@@ -246,7 +246,7 @@ int main(int argc, char **argv)
  			
  				usleep(ts);
  			}
- 			//writeArm, alpha: pi/2->0
+ 			//writeArm, alpha: 0.7*6->0
  			for (int i = 0; i < t_step[1]; i++)
  			{
  				demo_a = genetraj(a_useg*6, 0, i, t_step[1]);
@@ -272,7 +272,7 @@ int main(int argc, char **argv)
  			
  				usleep(ts);
  			}
- 			//writeArm, alpha: 0->-pi/2
+ 			//writeArm, alpha: 0->-0.7*6
  			for (int i = 0; i < t_step[1]; i++)
  			{
  				demo_a = genetraj(0, -a_useg*6, i, t_step[1]);
@@ -354,7 +354,7 @@ int main(int argc, char **argv)
  				usleep(ts);
  			}
 
- 			//writeArm, alpha: -pi/2->0
+ 			//writeArm, alpha: -0.7*6->0
  			for (int i = 0; i < t_step[1]; i++)
  			{
  				demo_a = genetraj(-a_useg*6, 0, i, t_step[1]);
@@ -566,8 +566,8 @@ int main(int argc, char **argv)
  				printf("A[%d]: %f, B[%d]: %f, L[%d]: %f\r\n", i, a_seg6[i], i, b_seg6[i], i, l_seg6[i]);
  			}
 			
-			//first segment, alpha: 0->pi/6
- 			//second segment, alpha: 0->-pi/6
+			//first segment, alpha: 0->0.7*3
+ 			//second segment, alpha: 0->-0.7*3
  			for (int i = 0; i < t_step[3]; i++)
  			{
  				a_seg2[0] = genetraj(0, a_useg*3, i, t_step[3]);
@@ -648,8 +648,8 @@ int main(int argc, char **argv)
  			}
  				
  			//reverse
- 			//first segment, alpha: pi/6->0
- 			//second segment, alpha: -pi/6->0
+ 			//first segment, alpha: 0.7*3->0
+ 			//second segment, alpha: -0.7*3->0
  			for (int i = 0; i < t_step[3]; i++)
  			{
  				a_seg2[0] = genetraj(a_useg*3, 0, i, t_step[3]);
@@ -1045,9 +1045,9 @@ int main(int argc, char **argv)
  				printf("A[%d]: %f, B[%d]: %f, L[%d]: %f\r\n", i, a_seg6[i], i, b_seg6[i], i, l_seg6[i]);
  			}
 
-			//first segment alpha: 0->pi/9
+			//first segment alpha: 0->0.7*2
 			//second segment length: l0->lmax
-			//third segment alpha: 0->-pi/9
+			//third segment alpha: 0->-0.7*2
 			for (int i = 0; i < t_step[5]; i++)
  			{
  				a_seg3[0] = genetraj(0, a_useg*2, i, t_step[5]);
@@ -1096,9 +1096,9 @@ int main(int argc, char **argv)
  				usleep(ts); 			
  			}
 
- 			//first segment alpha: pi/9
+ 			//first segment alpha: 0.7*2
 			//second segment length: lmax->lmin
-			//third segment alpha: -pi/9
+			//third segment alpha: -0.7*2
 			for (int i = 0; i < t_step[6]; i++)
  			{
  				a_seg3[0] = a_useg*2;
@@ -1147,9 +1147,9 @@ int main(int argc, char **argv)
  				usleep(ts); 			
  			}
 
- 			//first segment alpha: pi/9, beta: 0->pi
+ 			//first segment alpha: 0.7*2, beta: 0->pi
 			//second segment length: lmin->lmax
-			//third segment alpha: -pi/9, beta: 0->-pi
+			//third segment alpha: -0.7*2, beta: 0->-pi
 			for (int i = 0; i < t_step[7]; i++)
  			{
  				a_seg3[0] = a_useg*2;
@@ -1197,9 +1197,9 @@ int main(int argc, char **argv)
  				usleep(ts); 			
  			}
 
-			//first segment alpha: pi/9, beta: -pi->0
+			//first segment alpha: 0.7*2, beta: -pi->0
 			//second segment length: lmax->lmin
-			//third segment alpha: -pi/9, beta: pi->0
+			//third segment alpha: -0.7*2, beta: pi->0
 			for (int i = 0; i < t_step[7]; i++)
  			{
  				a_seg3[0] = a_useg*2;
@@ -1248,9 +1248,9 @@ int main(int argc, char **argv)
  			}
 
  			//reverse
- 			//first segment alpha: pi/9->0
+ 			//first segment alpha: 0.7*2->0
 			//second segment length: lmin-l0
-			//third segment alpha: -pi/9->0
+			//third segment alpha: -0.7*2->0
 			for (int i = 0; i < t_step[8]; i++)
  			{
  				a_seg3[0] = genetraj(a_useg*2, 0, i, t_step[8]);
@@ -1305,7 +1305,7 @@ int main(int argc, char **argv)
  			flag = 6;
 		}
 		else if (flag == 6)//writeSixSegments
-		{		
+		{
 			/************************************************seg1*******************************************/
 			//seg1, alpha->a_useg
 			for (int i = 0; i < t_step[11]; i++)
@@ -2165,9 +2165,6 @@ int main(int argc, char **argv)
  				usleep(ts); 			
  			}
 			
-
-
-
 			flag = 0;
 		}
 		else
