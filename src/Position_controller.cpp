@@ -47,6 +47,7 @@ class POSISTION_CONTROLLER
       if(clt_.call(Desired))
       {
         Cmd_ = Desired.response.output;
+        pub_.publish(Cmd_);
         //cout << Desired.response.output;
       }
     }
@@ -85,7 +86,7 @@ int main(int argc, char **argv)
   
   while(ros::ok())
   {
-    POSISTION_CONTROLLER_Node.pub();
+    // POSISTION_CONTROLLER_Node.pub();
     //ros::spinOnce();
     loop_rate.sleep();
   }
