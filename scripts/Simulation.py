@@ -34,6 +34,7 @@ class Example(QWidget):
         grid = QGridLayout()
         self.gridLayout = QGridLayout()
         self.gridLayout_2 = QGridLayout()
+        self.gridLayout_3 = QGridLayout()
 
         self.lab1 = QLabel('0')
         self.lab1.setFixedSize(100, 12)
@@ -230,14 +231,16 @@ class Example(QWidget):
         self.setWindowTitle('feedback')
         self.muti = self.view.multi
 
-        self.Update()
-        self.setLayout(self.gridLayout_2)
+        # self.Update()
+        # self.setLayout(self.gridLayout_2)
+        self.gridLayout_3.addWidget(self.view.w,0,0)
+        self.setLayout(self.gridLayout_3)
 
         # self.show()
         # self.view.animation()
-        self.edit10.setValue(self.view.pts[8][18][0]/self.muti*100)
-        self.edit11.setValue(-self.view.pts[8][18][1]/self.muti*100)
-        self.edit12.setValue(-self.view.pts[8][18][2]/self.muti*100)
+        # self.edit10.setValue(self.view.pts[8][18][0]/self.muti*100)
+        # self.edit11.setValue(-self.view.pts[8][18][1]/self.muti*100)
+        # self.edit12.setValue(-self.view.pts[8][18][2]/self.muti*100)
 
         '''self.edit13.setValue(self.view.a[0])
         self.edit14.setValue(self.view.a[1])
@@ -369,22 +372,22 @@ class Thread(QThread):
         self.ABL = ABL
 
 if __name__ == '__main__':
-    x = [pi/18, pi/18, pi/18, pi/4, pi/4, pi/4, 0.055, 0.055, 0.055]
+    x = [pi/8, pi/8, pi/8, 0, 0, 0, 0.055, 0.055, 0.055]
     para = dict()
-    para[0] = [pi/6, pi/2, 0.5, 'big']
+    para[0] = [pi/6, pi/2, 0.5, 'small']
     para[1] = [pi/6, pi, 0.5, 'small']
     para[2] = [pi/6, pi/2, 0.5, 'small']
-    soft1 = softArm(alpha=x[0], beta=x[3], length=x[6], actuator_type='big')
-    soft2 = softArm(alpha=x[1], beta=x[3], length=x[7], actuator_type='big')
-    soft3 = softArm(alpha=x[2], beta=x[3], length=x[8], actuator_type='big')
-    soft4 = softArm(alpha=x[0], beta=x[4], length=x[6])
-    soft5 = softArm(alpha=x[1], beta=x[4], length=x[7])
+    soft1 = softArm(alpha=x[2], beta=x[3], length=x[6])
+    soft2 = softArm(alpha=x[2], beta=x[1], length=x[7])
+    soft3 = softArm(alpha=x[2], beta=x[3], length=x[8])
+    soft4 = softArm(alpha=x[2], beta=x[2], length=x[6])
+    soft5 = softArm(alpha=x[2], beta=x[4], length=x[7])
     soft6 = softArm(alpha=x[2], beta=x[4], length=x[8])
-    soft7 = softArm(alpha=x[0], beta=x[5], length=x[6])
+    soft7 = softArm(alpha=x[2], beta=x[3], length=x[6])
     soft8 = softArm(alpha=x[1], beta=x[5], length=x[7])
     soft9 = softArm(alpha=x[2], beta=x[5], length=x[8])
 
-    softArms = SoftObject(soft1, soft2, soft3, soft4, soft5, soft6, soft7, soft8, soft9)
+    softArms = SoftObject(soft1, soft2, soft3, soft4, soft5, soft6)
     app = QApplication(sys.argv)
     # Display = Example(softArms)
     # Display.show()

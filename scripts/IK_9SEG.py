@@ -54,7 +54,6 @@ class ik_solver:
                 ]
         self.desired = ABL
         self.detect = ABL
-        print('update', self.desired.segment[0].L)
         self.pts = self.position(x0)
         self.N, self.A = self.forwarding_orientation(x0)
 

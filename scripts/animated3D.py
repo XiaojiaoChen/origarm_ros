@@ -82,15 +82,17 @@ class Visualizer(QObject):
         self.w.setGeometry(20, 20, 900, 900)
 
         self.pts = dict()
+        self.pts2 = dict()
 
         self.flag1 = 0
         self.display = 1
-        self.multi = 20
+        self.multi = 40
 
         self.dst_pos = [5, 5, 5]
         self.dst_dir = [0, 1, 0]
 
         self.traces = dict()
+        self.lines = dict()
         self.incre_alpha = dict()
         self.incre_beta = dict()
         self.incre_length = dict()
@@ -102,18 +104,22 @@ class Visualizer(QObject):
         self.incre = 0
 
         self.num_seg = sf.num
-        self.num_pipe = 3
+        self.num_pipe = 1
         self.calculate_flag = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0}
         self.angle = {0:[0, 1, 0],1:[0, 1, 0],2:[0, 1, 0]}
-        self.vector_display([1,0,0], [0,0,0], 7, 2, 1)
-        self.vector_display([0,-1,0], [0,0,0], 8, 2, 2)
-        self.vector_display([0,0,-1], [0,0,0], 9, 2, 3)
+        # self.vector_display([1,0,0], [0,0,0], 7, 2, 1)
+        # self.vector_display([0,-1,0], [0,0,0], 8, 2, 2)
+        # self.vector_display([0,0,-1], [0,0,0], 9, 2, 3)
 
-        for i in range(3):
-            for j in range(3):
-                self.traces[3*i+j] = gl.GLLinePlotItem(color=pg.glColor((40+30*(i+1), 100+10*(i+1))),
+   
+        for i in range(self.num_seg):
+            self.traces[i] = gl.GLLinePlotItem(color=pg.glColor((40+30*(i+1), 100+10*(i+1))),
                                                 width=2, antialias=True)
-                self.w.addItem(self.traces[3*i+j])
+            self.w.addItem(self.traces[i])
+        for i in range(36):
+            self.lines[i] = gl.GLLinePlotItem(color=pg.glColor((40+30*(1), 100+10*(1))),
+                                            width=2, antialias=True)
+            self.w.addItem(self.lines[i])
         self.circle_show = 1
         if self.circle_show:
             self.create_circle()
@@ -131,6 +137,16 @@ class Visualizer(QObject):
         self.euler_beta = 0
         self.euler_alpha = 0
         self.euler_gamma = 0
+
+        self.angle = np.array([0, pi/3, pi*2/3, pi, pi*4/3, pi*5/3]) #
+        self.x_offset = np.array([1, cos(pi/3), cos(2*pi/3), cos(pi), cos(4*pi/3), cos(5*pi/3)])*self.multi*0.0615
+        self.y_offset = np.array([0, sin(pi/3), sin(2*pi/3), sin(pi), sin(4*pi/3), sin(5*pi/3)])*self.multi*0.0615
+        self.x_offset2 = np.array([1, cos(pi/3), cos(2*pi/3), cos(pi), cos(4*pi/3), cos(5*pi/3), 0])*self.multi*0.0615
+        self.y_offset2 = np.array([0, sin(pi/3), sin(2*pi/3), sin(pi), sin(4*pi/3), sin(5*pi/3), 0])*self.multi*0.0615
+        l = [6,6, 6, 6, 6, 6]
+        for i in range(6):
+            self.x_offset[i] = self.x_offset2[l[i]]
+            self.y_offset[i] = self.y_offset2[l[i]]
 
         self.update()
 
@@ -159,14 +175,6 @@ class Visualizer(QObject):
 
         self.transfer_line()
 
-        # self.orientation()
-        # self.vector_display(self.n, self.pts[8][18], 1, 1.5, 1)
-        # self.vector_display(self.o, self.pts[8][18], 2, 1.5, 2)
-        # self.vector_display(self.a, self.pts[8][18], 3, 1.5, 3)
-        '''self.vector_display(self.pts[2][18], self.pts[0][0], 4, 1, 1)
-        self.vector_display(self.pts[5][18]-self.pts[2][18], self.pts[2][18], 5, 1, 2)
-        self.vector_display(self.pts[8][18]-self.pts[5][18], self.pts[5][18], 6, 1, 3)'''
-
         if self.incre:
             self.Sign.ValueSign.emit()
             self.incre -= 1
@@ -190,8 +198,34 @@ class Visualizer(QObject):
                   [-sin(beta), cos(beta), 0],
                   [0, 0, 1]])
         self.pts[seg] = np.vstack([x, y, z]).transpose().dot(transB)
-        self.nx[seg+1] = [cos(beta)*cos(alpha), sin(beta)*cos(alpha), -sin(alpha)]
-        self.nz[seg+1] = [cos(beta)*sin(alpha), sin(beta)*sin(alpha), cos(alpha)]
+
+    def create_Lines(self, seg, alpha, beta, lm): # 扩展接口：
+        x = np.array([.0]*19)
+        y = np.array([0]*19)
+        z = np.array([.0]*19)
+
+        for i in range(self.num_seg):
+            for j in range(6):
+                if not alpha:
+                    length = np.linspace(0, lm, 19)
+                    for k in range(19):
+                        z[k] = length[k]
+                else:
+                    length2 = (lm/alpha + 0.615 * sin(beta - self.angle[j])) * alpha
+               
+                    theta = np.linspace(0, alpha, 19)
+                    for k in range(19):
+                        # 根据alpha lm计算y=0 平面上图形
+                        x[k] = length2/alpha*(1-cos(theta[k]))
+                        z[k] = length2/alpha*sin(theta[k])
+
+                transB = np.array([[cos(beta), sin(beta), 0],
+                        [-sin(beta), cos(beta), 0],
+                        [0, 0, 1]])
+                self.pts2[6*i + j] = np.vstack([x, y, z]).transpose().dot(transB)
+                # self.pts2[6*i + j][:][0] = self.pts2[6*i + j][:][0] + self.x_offset[j]
+                # self.pts2[6*i + j][:][1] = -self.pts2[6*i + j][:][1] - self.y_offset[j]
+                # self.pts2[6*i + j][:][2] = -self.pts2[6*i + j][:][2] 
 
     def orientation(self):
         a1 = self.alpha[0] * 3
@@ -294,13 +328,13 @@ class Visualizer(QObject):
 
     def create_circle(self):
         def create(L, r):
-            num_res = 120
+            num_res = 200
             pos3 = np.zeros((num_res, num_res, 3))
             pos3[:, :, :2] = np.mgrid[:num_res, :num_res].transpose(1, 2, 0) * [-0.1, 0.1]
             pos3 = pos3.reshape(num_res**2, 3)
             d3 = (pos3 ** 2).sum(axis=1) ** 0.5
             area = L #产生备选点的区域
-            ring_res = 0.08 #环粗细
+            ring_res = 0.15 #环粗细
             for i in range(num_res):
                 pos3[i * num_res:num_res * (i + 1), 0] = -area + 2*area*i/num_res
                 pos3[i * num_res:num_res * (i + 1), 1] = np.linspace(-area, area, num_res)
@@ -308,7 +342,7 @@ class Visualizer(QObject):
             count = 0
             list1 = list()
             rad_ring = r #环圆心距离
-            ring = 0.029*10 #环半径
+            ring = 0.06*10 #环半径
             for i in range(num_res**2):
                 if  (ring - ring_res) ** 2 < ((pos3[i, 1]) ** 2 + (pos3[i, 0]-rad_ring) ** 2 )< ring**2  or\
                     (ring - ring_res) ** 2 < ((pos3[i, 1]+rad_ring*0.866) ** 2 + (pos3[i, 0]-rad_ring/2) ** 2)<ring**2 or\
@@ -322,18 +356,15 @@ class Visualizer(QObject):
                 backup.append(pos3[i])
             return backup
 
-        self.backup = create(L = 2, r = 0.09*10)
-        self.backup1 = create(L = 2, r = 0.0615*10)
+        self.backup = create(L = 3, r = 0.0615*self.multi)
         self.sp = list()
+        self.base = list()
 
         color = {0:pg.glColor(40,20,5),1:pg.glColor(40,20,5),2:pg.glColor(40,20,5),3:pg.glColor(40,40,0),4:pg.glColor(40,40,0),5:pg.glColor(40,40,0),6:pg.glColor(0,40,40),7:pg.glColor(0,40,40),8:pg.glColor(0,40,40)}
-        for i in range(self.num_seg):
-            for j in range(self.num_pipe*i, self.num_pipe*(i+1)):
-                if i <= 2:
-                    self.sp.append(gl.GLScatterPlotItem(pos=self.backup, size=0.08, pxMode=False, color = color[i]))
-                else:
-                    self.sp.append(gl.GLScatterPlotItem(pos=self.backup1, size=0.08, pxMode=False, color = color[i]))
-                self.w.addItem(self.sp[j])
+
+        for i in range(self.num_seg+1):
+            self.sp.append(gl.GLScatterPlotItem(pos=self.backup, size=0.08, pxMode=False, color = color[1]))
+            self.w.addItem(self.sp[i])
 
     def vector_display(self, vector, pos, num, multipy=0, rgb=0):
         color = [0,pg.glColor(255,0,0),pg.glColor(0,255,0),pg.glColor(0,0,255)]
@@ -356,29 +387,29 @@ class Visualizer(QObject):
 
     def update_circle(self, seg):
         #for seg in range(self.num_seg):
-        vector1 = np.subtract(self.pts[seg][1], self.pts[seg][0])
-        vector2 = np.subtract(self.pts[seg][2], self.pts[seg][0])
-
-        result = -np.cross(vector1, vector2)
-        # 化为单位向量
-        mod = np.sqrt(np.square(result[0])+np.square(result[1])+np.square(result[2]))
-        if mod:
-            result = np.divide(result, mod)
-        # 旋转轴
-        if not seg:
+        if seg == self.num_seg:
             #母本
             data = self.backup
-        elif seg<=2:
-            data = np.subtract(self.sp[self.num_pipe*seg-1].pos, self.pts[seg-1][18])
-        elif seg == 3:
-            data = np.dot(self.backup1, self.spin)
-        elif seg > 3:
-            data = np.subtract(self.sp[self.num_pipe * seg - 1].pos, self.pts[seg - 1][18])
-        for i in range(self.num_pipe):
-            spin = -np.array(linalg.expm(np.multiply((i+1)*self.alpha[seg]/self.num_pipe, self.hat(result))))
-            if seg==2 and i==2:
-                self.spin = -np.array(linalg.expm(np.multiply((i+1)*self.alpha[seg], self.hat(result))))
-            self.sp[i+self.num_pipe*seg].setData(pos=np.add(np.dot(data, spin), self.pts[seg][6*(i+1)][:]))
+            self.sp[seg].setData(pos=np.add(data, self.pts[0][0][:]))
+        else:
+            vector1 = np.subtract(self.pts[seg][1], self.pts[seg][0])
+            vector2 = np.subtract(self.pts[seg][2], self.pts[seg][0])
+
+            result = -np.cross(vector1, vector2)
+            # 化为单位向量
+            mod = np.sqrt(np.square(result[0])+np.square(result[1])+np.square(result[2]))
+            if mod:
+                result = np.divide(result, mod)
+            # 旋转轴
+            
+            if not seg:
+                data = self.backup
+            else:
+                data = np.subtract(self.sp[seg - 1].pos, self.pts[seg - 1][18])
+    
+            spin = -np.array(linalg.expm(np.multiply(self.alpha[seg], self.hat(result))))
+
+            self.sp[seg].setData(pos=np.add(np.dot(data, spin), self.pts[seg][18][:]))
 
     def hat(self, vector):
         hat = np.array([
@@ -427,7 +458,8 @@ class Visualizer(QObject):
                 self.pts[i][j][2] = -self.pts[i][j][2]
             self.traces[i].setData(pos=self.pts[i])
         if self.circle_show:
-            self.update_circle()
+            1
+            # self.update_circle()
     # 基于向量
 
     def transfer_line(self):
@@ -479,10 +511,9 @@ class Visualizer(QObject):
         multi = self.multi
         for i in range(self.num_seg):
             a[i] = self.alpha[i]
-        for i in range(self.num_seg):
             b[i] = self.beta[i]
-        for i in range(self.num_seg):
             self.create_Line(i, self.alpha[i], b[i], self.lm[i] * multi)
+            self.create_Lines(i , self.alpha[i], b[i], self.lm[i] * multi)
 
         for i in range(1, self.num_seg):
             for j in reversed(range(i)):
@@ -500,14 +531,27 @@ class Visualizer(QObject):
                             ]).dot(transB(b[j]))
                 self.pts[i] = self.pts[i].dot(transform)
                 self.pts[i] += base
+                # for j in range(6):
+                #     self.pts2[6*i + j] = self.pts2[6*i + j].dot(transform)
+                #     self.pts2[6*i + j] += base
 
         for seg in range(self.num_seg):
             for j in range(19):
                 self.pts[seg][j][1] = -self.pts[seg][j][1]
                 self.pts[seg][j][2] = -self.pts[seg][j][2]
+            self.traces[seg].setData(pos=self.pts[seg])
+
+        for i in range(self.num_seg):
+            for j in range(6):
+                for k in range(19):
+                    self.pts2[6*i + j][k][0] =  self.pts2[6*i + j][k][0] + self.x_offset[j]
+                    self.pts2[6*i + j][k][1] = -self.pts2[6*i + j][k][1] - self.y_offset[j]
+                    self.pts2[6*i + j][k][2] = -self.pts2[6*i + j][k][2]
+                self.lines[6*i + j].setData(pos=self.pts2[6*i + j])
+
+        for seg in range(self.num_seg+1):
             if self.circle_show:
                 self.update_circle(seg)
-            self.traces[seg].setData(pos=self.pts[seg])
     # 基于方程迭代
 
     def move(self):
@@ -519,23 +563,28 @@ class Visualizer(QObject):
                     self.soft[3*i+j].length += self.incre_length[i]
     
     def ROS(self):
-        for i in range(3):
-            if self.T.ABL.segment[2*i].A < 0:
-                for j in range(3):
-                    self.soft[3*i+j].alpha = -self.T.ABL.segment[2*i].A*2/3
-                    self.soft[3*i+j].beta = normalize_angle(self.T.ABL.segment[2*i].B + pi)
-                    self.soft[3*i+j].length = self.T.ABL.segment[2*i].L*2/3
-            elif self.T.ABL.segment[2*i].A > 0:
-                for j in range(3):
-                    self.soft[3*i+j].alpha = self.T.ABL.segment[2*i].A*2/3
-                    self.soft[3*i+j].beta = self.T.ABL.segment[2*i].B
-                    self.soft[3*i+j].length = self.T.ABL.segment[2*i].L*2/3
-            elif self.T.ABL.segment[2*i].A == 0:
-                for j in range(3):
-                    self.soft[3*i+j].alpha = 0
-                    self.soft[3*i+j].beta = 0
-                    self.soft[3*i+j].length = self.T.ABL.segment[2*i].L*2/3
-        self.Sign.ValueSign.emit()
+        # for i in range(3):
+            # if self.T.ABL.segment[2*i].A < 0:
+            #     for j in range(3):
+            #         self.soft[3*i+j].alpha = -self.T.ABL.segment[2*i].A*2/3
+            #         self.soft[3*i+j].beta = normalize_angle(self.T.ABL.segment[2*i].B + pi)
+            #         self.soft[3*i+j].length = self.T.ABL.segment[2*i].L*2/3
+            # elif self.T.ABL.segment[2*i].A > 0:
+            #     for j in range(3):
+            #         self.soft[3*i+j].alpha = self.T.ABL.segment[2*i].A*2/3
+            #         self.soft[3*i+j].beta = self.T.ABL.segment[2*i].B
+            #         self.soft[3*i+j].length = self.T.ABL.segment[2*i].L*2/3
+            # elif self.T.ABL.segment[2*i].A == 0:
+            #     for j in range(3):
+            #         self.soft[3*i+j].alpha = 0
+            #         self.soft[3*i+j].beta = 0
+            #         self.soft[3*i+j].length = self.T.ABL.segment[2*i].L*2/3
+        for i in range(6):
+            if self.T.ABL.segment[i].A < 0:
+                    self.soft[i].alpha = -self.T.ABL.segment[i].A
+                    self.soft[i].beta = normalize_angle(self.T.ABL.segment[i].B + pi)
+                    self.soft[i].length = self.T.ABL.segment[i].L
+        # self.Sign.ValueSign.emit()
 
     def inverse_kinematic(self, pts=[0,0,0], n=[0,0,0], a=[0,0,0], euler=0, model=1, input=[],length=2):
         result = self.Arms.inverse_kinematic(pts=pts, n=n, a=a, euler=euler, model=model, input=input,length=length)
