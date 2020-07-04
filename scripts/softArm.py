@@ -26,7 +26,7 @@ class softArm(object):
 
         self.angleULimit = pi
         self.angleDLimit = 0
-        self.lengthULimit = 10
+        self.lengthULimit = 0.8
         self.lengthDLimit = 0
         self.posVector = numpy.array([.0, .0, .0])
         self.posVector_D = numpy.array([.0, .0, .0])
