@@ -1,18 +1,3 @@
-#!/usr/bin/env python3
-#coding=utf-8
-
-import numpy as np
-import time
-from math import cos, sin, sqrt, pi, atan, asin, atan, atan2
-from scipy.optimize import least_squares
-from scipy.spatial.transform import Rotation
-from std_msgs.msg import String
-from angles import normalize_angle
-import rospy
-from origarm_ros.srv import ik
-from origarm_ros.msg import *
-import traceback
-
 class softArm(object):
     def __init__(self, c1 =6 * 400 * 0.09 / 2.3e-3 / 2, lengthD=0.403,length=0.403
                  ,length0=0.403,alphaD=.0,betaD=.0,alpha=.0,beta=.0,actuator_type='small'):
@@ -177,8 +162,8 @@ class SoftObject(object):
         for i in range(self.num):
             self.seg[i] = Arms[i]
 
-    def inverse_kinematic(self, pts, quat, x0, single = 0):
-        def test_square(dst, x0, a, n, R, single = 0):  # a1 a2 a3 b1 b2 b3 r1 r2 r3
+    def inverse_kinematic(self, pts, quat, seg, single = 0):
+        def test_square(dst, seg, a, n, R, single = 0):  # a1 a2 a3 b1 b2 b3 r1 r2 r3
             def Pos2ABLD():
                 x = dst[0]
                 y = dst[1]
@@ -375,7 +360,7 @@ class SoftObject(object):
                     result[3*i+2] = res[3*i+2] * res[3*i] / sin(res[3*i] / 2) / 2
                 return result
             now = time.time()
-            x0_rosenbrock = np.array(x0).astype('float64')
+   
             # string type
             if single:
                 res = Pos2ABLD()
@@ -385,14 +370,20 @@ class SoftObject(object):
                     res[0], res[1], res[2]
                 ]
             else:
-                res = least_squares(string_type, x0_rosenbrock,
+                x0 = [
+                    seg[0].A, seg[0].B, seg[0].L, 
+                    seg[1].A, seg[1].B, seg[1].L, 
+                    seg[2].A, seg[2].B, seg[2].L
+                ]
+            x0_rosenbrock = np.array(x0).astype('float64')
+            res = least_squares(string_type, x0_rosenbrock,
                                     bounds=([-pi, -pi, -pi, -2*pi, -2*pi, -2*pi, 0.05, 0.05, 0.05],
                                             [pi, pi, pi, 2*pi, 2*pi, 2*pi, 1, 1, 1]))
-                new = np.array([res.x[0], res.x[3], res.x[6],
+            new = np.array([res.x[0], res.x[3], res.x[6],
                                 res.x[1], res.x[4], res.x[7],
                                 res.x[2], res.x[5], res.x[8]
                                 ]).astype('float64')  # a1 b1 l1 a2 b2 l2 a3 b3 l3
-                result = tranformation_string(new)
+            result = tranformation_string(new)
 
             print('time cost:', time.time() - now)
             # end
@@ -421,67 +412,11 @@ class SoftObject(object):
         #             self.seg[0].length * 2 / self.seg[0].alpha * sin(self.seg[0].alpha / 6),
         #             self.seg[3].length * 2 / self.seg[3].alpha * sin(self.seg[3].alpha / 6),
         #             self.seg[6].length * 2 / self.seg[6].alpha * sin(self.seg[6].alpha / 6)
-        #             ]
-        x0 =1
-        self.desired = test_square(pts, x0, a, n, R, single)
+        #             
+        self.desired = test_square(pts, seg, a, n, R, single)
 
         return self.desired
 
     def quat_transform(self, qua): # alpha beta gamma
         R1 = Rotation.from_quat(qua).as_matrix()
         return R1
-
-    def outputPressure(self):
-        1
-
-class ik_solver:
-    def __init__(self):
-        # x = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.2, 0.2, 0.2]
-
-        # soft1 = softArm(alpha=x[0], beta=x[3], length=x[6], actuator_type='big')
-        # soft2 = softArm(alpha=x[1], beta=x[3], length=x[7], actuator_type='big')
-        # soft3 = softArm(alpha=x[2], beta=x[3], length=x[8], actuator_type='big')
-        # soft4 = softArm(alpha=x[0], beta=x[4], length=x[6])
-        # soft5 = softArm(alpha=x[1], beta=x[4], length=x[7])
-        # soft6 = softArm(alpha=x[2], beta=x[4], length=x[8])
-        # soft7 = softArm(alpha=x[0], beta=x[5], length=x[6])
-        # soft8 = softArm(alpha=x[1], beta=x[5], length=x[7])
-        # soft9 = softArm(alpha=x[2], beta=x[5], length=x[8])
-
-        # self.softArms = SoftObject(soft1, soft2, soft3, soft4, soft5, soft6, soft7, soft8, soft9)
-        self.ik_srv_setup()
-
-    def handle_ik_srv(self, req):
-        result = self.softArms.inverse_kinematic(
-            req.input.pose.position,
-            req.input.pose.orientation,
-            req.input.ABL.segment,
-            1
-        )
-
-        re = Command_ABL()
-        re.segment[0].A = result[0]
-        re.segment[0].B = result[1]
-        re.segment[0].L = result[2]
-        # print(np.degrees(result[0]))
-        # print(np.degrees(result[1]))
-        # print(np.degrees(result[3]))
-        # print(np.degrees(result[4]))
-        # print(np.degrees(result[6]))
-        # print(np.degrees(result[7]))
-        # print(result[8])
-        return re
-
-    def ik_srv_setup(self):
-        rospy.init_node('ik_srv')
-        s = rospy.Service('ik', ik, self.handle_ik_srv)
-        print('ready for ik service')
-        rospy.spin()
-      
-
-if __name__ == '__main__':
-    try:
-        IK = ik_solver()
-        print('IK is finished')
-    except rospy.ServiceException as exc:
-        print("IK call failed:"+str(exc))

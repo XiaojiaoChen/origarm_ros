@@ -1,0 +1,1 @@
+origarm_ros/Sensor_Act[6] sensor_actuator

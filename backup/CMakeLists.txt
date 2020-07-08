@@ -58,6 +58,14 @@ find_package(Eigen3 REQUIRED)
 
 ## Generate messages in the 'msg' folder
 add_message_files(FILES
+<<<<<<< HEAD
+  Test.msg
+  Seg_ABL.msg
+  Sensor.msg
+  Command_Pre_Open.msg
+  Command_ABL.msg
+=======
+>>>>>>> 98f860b99350572385088eaef4ecae53b37ef1b4
   Command_Position.msg
   Command_ABL.msg
   Command_Pre_Open.msg
@@ -299,11 +307,5 @@ target_link_libraries(demo_abl
 add_executable(demo_picknplace src/demo_picknplace.cpp) 
 add_dependencies(demo_picknplace ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(demo_picknplace             
-   ${catkin_LIBRARIES}
- )
-
-add_executable(demo_xyz src/demo_xyz.cpp) 
-add_dependencies(demo_xyz ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(demo_xyz             
    ${catkin_LIBRARIES}
  )

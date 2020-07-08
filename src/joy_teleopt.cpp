@@ -5,18 +5,38 @@
 #include <math.h>
 #include <time.h>
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <stdio.h>
 #include <stdlib.h>
-#include <termios.h>                    //termios, TCSANOW, ECHO, ICANON
 
 #include "origarm_ros/Command_ABL.h"
-#include "origarm_ros/Cmd_ABL.h"
 #include "origarm_ros/Seg_ABL.h"
 #include "origarm_ros/SegOpening.h"
+#include "origarm_ros/Command_Pre_Open.h"
 #include "origarm_ros/Command_Position.h"
+#include "origarm_ros/keynumber.h"
+#include "origarm_ros/modenumber.h"
+#include "origarm_ros/segnumber.h"
+
+#include "myData.h"
+#include "myFunction.h"
+#include <Eigen/Eigen>
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
+using Eigen::Matrix4f;
+using Eigen::Matrix3f;
+using Eigen::Vector3f;
+using Eigen::VectorXf;
+using Eigen::Quaternionf;
 
 using namespace std;
+
+//save into files
+int save_flag = 0;
+
+//keyboard mapping
+int key_no[10];
 
 //joystick mapping
 float joyLx;
@@ -25,20 +45,21 @@ float joyRx;
 float joyRy;
 float joyLT;
 float joyRT;
-int joyLB;
-int joyRB;		//segment[8]
-int joyX;		//segment[3]
-int joyY;		//segment[2]
-int joyA;       //segment[0]
-int joyB;		//segment[1]
+int joyLB;		//mode[5]
+int joyRB;	    //mode[4]	
+int joyX;		//mode[2]
+int joyY;		//mode[3]
+int joyA;       //mode[0]
+int joyB;		//mode[1]
 int joyCrossY;	
 int joyCrossX;	
-int joyUp;		//segment[6]
-int joyDown;	//segment[4]
-int joyLeft;	//segment[7]
-int joyRight;	//segment[5]
+int joyUp;		
+int joyDown;	
+int joyLeft;	
+int joyRight;	
 
 int last_joyRB;
+int last_joyLB;
 int last_joyX;
 int last_joyY;
 int last_joyA;
@@ -56,16 +77,18 @@ int status;
 
 //Write ABL
 int segNumber;
+float alpha;
+float beta;
+float length = length0;
+float segAlpha_[3];
+float segBeta_[3];
+float segLength_[3];
 float segAlpha[9];
 float segBeta[9];
 float segLength[9];
 
-float alpha;
-float beta;
-float length  = 0.055;
-
-float a_scale = 0.001;
-float b_scale = 0.001;
+float a_scale = 0.003;
+float b_scale = 0.002;
 float l_scale = 0.00001;
 
 float l_max =  0.08;
@@ -91,25 +114,66 @@ float openingBase;
 float OpeningResult[6];
 
 //Write XYZ unit:m
-float x = 0;
-float y = 0;
-float z = 0.055;
+float x = x_origin;
+float y = y_origin;
+float z = z_origin;
+float segx_ = x_origin;
+float segy_ = y_origin;
+float segz_ = z_origin*6;
+float segqx_ = 1;
+float segqy_ = 0;
+float segqz_ = 0;
+float segqw_ = 1;
 
 float x_scale = 0.00001;
 float y_scale = 0.00001;
 float z_scale = 0.0001;
 
-float x_max =  0.01;
-float x_min = -0.01;
-float y_max =  0.01;
-float y_min = -0.01;
-float z_max =  0.08;
-float z_min =  0.03;
+float x_max =  0.06;
+float x_min = -0.06;
+float y_max =  0.06;
+float y_min = -0.06;
 
+float z_max =  0.08;
+float z_min =  0.01;
+float z_max9 = z_max*9;
+float z_min9 = z_min*9;
+float z_max6 = z_max*6;
+float z_min6 = z_min*6;
+
+//Internal parameters
+//ABL calculated by XYZ
+float alphad;
+float betad;
+float lengthd;
+float segAlphad_[3];
+float segBetad_[3];
+float segLengthd_[3];
+float segAlphad[9];
+float segBetad[9];
+float segLengthd[9];
+
+//control mode
+//mode[0]: 1 abl; mode[1]: 3 abl; mode[2]: 9 abl; mode[3]: 1 xyz; mode[4]: 3 xyz;
+//mode[0]: joyA;  mode[1]: joyB;  mode[2]: joyX;  mode[3]: joyY;  mode[4]: joyRB;
+int mode;
+
+//keyboard callback
+void keyCallback(const origarm_ros::keynumber& key)
+{
+	for (int i = 0; i < 10; i++)
+	{
+		key_no[i] = key.KEY_CODE[i];
+		if (key_no[i] > 0)
+		{
+			segNumber = i;
+		}
+	}
+}
 
 //joystick callback
 void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
-{	
+{
 	//joystick mapping
 	joyLx = joy->axes[0];
 	joyLy = joy->axes[1];
@@ -159,42 +223,35 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 		joyDown = 0;
 	}
 
-	// 9 segments, SegNumber:[1]->[9]	
 	if (joyA == 1 && last_joyA == 0)
 	{
-		segNumber = 0;
+		mode = 0;
 	}
 	else if (joyB == 1 && last_joyB == 0)
 	{
-		segNumber = 1;
+		mode = 1;
 	}
 	else if (joyY == 1 && last_joyY == 0)
 	{
-		segNumber = 2;
+		mode = 3;
 	}
 	else if (joyX == 1 && last_joyX == 0)
 	{
-		segNumber = 3;
-	}
-	else if (joyDown == 1 && last_joyDown == 0)
-	{
-		segNumber = 4;
-	}
-	else if (joyRight == 1 && last_joyRight == 0)
-	{
-		segNumber = 5;
-	}
-	else if (joyUp == 1 && last_joyUp == 0)
-	{
-		segNumber = 6;
-	}
-	else if (joyLeft == 1 && last_joyLeft == 0)
-	{
-		segNumber = 7;
+		mode = 2;
 	}
 	else if (joyRB == 1 && last_joyRB == 0)
 	{
-		segNumber = 8;
+		mode = 4;
+	}
+
+	//save into files
+	if (joyLB == 1 && last_joyLB == 0)
+	{
+		save_flag = 1;
+	}
+	else
+	{
+		save_flag = 0;
 	}
 
 	//only when joyRT && joyLT pressed together, joystick starts to control
@@ -228,51 +285,248 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
   	last_joyLeft = joyLeft;
   	last_joyRight = joyRight;
   	last_joyRB = joyRB;
-
+  	last_joyLB = joyLB;
 }
 
-//Joystick->ABL
-void WriteABL()
+//ABL from ik
+void ABLCallback(const origarm_ros::Command_ABL& msg)
 {
-  	if (joyLy > 0.05)
+	alphad  = msg.segment[0].A;
+	betad   = msg.segment[0].B;
+	lengthd = msg.segment[0].L;
+
+	for (int i = 0; i < 3; i++)
 	{
-		segAlpha[segNumber] = segAlpha[segNumber] + a_scale;
+		segAlphad_[i]  = msg.segment[int(i*2)].A;
+		segBetad_[i]   = msg.segment[int(i*2)].B;
+		segLengthd_[i] = msg.segment[int(i*2)].L;
 	}
-	else if (joyLy < -0.05)
+}
+
+float constrain2PI (float s)
+{
+	if (s > M_PI)
 	{
-		segAlpha[segNumber] = segAlpha[segNumber] - a_scale;
+		s = s - 2*M_PI;
 	}
-	
-	if (joyRx > 0.05)
+	else if (s < -M_PI)
 	{
-		if (joyRx > 0.5)
-		{
-			segBeta[segNumber] = segBeta[segNumber] + 2*b_scale;
-		}
-		else
-		{
-			segBeta[segNumber] = segBeta[segNumber] + b_scale;
-		}
-	}
-	else if (joyRx < -0.05)
-	{
-		if (joyRx < -0.5)
-		{
-			segBeta[segNumber] = segBeta[segNumber] - 2*b_scale;
-		}
-		else
-		{
-			segBeta[segNumber] = segBeta[segNumber] - b_scale;
-		}
+		s = s + 2*M_PI;
 	}
 
-	if (joyLT != 1 && joyRT != 1)
+	return s;
+}
+
+//Joystick->ABL (joyLy->alpha, joyRx->beta, joyLT & joyRT->length)
+void writeABL1(int joystickFLag)
+{
+	if (joystickFLag == 1)
 	{
-			
+		if (joyLy > 0.05)
+		{			
+			alpha = alpha + a_scale;
+		}
+		else if (joyLy < -0.05)
+		{
+			alpha = alpha - a_scale;
+		}
+
+		if (joyRx > 0.05)
+		{
+			if (joyRx > 0.5)
+			{
+				beta = beta + 2*b_scale;
+			}
+			else
+			{
+				beta = beta + b_scale;
+			}
+		}
+		else if (joyRx < -0.05)
+		{
+			if (joyRx < -0.5)
+			{
+				beta = beta - 2*b_scale;
+			}
+			else
+			{
+				beta = beta - b_scale;
+			}
+		}
+
+		if (joyLT != 1 && joyRT != 1)
+		{
+
+		}
+		else if (abs(joyLT-1) > 0.05)
+		{
+			if (abs(joyLT-1) > 1)
+			{
+				length = length + 2*l_scale;
+			}
+			else
+			{
+				length = length + l_scale;
+			}
+		}
+		else if (abs(joyRT-1) > 0.05)
+		{
+			if (abs(joyRT-1) > 0.05)
+			{
+				if (abs(joyRT-1) > 1)
+				{
+					length = length - 2*l_scale;
+				}
+				else
+				{
+					length = length - l_scale;
+				}
+			}
+		}
 	}
-	else
+	else if (joystickFLag == 0)  //calculate  ABL from xyz
 	{
-		if (abs(joyLT-1) > 0.05)
+		alpha  = alphad;
+		beta   = betad;
+		length = lengthd;
+	}
+
+	beta = constrain2PI(beta);
+
+	alpha  = CONSTRAIN(alpha, a_min, a_max);
+	beta   = CONSTRAIN(beta, b_min, b_max);
+	length = CONSTRAIN(length, l_min, l_max);
+}
+
+void writeABL3(int joystickFLag)
+{
+	if (joystickFLag == 1)
+	{
+		if (segNumber < 3)
+		{
+			if (joyLy > 0.05)
+			{			
+				segAlpha_[segNumber] = segAlpha_[segNumber] + a_scale;
+			}
+			else if (joyLy < -0.05)
+			{
+				segAlpha_[segNumber] = segAlpha_[segNumber] - a_scale;
+			}
+
+			if (joyRx > 0.05)
+			{
+				if (joyRx > 0.5)
+				{
+					segBeta_[segNumber] = segBeta_[segNumber] + 2*b_scale;
+				}
+				else
+				{
+					segBeta_[segNumber] = segBeta_[segNumber] + b_scale;
+				}
+			}
+			else if (joyRx < -0.05)
+			{
+				if (joyRx < -0.5)
+				{
+					segBeta_[segNumber] = segBeta_[segNumber] - 2*b_scale;
+				}
+				else
+				{
+					segBeta_[segNumber] = segBeta_[segNumber] - b_scale;
+				}
+			}
+
+			if (joyLT != 1 && joyRT != 1)
+			{
+
+			}
+			else if (abs(joyLT-1) > 0.05)
+			{
+				if (abs(joyLT-1) > 1)
+				{
+					segLength_[segNumber] = segLength_[segNumber] + 2*l_scale;
+				}
+				else
+				{
+					segLength_[segNumber] = segLength_[segNumber] + l_scale;
+				}
+			}
+			else if (abs(joyRT-1) > 0.05)
+			{
+				if (abs(joyRT-1) > 0.05)
+				{
+					if (abs(joyRT-1) > 1)
+					{
+						segLength_[segNumber] = segLength_[segNumber] - 2*l_scale;
+					}
+					else
+					{
+						segLength_[segNumber] = segLength_[segNumber] - l_scale;
+					}
+				}
+			}
+		}		
+	}
+	else if (joystickFLag == 0)
+	{
+		for (int i = 0; i < 3; i++)
+		{
+			segAlpha_[i]  = segAlphad_[i]*2;
+			segBeta_[i]   = segBetad_[i];
+			segLength_[i] = segLengthd_[i]*2;
+		}		
+	}
+
+	for (int i = 0; i < 3; i++)
+	{
+		segBeta_[i]   = constrain2PI(segBeta_[i]);
+		segAlpha_[i]  = CONSTRAIN(segAlpha_[i], a_min*2, a_max*2);
+		segBeta_[i]   = CONSTRAIN(segBeta_[i], b_min, b_max);
+		segLength_[i] = CONSTRAIN(segLength_[i], l_min*2, l_max*2);
+	}
+}
+
+void writeABL9(int joystickFLag)
+{
+	if (joystickFLag == 1)// calculated from joystick
+	{
+		if (joyLy > 0.05)
+		{			
+			segAlpha[segNumber] = segAlpha[segNumber] + a_scale;
+		}
+		else if (joyLy < -0.05)
+		{
+			segAlpha[segNumber] = segAlpha[segNumber] - a_scale;
+		}
+
+		if (joyRx > 0.05)
+		{
+			if (joyRx > 0.5)
+			{
+				segBeta[segNumber] = segBeta[segNumber] + 2*b_scale;
+			}
+			else
+			{
+				segBeta[segNumber] = segBeta[segNumber] + b_scale;
+			}
+		}
+		else if (joyRx < -0.05)
+		{
+			if (joyRx < -0.5)
+			{
+				segBeta[segNumber] = segBeta[segNumber] - 2*b_scale;
+			}
+			else
+			{
+				segBeta[segNumber] = segBeta[segNumber] - b_scale;
+			}
+		}
+
+		if (joyLT != 1 && joyRT != 1)
+		{
+
+		}
+		else if (abs(joyLT-1) > 0.05)
 		{
 			if (abs(joyLT-1) > 1)
 			{
@@ -285,44 +539,45 @@ void WriteABL()
 		}
 		else if (abs(joyRT-1) > 0.05)
 		{
-			if (abs(joyRT-1) > 1)
+			if (abs(joyRT-1) > 0.05)
 			{
-				segLength[segNumber] = segLength[segNumber] - 2*l_scale;
+				if (abs(joyRT-1) > 1)
+				{
+					segLength[segNumber] = segLength[segNumber] - 2*l_scale;
+				}
+				else
+				{
+					segLength[segNumber] = segLength[segNumber] - l_scale;
+				}
 			}
-			else
-        	{
-        		segLength[segNumber] = segLength[segNumber] - l_scale;
-        	}
 		}
 	}
-			
-	if (segAlpha[segNumber] >= a_max)
+	else if (joystickFLag == 0) //calcuated from XYZ_9 control mode
 	{
-		segAlpha[segNumber] = a_max;
+		for (int i = 0; i < 9; i++)
+		{
+			segAlpha[i]  = segAlphad[i];
+			segBeta[i]   = segBetad[i];
+			segLength[i] = segLengthd[i];
+		}		
 	}
-	else if (segAlpha[segNumber] <= a_min)
+	else if (joystickFLag == 2) //calculated from ABL_3 control mode
 	{
-		segAlpha[segNumber] = a_min;
+		for (int i = 0; i < 6; i++)
+		{
+			segAlpha[i] = segAlpha_[int(i/2)]/2;
+			segBeta[i]  = segBeta_[int(i/2)];
+			segLength[i]= segLength_[int(i/2)]/2;
+		}
 	}
 
-	if (segBeta[segNumber] >= b_max)
+	for (int i = 0; i < 9; i++)
 	{
-		segBeta[segNumber] = b_max;
-	}
-	else if (segBeta[segNumber] <= b_min)
-	{
-		segBeta[segNumber] = b_min;
-	}
-
-	if (segLength[segNumber] >= l_max)
-	{
-		segLength[segNumber] = l_max;
-	}
-	else if (segLength[segNumber] <= l_min)
-  	{
-  		segLength[segNumber] = l_min;
-  	}	
-  	
+		segBeta[i]  = constrain2PI(segBeta[i]);
+		segAlpha[i]  = CONSTRAIN(segAlpha[i], a_min, a_max);
+		segBeta[i]   = CONSTRAIN(segBeta[i], b_min, b_max);
+		segLength[i] = CONSTRAIN(segLength[i], l_min, l_max);
+	}		
 }
 
 //Joystick->Opening
@@ -334,7 +589,7 @@ void WriteOpening()
 		openingBase = 0.5;
 	}
 	else if (joyLy < 0)
-  {
+  	{
 		openingBase = -0.8;
 	}
 	else
@@ -374,9 +629,9 @@ void WriteOpening()
 			else
 			{
 				rawAmplitudeMax = Rmax/sin(rawAngle+M_PI);
-			} //if (rawAngle > -M_PI*0.25 || rawAngle < -M_PI*0.75)else						
-		} //if (rawAmplitude>0)else			
-	} //if (joyRx == 0&&...)else
+			}						
+		}			
+	}
 	
 	angleCommand = rawAngle;
 	amplitudeCommand = abs(rawAmplitude/rawAmplitudeMax);
@@ -386,54 +641,146 @@ void WriteOpening()
 		bellowProjection[i] = cos(angleCommand)*bellowConfigurationPx[i] + sin(angleCommand)*bellowConfigurationPy[i];
 		OpeningResult[i] = -(bellowProjection[i]/belloConfigurationR*amplitudeCommand*0.5)+openingBase;
 	}
-
-} //void 
+}
 
 //Joystick->XYZ (joyRx->x, joyRy->y, joyLy->z)
-void WriteXYZ()
+void writeXYZ1(int joystickFLag)
 {
-	if (joyRx > 0.05)
+	if (joystickFLag == 1)
 	{
-		x = x + x_scale;
-	}
-	else if (joyRx < -0.05)
-	{
-		x = x - x_scale;
-	}
+		if (joyRx > 0.05)
+		{		
+			x = x + x_scale;
+		}
+		else if (joyRx < -0.05)
+		{		
+			x = x - x_scale;
+		}
 
-	if (joyRy > 0.05)
-	{
-		y = y + y_scale;
-	}			
-	else if (joyRy < -0.05)
-	{
-		y = y - y_scale;
-	}
+		if (joyRy > 0.05)
+		{		
+			y = y + y_scale;			
+		}			
+		else if (joyRy < -0.05)
+		{			
+			y = y - y_scale;
+		}
 		
-	if (joyLy > 0.05)
+		if (joyLy > 0.05)
+		{
+			z = z + z_scale;
+		}			
+		else if (joyLy < -0.05)
+		{
+			z = z - z_scale;	
+		}
+	}
+	else if (joystickFLag == 0)
 	{
-		z = z + z_scale;
-	}			
-	else if (joyLy < -0.05)
-	{
-		z = z - z_scale;
+		if (abs(alpha) < 1e-4)
+		{
+			x = 0;
+			y = 0;
+			z = length;
+		}
+		else
+		{
+			x = length*cos(beta)*(1-cos(alpha))/alpha;
+			y = length*sin(beta)*(1-cos(alpha))/alpha;
+			z = length*sin(alpha)/alpha;
+		}	
 	}
 
-	if (x >= x_max)
-	{x = x_max;}
-	else if (x <= x_min)
-	{x = x_min;}
+	x = CONSTRAIN(x, x_min, x_max);
+	y = CONSTRAIN(y, y_min, y_max);
+	z = CONSTRAIN(z, z_min, z_max);
+}
 
-	if (y >= y_max)
-	{y = y_max;}
-	else if (y <= y_min)
-	{y = y_min;}
+void writeXYZ3(int joystickFLag)
+{
+	if (joystickFLag == 1)
+	{
+		if (joyRx > 0.05)
+		{
+			segx_ = segx_ + x_scale;
+		}
+		else if (joyRx < -0.05)
+		{		
+			segx_ = segx_ - x_scale;		
+		}
 
-	if (z >= z_max)
-	{z = z_max;}
-	else if (z <= z_min)
-  	{z = z_min;}
+		if (joyRy > 0.05)
+		{
+			segy_ = segy_ + y_scale;	
+		}			
+		else if (joyRy < -0.05)
+		{
+			segy_ = segy_ - y_scale;			
+		}
+		
+		if (joyLy > 0.05)
+		{
+			segz_ = segz_ + z_scale;
+		}			
+		else if (joyLy < -0.05)
+		{		
+			segz_ = segz_ - z_scale;	
+		}
+	}
+	else if (joystickFLag == 0)
+	{
+		Matrix4f T = Matrix4f::Identity();
+		Matrix4f Tr;
+		Matrix3f R;
+	
+		Quaternionf q;
+		float a[3];
+		float b[3];
+		float l[3];
 
+		for (int i = 0; i < 3; i++)
+		{
+			a[i] = segAlpha_[i];
+			b[i] = segBeta_[i];
+			l[i] = segLength_[i];
+		}
+
+		for (int i = 0; i < 3; i++)
+		{
+			if (abs(a[i]) < 1e-4)
+			{	
+				Tr << cos(b[i]), -sin(b[i]), 0,    0,
+			  	  	  sin(b[i]),  cos(b[i]), 0,    0,
+			  			  	  0,  		  0, 1, l[i],
+			  			  	  0,		  0, 0,	   1;
+			}
+			else
+			{
+			  	Tr << cos(b[i])*cos(b[i])*(cos(a[i])-1)+1,       0.5*sin(2*b[i])*(cos(a[i])-1),  cos(b[i])*sin(a[i]), (l[i]*cos(b[i])*(1-cos(a[i])))/a[i],
+			  	  	        0.5*sin(2*b[i])*(cos(a[i])-1), sin(b[i])*sin(b[i])*(cos(a[i])-1)+1,  sin(b[i])*sin(a[i]), (l[i]*sin(b[i])*(1-cos(a[i])))/a[i],
+			  			   	         -sin(a[i])*cos(b[i]),  		      -sin(a[i])*sin(b[i]), 		   cos(a[i]), 				  l[i]*sin(a[i])/a[i],
+			  					                        0,			                         0,					   0,								    1;
+			}
+		
+			T  = T*Tr;
+		}
+
+		segx_ = T(0,3);
+		segy_ = T(1,3);
+		segz_ = T(2,3);
+
+		R = T.block<3,3>(0,0);
+		q = R;
+	
+		segqx_ = q.x();
+		segqy_ = q.y();	
+		segqz_ = q.z();
+		segqw_ = q.w();				
+	}
+
+	segx_ = CONSTRAIN(segx_, x_min, x_max);
+	segy_ = CONSTRAIN(segy_, y_min, y_max);
+	segz_ = CONSTRAIN(segz_, z_min6, z_max6);
 }
 
 void Init_parameter()
@@ -441,7 +788,12 @@ void Init_parameter()
 	//for Write ABL
 	for (int i = 0; i < 9; i++)
 	{
-		segLength[i] = 0.055;
+		segLength[i] = length0;
+	}
+
+	for (int i = 0; i < 3; i++)
+	{
+		segLength_[i] = length0*2;
 	}
 
 	//for Write Opening
@@ -452,43 +804,89 @@ void Init_parameter()
 	}
 }
 
+void help_menu()
+{
+	cout<<"==============================================================================="<<endl;
+	cout<<"                              JOYSCTIK USER MENU                               "<<endl;
+	cout<<"-------------------------------------------------------------------------------"<<endl;
+	cout<<"           MODE         |"<<" KEY |                    KEYCODE                 "<<endl;
+	cout<<" 0: 1 segment abl(test) |"<<" A   |"<<"  alpha  +: joyLy +, alpha  -: joyLy -; "<<endl;
+	cout<<" 1: 3 segment abl       |"<<" B   |"<<"  beta   +: joyRx +, beta   -: joyRx -; "<<endl;
+	cout<<" 2: 6 segment abl       |"<<" X   |"<<"  length +: joyLT  , length -: joyRT  ; "<<endl;
+	cout<<"                                                                               "<<endl;
+	cout<<" 3: 1 segment xyz(test) |"<<" Y   |"<<"  x+: joyRx +, x-: joyRx -;             "<<endl;
+	cout<<" 4: 6 segment xyz       |"<<" RB  |"<<"  y+: joyRy +, y-: joyRy -;             "<<endl;
+	cout<<"                        |"<<"     |"<<"  z+: joyLy +, z-: joyLy -;             "<<endl;
+	cout<<"                                                                               "<<endl;
+	cout<<" save data into file    |"<<" LB  |"<<"                                        "<<endl;
+	cout<<"                                                                               "<<endl;
+	cout<<"==============================================================================="<<endl;
+}
+
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "joy_teleopt");
 	ros::NodeHandle nh;	
 	ros::Rate r(100);     //Hz
 
-	ros::Subscriber sub1 = nh.subscribe("joy", 1, joyCallback);	
-	//ros::Publisher  pub1  = nh.advertise<origarm_ros::Command_ABL>("Cmd_ABL", 100);
-	ros::Publisher  pub1  = nh.advertise<origarm_ros::Cmd_ABL>("Cmd_ABL", 100);
-	ros::Publisher  pub2  = nh.advertise<origarm_ros::SegOpening>("Cmd_Opening", 100);
-	//ros::Publisher  pub3  = nh.advertise<geometry_msgs::Pose>("Cmd_XYZ", 100);
-	ros::Publisher  pub3  = nh.advertise<origarm_ros::Command_Position>("Command_Position", 100);
+	ofstream savedata;
+    savedata.open("/home/ubuntu/Desktop/demo_traj.txt", ios::app);
 
+	ros::Subscriber sub1 = nh.subscribe("joy", 1, joyCallback);	
+	ros::Subscriber sub2 = nh.subscribe("key_number", 1, keyCallback);
+	ros::Subscriber sub3 = nh.subscribe("Cmd_ABL_ik",1, ABLCallback);
+	ros::Publisher  pub1 = nh.advertise<origarm_ros::Command_ABL>("Cmd_ABL_joy", 100);		
+	ros::Publisher  pub3 = nh.advertise<origarm_ros::Command_Position>("Cmd_Position", 100);
+	ros::Publisher  pub4 = nh.advertise<origarm_ros::modenumber>("modenumber", 100);
+	ros::Publisher  pub5 = nh.advertise<origarm_ros::segnumber>("segnumber", 100);
+	//ros::Publisher  pub5  = nh.advertise<origarm_ros::SegOpening>("Cmd_Opening", 100);
 	
 	Init_parameter();
 
 	while (ros::ok())
 	{
+		//print help menu
+		help_menu();
+
 		//check whether joystick is available
 		if (status == 1)
 		{
-			WriteABL();	
-					
-			ROS_INFO("status: %d", status);
-			ROS_INFO("segment:%d",segNumber);
-			/*ROS_INFO("Alpha : %f", alpha);	
-  			ROS_INFO("Beta  : %f", beta);
-			ROS_INFO("Length: %f", length);*/			
-			
-			WriteOpening();
-      		//ROS_INFO("Lx: %f, Ly: %f, Rx: %f, Ry: %f",joyLx,joyLy,joyRx,joyRx);
-      		//ROS_INFO("OpeningResult[0]: %f,[1]: %f,[2]: %f,[3]: %f,[4]: %f,[5]: %f",OpeningResult[0],OpeningResult[1],OpeningResult[2],OpeningResult[3],OpeningResult[4],OpeningResult[5]);
+			//control mode
+			//mode[0]: 1 abl; mode[1]: 3 abl; mode[2]: 9 abl; mode[3]: 1 xyz; mode[4]: 3 xyz; 
+			//mode[0]: joyA;  mode[1]: joyB;  mode[2]: joyX;  mode[3]: joyY;  mode[4]: joyRB; 
 
-			WriteXYZ();
-			/*ROS_INFO("x : %f", x);	
-  			ROS_INFO("y : %f", y);
-			ROS_INFO("z : %f", z);*/				
+			if (mode == 0)           //ABL_1 control mode
+			{		
+				writeABL1(1);		 //joystick -> ABL1
+				writeXYZ1(0);		 //ABL1     -> XYZ1
+			}
+			else if (mode == 1)      //ABL_3 control mode
+			{
+				writeABL3(1);        //joystick -> ABL3
+				writeABL9(2);        //ABL3     -> ABL9
+				writeXYZ3(0);		 //ABL3     -> XYZ3
+			}
+			else if (mode == 2)      //ABL_9 control mode
+			{
+				writeABL9(1);        //joystick -> ABL9
+			}
+			else if (mode == 3)      //XYZ_1 control mode
+			{
+				writeXYZ1(1);        //joystick -> XYZ1
+				writeABL1(0);        //XYZ1     -> ABL1				
+			}
+			else if (mode == 4)      //XYZ_3 control mode
+			{
+				writeXYZ3(1);        //joystick -> XYZ3
+				writeABL3(0);        //XYZ3     -> ABL3
+				writeABL9(2);        //ABL3     -> ABL9					
+			}
+
+			//WriteOpening();
+
+			//ROS_INFO("status: %d", status);
+			//ROS_INFO("segment:%d", segNumber);
+			//ROS_INFO("mode   :%d", mode);						
 		}						
 		else if (status == 0)
 		{
@@ -497,84 +895,177 @@ int main(int argc, char **argv)
 			{
 				segAlpha[i]  = 0;
 				segBeta[i]   = 0;
-				segLength[i] = 0.055;
-			}		
+				segLength[i] = length0;
+			}
+
+			for (int i = 0; i < 3; i++)
+			{
+				segAlpha_[i]  = 0;
+				segBeta_[i]   = 0;
+				segLength_[i] = length0*2;
+			}
+
+			alpha = 0;
+			beta = 0;
+			length = length0;		
 
 			x = 0;
 			y = 0;
-			z = 0.055; 
+			z = z_origin; 
+
+			segx_ = 0;
+			segy_ = 0;
+			segz_ = z_origin*6; 
 
 			for (int i = 0; i < 6; i++)
 			{
 				OpeningResult[i] = 0;
 			}
 			
-
-			ROS_INFO("status: %d", status);
-			/*ROS_INFO("Alpha : %f", alpha);	
-  			ROS_INFO("Beta  : %f", beta);
-			ROS_INFO("Length: %f", length);*/
-
-			//ROS_INFO("Lx: %f, Ly: %f, Rx: %f, Ry: %f",joyLx,joyLy,joyRx,joyRx);
-      		//ROS_INFO("OpeningResult[0]: %f,[1]: %f,[2]: %f,[3]: %f,[4]: %f,[5]: %f",OpeningResult[0],OpeningResult[1],OpeningResult[2],OpeningResult[3],OpeningResult[4],OpeningResult[5]);
-
-			/*ROS_INFO("x : %f", x);	
-  			ROS_INFO("y : %f", y);
-			ROS_INFO("z : %f", z);*/
-	
-		}
-		else
-		{
-			ROS_INFO("status: %d", status);
-			/*ROS_INFO("Alpha : %f", alpha);	
-  			ROS_INFO("Beta  : %f", beta);
-			ROS_INFO("Length: %f", length);*/
-
-			//ROS_INFO("Lx: %f, Ly: %f, Rx: %f, Ry: %f",joyLx,joyLy,joyRx,joyRx);
-      		//ROS_INFO("OpeningResult[0]: %f,[1]: %f,[2]: %f,[3]: %f,[4]: %f,[5]: %f",OpeningResult[0],OpeningResult[1],OpeningResult[2],OpeningResult[3],OpeningResult[4],OpeningResult[5]);
-
-			/*ROS_INFO("x : %f", x);	
-  			ROS_INFO("y : %f", y);
-			ROS_INFO("z : %f", z);*/
+			//ROS_INFO("status: %d", status);	
 		}
 		
-		//origarm_ros::Command_ABL Cmd_ABL;
-		origarm_ros::Cmd_ABL Cmd_ABL;
-		for (int i = 0; i < 9; i++)
+		origarm_ros::Command_ABL Cmd_ABL;	
+		origarm_ros::Command_Position Cmd_Position;	
+		origarm_ros::modenumber modenumber;	
+		modenumber.modeNumber = mode;
+		modenumber.status     = status;
+
+		origarm_ros::segnumber segnumber;
+		segnumber.segmentNumber = segNumber;		
+		
+		if (mode == 0)
 		{
-			Cmd_ABL.segment[i].A = segAlpha[i];
-			Cmd_ABL.segment[i].B = segBeta[i];
-			Cmd_ABL.segment[i].L = segLength[i];
-		}		
-		Cmd_ABL.segmentNumber = segNumber;
+			Cmd_ABL.segment[0].A = alpha;
+			Cmd_ABL.segment[0].B = beta;
+			Cmd_ABL.segment[0].L = length;
+
+			for (int i = 1; i < seg; i++)
+			{
+				Cmd_ABL.segment[i].A = 0;
+				Cmd_ABL.segment[i].B = 0;
+				Cmd_ABL.segment[i].L = length0;
+			}
+
+			printf("ABL1: alpha: %f, beta: %f, length: %f\r\n", alpha, beta, length);
+
+			pub1.publish(Cmd_ABL);
+		}
+		else if (mode == 1)
+		{
+			for (int i = 0; i < 6; i++)
+			{
+				Cmd_ABL.segment[i].A = segAlpha_[int(i/2)]/2;
+				Cmd_ABL.segment[i].B = segBeta_[int(i/2)];
+				Cmd_ABL.segment[i].L = segLength_[int(i/2)]/2;
 				
-		origarm_ros::SegOpening Cmd_Opening;
-		for (int i = 0; i < 6; i++)
-		{
-			Cmd_Opening.Op[i] = OpeningResult[i];
+				printf("ABL3: alpha: %f, beta: %f, length: %f\r\n", segAlpha_[int(i/2)]/2, segBeta_[int(i/2)], segLength_[int(i/2)]/2);	
+			}
+
+			for (int i = 6; i < seg; i++)
+			{
+				Cmd_ABL.segment[i].A = 0;
+				Cmd_ABL.segment[i].B = 0;
+				Cmd_ABL.segment[i].L = length0;
+			}
+			
+			pub1.publish(Cmd_ABL);
 		}
-		
-		/*geometry_msgs::Pose Cmd_XYZ;
-		Cmd_XYZ.position.x = x;
-		Cmd_XYZ.position.y = y;
-		Cmd_XYZ.position.z = z;*/
+		else if (mode == 2)
+		{
+			for (int i = 0; i < 6; i++)
+			{
+				Cmd_ABL.segment[i].A = segAlpha[i];
+				Cmd_ABL.segment[i].B = segBeta[i];
+				Cmd_ABL.segment[i].L = segLength[i];
 
-		origarm_ros::Command_Position Command_Position;
-		Command_Position.pose.position.x = x;
-		Command_Position.pose.position.y = y;
-		Command_Position.pose.position.z = z;
-		Command_Position.pose.orientation.x = 1;
-		Command_Position.pose.orientation.w = 1;
+				printf("ABL6: alpha: %f, beta: %f, length: %f\r\n", segAlpha[i], segBeta[i], segLength[i]);	
+			}
 
-		pub1.publish(Cmd_ABL);
-		pub2.publish(Cmd_Opening);
-		pub3.publish(Command_Position);
+			for (int i = 6; i < seg; i++)
+			{
+				Cmd_ABL.segment[i].A = 0;
+				Cmd_ABL.segment[i].B = 0;
+				Cmd_ABL.segment[i].L = length0;
+			}
+
+			pub1.publish(Cmd_ABL);
+		}
+		else if (mode == 3)
+		{
+			Cmd_Position.pose.position.x = x;
+			Cmd_Position.pose.position.y = y;
+			Cmd_Position.pose.position.z = z;
+			Cmd_Position.pose.orientation.x = 1;
+			Cmd_Position.pose.orientation.w = 1;
+
+			printf("XYZ1: x: %f, y: %f, z: %f\r\n", x, y, z);
+
+			pub3.publish(Cmd_Position);
+		}
+		else if (mode == 4)
+		{
+			Cmd_Position.pose.position.x = segx_;
+			Cmd_Position.pose.position.y = segy_;
+			Cmd_Position.pose.position.z = segz_;
+			Cmd_Position.pose.orientation.x = segqx_;
+			Cmd_Position.pose.orientation.y = segqy_;
+			Cmd_Position.pose.orientation.z = segqz_;
+			Cmd_Position.pose.orientation.w = segqw_;
+
+			printf("XYZ6: x: %f, y: %f, z: %f\r\n", segx_, segy_, segz_);
+
+			pub3.publish(Cmd_Position);	
+		}
+
+		//write into files
+		if (save_flag == 1)
+		{
+			if (mode == 1)
+			{
+				savedata<<1<<" "<<10000<<" "<<10000<<" "<<10000<<" "<<segAlpha_[0]/2<<" "<<segBeta_[0]<<" "<<segLength_[0]/2
+						   <<" "<<segAlpha_[0]/2<<" "<<segBeta_[0]<<" "<<segLength_[0]/2
+						   <<" "<<segAlpha_[1]/2<<" "<<segBeta_[1]<<" "<<segLength_[1]/2
+						   <<" "<<segAlpha_[1]/2<<" "<<segBeta_[1]<<" "<<segLength_[1]/2
+						   <<" "<<segAlpha_[2]/2<<" "<<segBeta_[2]<<" "<<segLength_[2]/2
+						   <<" "<<segAlpha_[2]/2<<" "<<segBeta_[2]<<" "<<segLength_[2]/2
+						   <<endl;
+				printf("%s\n", "write mode 1 data");
+			}			
+			else if (mode == 2)
+			{				
+				savedata<<2<<" "<<10000<<" "<<10000<<" "<<10000<<" "<<segAlpha[0]<<" "<<segBeta[0]<<" "<<segLength[0]
+						   <<" "<<segAlpha[1]<<" "<<segBeta[1]<<" "<<segLength[1]
+						   <<" "<<segAlpha[2]<<" "<<segBeta[2]<<" "<<segLength[2]
+						   <<" "<<segAlpha[3]<<" "<<segBeta[3]<<" "<<segLength[3]
+						   <<" "<<segAlpha[4]<<" "<<segBeta[4]<<" "<<segLength[4]
+						   <<" "<<segAlpha[5]<<" "<<segBeta[5]<<" "<<segLength[5]
+						   <<endl;
+
+				printf("%s\n", "write mode 2 data");
+			}
+			else if (mode == 4)
+			{
+				savedata<<4<<" "<<segx_<<" "<<segy_<<" "<<segz_<<" "<<segAlphad_[0]<<" "<<segBetad_[0]<<" "<<segLengthd_[0]
+						   <<" "<<segAlphad_[0]<<" "<<segBetad_[0]<<" "<<segLengthd_[0]
+						   <<" "<<segAlphad_[1]<<" "<<segBetad_[1]<<" "<<segLengthd_[1]
+						   <<" "<<segAlphad_[1]<<" "<<segBetad_[1]<<" "<<segLengthd_[1]
+						   <<" "<<segAlphad_[2]<<" "<<segBetad_[2]<<" "<<segLengthd_[2]
+						   <<" "<<segAlphad_[2]<<" "<<segBetad_[2]<<" "<<segLengthd_[2]
+						   <<endl;
+				printf("%s\n", "write mode 4 data");
+			}			
+		}
+
+		pub4.publish(modenumber);
+		pub5.publish(segnumber);
 
 		ros::spinOnce();
 		r.sleep();    //sleep for 1/r sec
 		//usleep(10000); // N*us
 	}
 
+	savedata.close();
 	return 0;
 }
 

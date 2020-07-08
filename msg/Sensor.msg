@@ -1,1 +1,1 @@
-origarm_ros/Segment[] segment
+origarm_ros/Sensor_Seg[9] sensor_segment
