@@ -1,1 +1,1 @@
-int32[10] KEY_CODE
+int32[11] KEY_CODE

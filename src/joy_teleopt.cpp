@@ -89,7 +89,7 @@ float segLength[9];
 
 float a_scale = 0.003;
 float b_scale = 0.002;
-float l_scale = 0.00001;
+float l_scale = 0.00003;
 
 float l_max =  0.08;
 float l_min =  0.03;

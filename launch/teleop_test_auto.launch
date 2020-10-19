@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="origarm_ros" name="ABL_controller" type="ABL_controller"/>
+    <node pkg="origarm_ros" name="spi_node" type="spi_node"  output="screen"/>
+    <node pkg="origarm_ros" name="StateEstimator_node" type="State_Estimator" />
+</launch>

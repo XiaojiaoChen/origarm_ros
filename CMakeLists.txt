@@ -149,6 +149,7 @@ add_definitions(${EIGEN_DEFINITIONS})
 ## Declare a C++ library
  add_library(${PROJECT_NAME}
   src/myPID.cpp
+	src/myState.cpp
  )
 
 ## Add cmake target dependencies of the library
@@ -305,5 +306,17 @@ target_link_libraries(demo_picknplace
 add_executable(demo_xyz src/demo_xyz.cpp) 
 add_dependencies(demo_xyz ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(demo_xyz             
+   ${catkin_LIBRARIES}
+ ) 
+
+add_executable(demo_payload src/demo_payload.cpp) 
+add_dependencies(demo_payload ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(demo_payload             
+   ${catkin_LIBRARIES}
+ )
+
+add_executable(IMU_calibration src/IMU_calibration.cpp) 
+add_dependencies(IMU_calibration ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(IMU_calibration             
    ${catkin_LIBRARIES}
  )

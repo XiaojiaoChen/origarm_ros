@@ -371,10 +371,10 @@ int main(int argc, char* argv[])
 			{
 				Sensor.sensor_segment[i].sensor_actuator[j].pressure = sensorData.data[i][j].pressure;
 				Sensor.sensor_segment[i].sensor_actuator[j].distance = sensorData.data[i][j].distance;
-				Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.w = sensorData.data[i][j].quaternion.imuData[0];
-				Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.x = sensorData.data[i][j].quaternion.imuData[1];
-				Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.y = sensorData.data[i][j].quaternion.imuData[2];
-				Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.z = sensorData.data[i][j].quaternion.imuData[3];				
+				Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.w = sensorData.data[i][j].quaternion.imuData[0]/32768.0;
+				Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.x = sensorData.data[i][j].quaternion.imuData[1]/32768.0;
+				Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.y = sensorData.data[i][j].quaternion.imuData[2]/32768.0;
+				Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.z = sensorData.data[i][j].quaternion.imuData[3]/32768.0;				
 			}
 		}
 		pub1.publish(Sensor);

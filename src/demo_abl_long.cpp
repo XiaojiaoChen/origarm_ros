@@ -35,7 +35,6 @@ int ts = 10*ms; //time sleep at each step
 int t_sleep[] = {10*ms, 5000*ms, 1000*ms};
 
 int flag = 1;
-int repeat = 1;
 
 int mode_ = 0;
 int segment_ = 0;
@@ -46,9 +45,6 @@ float lengthmin = 0.03;
 float demo_a;
 float demo_b;
 float demo_l;
-
-float demo_b1;
-float demo_b2;
 
 float a_seg2[2];
 float b_seg2[2];
@@ -268,7 +264,7 @@ int main(int argc, char **argv)
  				usleep(ts);
  			}
  			//writeArm, alpha: 0.7*6->0
- 			/*for (int i = 0; i < t_step[1]; i++)
+ 			for (int i = 0; i < t_step[1]; i++)
  			{
  				demo_a = genetraj(a_useg*6, 0, i, t_step[1]);
  				demo_b = 0;
@@ -318,13 +314,12 @@ int main(int argc, char **argv)
  				printf("A: %f, B: %f, L: %f\r\n", demo_a, demo_b, demo_l);
  			
  				usleep(ts);
- 			}*/ 			
+ 			}
 
-/**************************************************modified one segment -> two segments*******************************************************/
-			//writeArm, alpha = a_useg*6, beta(1): 0->2*pi, beta(2): 0->pi/2,pi/2->reverse direction
+ 			//writeArm, beta: 0->2*pi
  			for (int i = 0; i < t_step[2]; i++)
  			{
- 				demo_a = a_useg*6;
+ 				demo_a = -a_useg*6;
  				demo_b = genetraj(0, 2*M_PI, i, t_step[2]);
  				demo_b = constrainb(demo_b);
  				demo_l = length0*6;
@@ -335,33 +330,6 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].B = demo_b;
  					Command_ABL_demo.segment[i].L = demo_l/6;
  				}
-				
- 				for (int i = 6; i < seg; i++)
- 				{
- 					Command_ABL_demo.segment[i].A = 0;
- 					Command_ABL_demo.segment[i].B = 0;
- 					Command_ABL_demo.segment[i].L = length0;
- 				}
-
- 				pub1.publish(Command_ABL_demo);
- 				printf("A: %f, B: %f, L: %f\r\n", demo_a, demo_b, demo_l);
- 			
- 				usleep(ts);
- 			}
-
-			//writeArm, reverse, alpha:a_useg*6->0;
- 			for (int i = 0; i < t_step[2]; i++)
- 			{
- 				demo_a = genetraj(a_useg*6, 0, i, t_step[2]);
- 				demo_b = 0;
- 				demo_l = length0*6;
-
- 				for (int i = 0; i < 6; i++)
- 				{
- 					Command_ABL_demo.segment[i].A = demo_a/6;
- 					Command_ABL_demo.segment[i].B = demo_b;
- 					Command_ABL_demo.segment[i].L = demo_l/6;
- 				}
 
  				for (int i = 6; i < seg; i++)
  				{
@@ -375,9 +343,6 @@ int main(int argc, char **argv)
  			
  				usleep(ts);
  			}
-
-			
-/**************************************************modified one segment -> two segments*******************************************************/
  			//writeArm, beta: 2*pi->0
  			/*for (int i = 0; i < t_step[2]; i++)
  			{
@@ -2032,9 +1997,8 @@ int main(int argc, char **argv)
  				a_seg6[4] = genetraj(0, a_useg, i, t_step[9]);
  				b_seg6[4] = 0;
  				l_seg6[4] = length0;
-				
-				//modified, last two segments remain the same
- 				a_seg6[5] = genetraj(0, a_useg, i, t_step[9]);
+
+ 				a_seg6[5] = genetraj(0, -a_useg, i, t_step[9]);
  				b_seg6[5] = 0;
  				l_seg6[5] = length0;
  				 				
@@ -2082,10 +2046,9 @@ int main(int argc, char **argv)
  				a_seg6[4] = a_useg;
  				b_seg6[4] = genetraj(0, 5*M_PI/3, i, t_step[10]);				
  				l_seg6[4] = length0;
-				
-				//modified, last two segments remain the same
- 				a_seg6[5] = a_useg;
- 				b_seg6[5] = genetraj(0, 5*M_PI/3, i, t_step[10]);				
+
+ 				a_seg6[5] = -a_useg;
+ 				b_seg6[5] = genetraj(0, 6*M_PI/3, i, t_step[10]);				
  				l_seg6[5] = length0;
  				
  				for (int i = 0; i < 6; i++)
@@ -2138,10 +2101,9 @@ int main(int argc, char **argv)
  				a_seg6[4] = a_useg;
  				b_seg6[4] = genetraj(5*M_PI/3, 0, i, t_step[10]);				
  				l_seg6[4] = length0;
-				
-				//modified, last two segments remain the same
- 				a_seg6[5] = a_useg;
- 				b_seg6[5] = genetraj(5*M_PI/3, 0, i, t_step[10]);				
+
+ 				a_seg6[5] = -a_useg;
+ 				b_seg6[5] = genetraj(6*M_PI/3, 0, i, t_step[10]);				
  				l_seg6[5] = length0;
  				
  				for (int i = 0; i < 6; i++)
@@ -2194,8 +2156,7 @@ int main(int argc, char **argv)
  				b_seg6[4] = 0;
  				l_seg6[4] = length0;
 
-				//modified, last two segments remain the same
- 				a_seg6[5] = genetraj(a_useg, 0, i, t_step[9]);
+ 				a_seg6[5] = genetraj(-a_useg, 0, i, t_step[9]);
  				b_seg6[5] = 0;
  				l_seg6[5] = length0;
  				 				
@@ -2223,16 +2184,8 @@ int main(int argc, char **argv)
 			
 			//pause for a while
  			//usleep(t_sleep[1]);
-			repeat = repeat -1;
-			if (repeat > 0)
-			{
-				flag = 1;
-			}
-			else
-			{
-				flag = 0;
-			}
-			
+
+			flag = 0;
 		}
 		else
 		{

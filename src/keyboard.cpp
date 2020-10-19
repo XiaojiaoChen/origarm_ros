@@ -15,9 +15,10 @@
 
 using namespace std;
 
-const char defualt_path[] = "/dev/input/by-path/platform-fd500000.pcie-pci-0000:01:00.0-usb-0:1.2:1.0-event-kbd"; //keyboard
+const char defualt_path[] = "/dev/input/by-path/platform-fd500000.pcie-pci-0000:01:00.0-usb-0:1.4:1.0-event-kbd"; //keyboard
 //const char defualt_path[] = "/dev/input/by-path/platform-fd500000.pcie-pci-0000:01:00.0-usb-0:1.1:1.0-event-kbd"; //keyboard
 //const char defualt_path[] = "/dev/input/by-path/platform-i8042-serio-0-event-kbd"; //AT Translated Set 2 keyboard
+
 
 int keycode;
 int value[10];
@@ -76,6 +77,10 @@ int main(int argc, char** argv)
 				if (event.code == KEY_0)
 				{
 					keycode = 0;
+				}
+				else if (event.code == KEY_EQUAL)
+				{
+					keycode = 10;
 				}				
 				else
 				{
@@ -89,12 +94,13 @@ int main(int argc, char** argv)
 
 		//std_msgs::Int16 keyboard;		
 		origarm_ros::keynumber key_number;
-		for (int i = 0; i < 10; i++)
+		for (int i = 0; i < 11; i++)
 		{
 			key_number.KEY_CODE[i] = value[i];
 		}					
 
 		pub.publish(key_number);
+		// printf("KEY %d pressed\n", keycode);
 
 		ros::spinOnce();
 		r.sleep();

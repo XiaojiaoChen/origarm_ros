@@ -5,18 +5,46 @@
 #include "math.h"
 #include "myData.h"
 #include "myFunction.h"
+#include "myState.cpp"
+
+#include "myData.h"
+#include "myFunction.h"
+#include <Eigen/Eigen>
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
+#include <fstream>
+#include <iostream>
+
+using namespace Eigen;
+using Eigen::Matrix4f;
+using Eigen::Matrix3f;
+using Eigen::MatrixXf;
+using Eigen::Vector3f;
+using Eigen::VectorXf;
+using Eigen::Quaternionf;
 
 using namespace std;
 
 float alphar[seg];
 float betar[seg];
 float lengthr[seg];
+float dist0;
 
 //local definition of pressure, distance, imu
 int16_t pressurer[seg][act];
 uint16_t distancer[seg][act];
-int16_t imur[seg][act][4];
+float imur[seg][act][4];
 int actn = 0;
+
+Quaternionf quat0, quat;
+Matrix3f R[seg][act], dR, Rtest;
+MatrixXf Rsegpair(6,3);
+
+// predefined quat0, the initial sensor data, read from file
+// either by initial manually or loading from imudata.yaml file/ .txt file
+ifstream inFile;
+float QUAT0[seg][act][4];
+
 
 class State_Estimator
 {
@@ -33,13 +61,6 @@ class State_Estimator
       {
         for (int j = 0; j < act; j++)
         {
-          /*sensorData.data[i][j].pressure = Sensor_.sensor_segment[i].sensor_actuator[j].pressure;
-          sensorData.data[i][j].distance = Sensor_.sensor_segment[i].sensor_actuator[j].distance;
-          sensorData.data[i][j].quaternion.imuData[0] = Sensor_.sensor_segment[i].sensor_actuator[j].pose.orientation.w; //double check
-          sensorData.data[i][j].quaternion.imuData[1] = Sensor_.sensor_segment[i].sensor_actuator[j].pose.orientation.x;
-          sensorData.data[i][j].quaternion.imuData[2] = Sensor_.sensor_segment[i].sensor_actuator[j].pose.orientation.y;
-          sensorData.data[i][j].quaternion.imuData[3] = Sensor_.sensor_segment[i].sensor_actuator[j].pose.orientation.z;*/
-
           pressurer[i][j] = Sensor_.sensor_segment[i].sensor_actuator[j].pressure;
           distancer[i][j] = Sensor_.sensor_segment[i].sensor_actuator[j].distance;
           imur[i][j][0] = Sensor_.sensor_segment[i].sensor_actuator[j].pose.orientation.w; //double check
@@ -61,13 +82,13 @@ class State_Estimator
       }
       
       //real pose calculated from sensor
-      /*states_.pose.position.x = ;
-      states_.pose.position.y = ;
-      states_.pose.position.z = ;
-      states_.pose.orientation.w = ;
-      states_.pose.orientation.x = ;
-      states_.pose.orientation.y = ;
-      states_.pose.orientation.z = ;*/
+      // states_.pose.position.x = ;
+      // states_.pose.position.y = ;
+      // states_.pose.position.z = ;
+      // states_.pose.orientation.w = ;
+      // states_.pose.orientation.x = ;
+      // states_.pose.orientation.y = ;
+      // states_.pose.orientation.z = ;
 
       pub_.publish(states_);
     }
@@ -82,54 +103,82 @@ class State_Estimator
 
 void quat2AB()
 {
-  
-  /*float n1=2*imuData.q0*imuData.q2 + 2*imuData.q1*imuData.q3;
-  float n2=2*imuData.q2*imuData.q3 - 2*imuData.q0*imuData.q1;
-  float n3=imuData.q0*imuData.q0 - imuData.q1*imuData.q1 - imuData.q2*imuData.q2 + imuData.q3*imuData.q3;
-
-  n1=CONSTRAIN(n1,-1,1);
-  n2=CONSTRAIN(n2,-1,1);
-  n3=CONSTRAIN(n3,-1,1);
-
-  alpha=acos(-n3);
-  alpha=CONSTRAIN(alpha,0.001,M_PI);//avoid singularity
-  beta=atan2(-n2,n1);
-  if(alpha<0.13)//the smaller alpha is, the larger error beta would have.
-  beta=0;*/
-  
-  float n1[seg];
-  float n2[seg];
-  float n3[seg];
+  Matrix3f R1, R2;
 
   for (int i = 0; i < seg; i++)
   {
-    n1[i] = 2*imur[i][actn][0]*imur[i][actn][2] + 2*imur[i][actn][1]*imur[i][actn][3];
-    n2[i] = 2*imur[i][actn][2]*imur[i][actn][3] - 2*imur[i][actn][0]*imur[i][actn][1];
-    n3[i] = imur[i][actn][0]*imur[i][actn][0] - imur[i][actn][1]*imur[i][actn][1] - imur[i][actn][2]*imur[i][actn][2] + imur[i][actn][3]*imur[i][actn][3];
+    for (int j = 0; j < act; j++)
+    {
+      quat.w() = imur[i][j][0];
+      quat.x() = imur[i][j][1];
+      quat.y() = imur[i][j][2];
+      quat.z() = imur[i][j][3];
 
-    n1[i] = CONSTRAIN(n1[i],-1,1);
-    n2[i] = CONSTRAIN(n2[i],-1,1);
-    n3[i] = CONSTRAIN(n3[i],-1,1);
+      ////Assuming actuator[i][0],[i][2],[i][4] have the same initial imu data
+      /*if (j % 2 == 0) 
+      {
+        quat0.w() = 1;
+        quat0.x() = 0;
+        quat0.y() = 0;
+        quat0.z() = 0;
+      }
+      else
+      {
+        quat0.w() = 0;
+        quat0.x() = 1;
+        quat0.y() = 0;
+        quat0.z() = 0;
+      }*/
 
-    alphar[i] = acos(-n3[i]);
-    alphar[i] = CONSTRAIN(alphar[i], 0.001, M_PI);
-    betar[i]  = atan2(-n2[i],n1[i]);
-    
-    if (alphar[i] < 0.13)
+       quat0.w() = QUAT0[i][j][0];
+       quat0.x() = QUAT0[i][j][1];
+       quat0.y() = QUAT0[i][j][2];
+       quat0.z() = QUAT0[i][j][3];
+
+       R[i][j] = getActuatorR(quat0, quat);
+			 Rtest = R[i][j];
+
+			/*printf("Rtest[0][1:3]:%f, %f, %f\n", Rtest(0,0),Rtest(0,1),Rtest(0,2));
+			printf("Rtest[1][1:3]:%f, %f, %f\n", Rtest(1,0),Rtest(1,1),Rtest(1,2));
+			printf("Rtest[2][1:3]:%f, %f, %f\n", Rtest(2,0),Rtest(2,1),Rtest(2,2));*/
+			 			              
+    }
+  }
+ 
+  for (int i = 0; i < seg; i++)
+  {
+    Rsegpair = getPlaneCoord(R[i][0], R[i][1], R[i][2], R[i][3], R[i][4], R[i][5]);
+		
+
+    R1 = Rsegpair.block<3,3>(0,0);
+    R2 = Rsegpair.block<3,3>(3,0);
+    dR = R1.transpose()*R2;
+
+		std::cout<<R1.format(printmatrix)<<sep;
+		std::cout<<R2.format(printmatrix)<<sep;
+		std::cout<<dR.format(printmatrix)<<sep;
+
+    alphar[i] = acos(dR(2,2));
+    if (abs(dR(2,2)-1) < 1e-3)
     {
       betar[i] = 0;
     }
+    else
+    {
+      betar[i] = atan2(dR(1,2),dR(0,2));
+    }
+    
+    alphar[i] = CONSTRAIN(alphar[i], 0.0001, 0.5*M_PI);
+		printf("Alphar[%d]:%f\n", i, alphar[i]);
+
   }
 }
 
 void dist2Length()
 {
   for (int i = 0; i < seg; i++)
-  {    
-    /*lengthr[i] = (sensorData.data[i][0].distance + sensorData.data[i][1].distance + sensorData.data[i][2].distance + 
-      sensorData.data[i][3].distance + sensorData.data[i][4].distance + sensorData.data[i][5].distance)/act;*/  
-
-    lengthr[i] = (distancer[i][0] + distancer[i][1] + distancer[i][2] + distancer[i][3] + distancer[i][4] + distancer[i][5])/act-length0;  
+  {     
+    lengthr[i] = (distancer[i][0] + distancer[i][1] + distancer[i][2] + distancer[i][3] + distancer[i][4] + distancer[i][5])/6-dist0;  
   }
 }
 
@@ -146,6 +195,27 @@ int main(int argc, char **argv)
 
   ROS_INFO("Ready for State_Estimator_Node");
 
+
+	Rtrans_init();
+	inFile.open("/home/ubuntu/Desktop/imu_data.txt", ios::in);
+  
+   if (!inFile)
+   {
+     printf("%s\n", "unable to open the file.");
+     exit(1);
+   }
+
+   if (!inFile.eof())
+   {
+     for (int p = 0; p < seg; p++)
+     {
+				for (int q = 0; q < act; q++)
+				{
+					inFile>>QUAT0[p][q][0]>>QUAT0[p][q][1]>>QUAT0[p][q][2]>>QUAT0[p][q][3];
+				}
+     }              
+   }
+
   while(ros::ok())
   {
     quat2AB();
@@ -155,5 +225,7 @@ int main(int argc, char **argv)
     ros::spinOnce();
     loop_rate.sleep();
   }
+
+  inFile.close(); 
   return 0;
 }
