@@ -70,7 +70,7 @@ int main(int argc, char **argv)
 	ros::Rate r(100);     //Hz
 	
 	//inFile.open("/home/ubuntu/Desktop/demo_traj_1.txt", ios::in);
-	inFile.open("/home/ubuntu/catkin_ws/src/origarm_ros/predefined_traj/traj_picknplace.txt", ios::in);
+	inFile.open("/home/ubuntu/catkin_ws/src/origarm_ros/predefined_param/traj_picknplace.txt", ios::in);
 
 	if (!inFile)
 	{

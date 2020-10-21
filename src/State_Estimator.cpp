@@ -28,23 +28,24 @@ using namespace std;
 float alphar[seg];
 float betar[seg];
 float lengthr[seg];
-float dist0;
+float dist0[seg];
 
 //local definition of pressure, distance, imu
 int16_t pressurer[seg][act];
-uint16_t distancer[seg][act];
+int16_t distancer[seg][act];
 float imur[seg][act][4];
 int actn = 0;
 
 Quaternionf quat0, quat;
 Matrix3f R[seg][act], dR, Rtest;
 MatrixXf Rsegpair(6,3);
+Matrix3f E;
 
 // predefined quat0, the initial sensor data, read from file
 // either by initial manually or loading from imudata.yaml file/ .txt file
 ifstream inFile;
 float QUAT0[seg][act][4];
-
+float rad2deg = 180/M_PI;
 
 class State_Estimator
 {
@@ -109,76 +110,103 @@ void quat2AB()
   {
     for (int j = 0; j < act; j++)
     {
-      quat.w() = imur[i][j][0];
-      quat.x() = imur[i][j][1];
-      quat.y() = imur[i][j][2];
-      quat.z() = imur[i][j][3];
+			/***********************************
+					imu error: imu[1][1], [1][3], [1][5];
+										 imu[2][3];
+										 imu[3][1], [3][5];
+										 imu[5][0], [5][1], [5][3], [5][4]	
+					***********************************/
+			if ((i == 1 && j == 1) || (i == 1 && j == 3) || (i == 1 && j == 5) || 
+					(i == 2 && j == 3) ||
+					(i == 3 && j == 1) || (i == 3 && j == 5) || 
+					(i == 5 && j == 0) || (i == 5 && j == 1) || (i == 5 && j == 3) || (i == 5 && j == 4))
+			{
+				R[i][j] = E;
+			}
+			else
+			{
+				quat.w() = imur[i][j][0];
+		    quat.x() = imur[i][j][1];
+		    quat.y() = imur[i][j][2];
+		    quat.z() = imur[i][j][3];
 
-      ////Assuming actuator[i][0],[i][2],[i][4] have the same initial imu data
-      /*if (j % 2 == 0) 
-      {
-        quat0.w() = 1;
-        quat0.x() = 0;
-        quat0.y() = 0;
-        quat0.z() = 0;
-      }
-      else
-      {
-        quat0.w() = 0;
-        quat0.x() = 1;
-        quat0.y() = 0;
-        quat0.z() = 0;
-      }*/
+		    quat0.w() = QUAT0[i][j][0];
+		    quat0.x() = QUAT0[i][j][1];
+		    quat0.y() = QUAT0[i][j][2];
+		    quat0.z() = QUAT0[i][j][3];
 
-       quat0.w() = QUAT0[i][j][0];
-       quat0.x() = QUAT0[i][j][1];
-       quat0.y() = QUAT0[i][j][2];
-       quat0.z() = QUAT0[i][j][3];
-
-       R[i][j] = getActuatorR(quat0, quat);
-			 Rtest = R[i][j];
-
-			/*printf("Rtest[0][1:3]:%f, %f, %f\n", Rtest(0,0),Rtest(0,1),Rtest(0,2));
-			printf("Rtest[1][1:3]:%f, %f, %f\n", Rtest(1,0),Rtest(1,1),Rtest(1,2));
-			printf("Rtest[2][1:3]:%f, %f, %f\n", Rtest(2,0),Rtest(2,1),Rtest(2,2));*/
-			 			              
+		    R[i][j] = getActuatorR(quat0, quat);		
+			}      			              
     }
   }
  
-  for (int i = 0; i < seg; i++)
-  {
-    Rsegpair = getPlaneCoord(R[i][0], R[i][1], R[i][2], R[i][3], R[i][4], R[i][5]);
+  for (int i = 0; i < 6; i++)
+  {		
+		if (i == 1)
+		{	
+			R1 = AverageR(R[i][0], R[i][2], R[i][4]);
+			R2 = AverageR(R[2][1], R[2][3], R[2][5]);
+		}
+		else if (i == 2)
+		{
+			R1 = AverageR(R[i][0], R[i][2], R[i][4]);
+			R2 = AverageR(R[2][1], R[2][1], R[2][5]);
+		}
+		else if (i == 3)
+		{
+			R1 = AverageR(R[i][0], R[i][2], R[i][4]);
+			R2 = AverageR(R[i][3], R[i][3], R[i][3]);
+		}
+		else if (i == 5)
+		{
+					R1 = AverageR(R[i][2], R[i][2], R[i][2]);
+					R2 = AverageR(R[i][5], R[i][5], R[i][5]);
+		}
+		else
+		{
+			R1 = AverageR(R[i][0], R[i][2], R[i][4]);
+			R2 = AverageR(R[i][1], R[i][3], R[i][5]);
+		}
 		
-
-    R1 = Rsegpair.block<3,3>(0,0);
-    R2 = Rsegpair.block<3,3>(3,0);
     dR = R1.transpose()*R2;
+					
+			printf("Segment[%d]\n",i);
+			/*if (i == 5)
+			{
+				printf("imu:%f, %f, %f, %f\n",imur[i][0][0],imur[i][0][1],imur[i][0][2],imur[i][0][3]);	
+				printf("imu:%f, %f, %f, %f\n",imur[i][2][0],imur[i][2][1],imur[i][2][2],imur[i][2][3]);	
+				printf("imu:%f, %f, %f, %f\n",imur[i][4][0],imur[i][4][1],imur[i][4][2],imur[i][4][3]);
 
-		std::cout<<R1.format(printmatrix)<<sep;
-		std::cout<<R2.format(printmatrix)<<sep;
-		std::cout<<dR.format(printmatrix)<<sep;
-
+				printf("imu:%f, %f, %f, %f\n",imur[i][1][0],imur[i][1][1],imur[i][1][2],imur[i][1][3]);	
+				printf("imu:%f, %f, %f, %f\n",imur[i][3][0],imur[i][3][1],imur[i][3][2],imur[i][3][3]);	
+				printf("imu:%f, %f, %f, %f\n",imur[i][5][0],imur[i][5][1],imur[i][5][2],imur[i][5][3]);				
+			}*/
+			
+			std::cout<<R1.format(printmatrix)<<sep;
+			std::cout<<R2.format(printmatrix)<<sep;
+			std::cout<<dR.format(printmatrix)<<sep;					
+					
     alphar[i] = acos(dR(2,2));
+		
     if (abs(dR(2,2)-1) < 1e-3)
     {
       betar[i] = 0;
     }
     else
     {
-      betar[i] = atan2(dR(1,2),dR(0,2));
+      betar[i] = atan2(dR(1,2)/sin(alphar[i]),dR(0,2)/sin(alphar[i]));
     }
     
     alphar[i] = CONSTRAIN(alphar[i], 0.0001, 0.5*M_PI);
-		printf("Alphar[%d]:%f\n", i, alphar[i]);
-
   }
+	
 }
 
 void dist2Length()
 {
   for (int i = 0; i < seg; i++)
   {     
-    lengthr[i] = (distancer[i][0] + distancer[i][1] + distancer[i][2] + distancer[i][3] + distancer[i][4] + distancer[i][5])/6-dist0;  
+    lengthr[i] = (distancer[i][0] + distancer[i][1] + distancer[i][2] + distancer[i][3] + distancer[i][4] + distancer[i][5])/6;  
   }
 }
 
@@ -195,9 +223,9 @@ int main(int argc, char **argv)
 
   ROS_INFO("Ready for State_Estimator_Node");
 
-
+	E = Matrix3f::Identity();
 	Rtrans_init();
-	inFile.open("/home/ubuntu/Desktop/imu_data.txt", ios::in);
+	inFile.open("/home/ubuntu/catkin_ws/src/origarm_ros/predefined_param/imu_data.txt", ios::in);
   
    if (!inFile)
    {
@@ -220,6 +248,16 @@ int main(int argc, char **argv)
   {
     quat2AB();
     dist2Length();
+
+		for (int i = 0; i < seg; i++)
+		{
+			alphar[i] = rad2deg*alphar[i];
+			betar[i] = rad2deg*betar[i];
+		}
+
+		printf("A[0]:%d, [1]:%d, [2]:%d, [3]:%d, [4]:%d, [5]:%d  |  ", (int)alphar[0], (int)alphar[1], (int)alphar[2], (int)alphar[3], (int)alphar[4], (int)alphar[5]);
+		printf("B[0]:%d, [1]:%d, [2]:%d, [3]:%d, [4]:%d, [5]:%d  |  ", (int)betar[0], (int)betar[1], (int)betar[2], (int)betar[3], (int)betar[4], (int)betar[5]);
+		printf("L[0]:%d, [1]:%d, [2]:%d, [3]:%d, [4]:%d, [5]:%d\n", (int)lengthr[0], (int)lengthr[1], (int)lengthr[2], (int)lengthr[3], (int)lengthr[4], (int)lengthr[5]);
 
     State_Estimator_Node.pub();
     ros::spinOnce();

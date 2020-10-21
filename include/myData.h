@@ -13,7 +13,7 @@ typedef struct QUATERNION_TAG{
 
 typedef struct SENSORDATA_TAG {
 	int16_t pressure;
-	uint16_t distance;
+	int16_t distance;
 	QUATERNION quaternion;
 }SENSORDATA;
 
