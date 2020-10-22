@@ -25,20 +25,18 @@ using Eigen::Quaternionf;
 
 using namespace std;
 
-static Matrix3f Rtrans;
-
 IOFormat printmatrix(4, 0, ", ", "\n", "[", "]");
 std::string sep = "\n---------------------------------------\n";
 
-void Rtrans_init()
+/*void Rtrans_init()
 {
 	Rtrans << 0, 1,  0, 
 		      1, 0,  0, 
 		      0, 0, -1; 
-}
+}*/
 
 // transform [quat_imu] imu pose (relative to imu base frame) -> [R_imu] imu pose (relative to arm base frame)
-Matrix3f transR(Quaternionf quat_imu)
+Matrix3f transR(Quaternionf quat_imu, Matrix3f Rtrans)
 {	
 	Matrix3f Rimu, Rarm;
 	Rimu = quat_imu;
@@ -59,7 +57,7 @@ Matrix3f transR(Quaternionf quat_imu)
 }*/
 
 // rotational matrix change relative to arm base frame
-Matrix3f getActuatorR(Quaternionf quat0, Quaternionf quat_imu)
+Matrix3f getActuatorR(Quaternionf quat0, Quaternionf quat_imu, Matrix3f Rtrans)
 {
 	Matrix3f Rinit, Rimu, Ract, Rt, Rmid;
 

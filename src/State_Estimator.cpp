@@ -37,7 +37,7 @@ float imur[seg][act][4];
 int actn = 0;
 
 Quaternionf quat0, quat;
-Matrix3f R[seg][act], dR, Rtest;
+Matrix3f R[seg][act], dR, Rinit, Rconfig[seg][act], Rtrans, Rtr[seg][act];
 MatrixXf Rsegpair(6,3);
 Matrix3f E;
 
@@ -46,6 +46,55 @@ Matrix3f E;
 ifstream inFile;
 float QUAT0[seg][act][4];
 float rad2deg = 180/M_PI;
+Matrix3f RI;
+Matrix3f rotx(float rad)
+{
+	
+	Matrix3f ret;
+  ret<<1,0,0,
+       0,cos(rad),-sin(rad),
+       0,sin(rad),cos(rad);
+return ret; 
+}
+Matrix3f roty(float rad)
+{
+	
+	Matrix3f ret;
+  ret<<cos(rad),0, sin(rad),
+				0,1,0,       
+				-sin(rad),0,cos(rad);
+return ret; 
+}
+Matrix3f rotz(float rad)
+{
+	
+	Matrix3f ret;
+  ret<<cos(rad),-sin(rad),0,
+       sin(rad),cos(rad),0,
+				0,0,1;
+return ret; 
+}
+void Rconfig_init()
+{
+		RI<< 1, 0, 0,
+				 0, 1, 0,
+				 0, 0, 1;
+ 	for (int i = 0; i < seg; i++)
+	{
+		Rconfig[i][0] = RI;
+
+		Rconfig[i][2] = Rconfig[i][0]*rotz(M_PI*2/3);
+
+		Rconfig[i][4] = Rconfig[i][2]*rotz(M_PI*2/3);
+
+		Rconfig[i][1] = Rconfig[i][0]*rotx(M_PI)*rotz(-M_PI/3);
+
+ 		Rconfig[i][3] = Rconfig[i][1]*rotz(-M_PI*2/3);
+
+		Rconfig[i][5] = Rconfig[i][3]*rotz(-M_PI*2/3);
+
+	}
+}
 
 class State_Estimator
 {
@@ -110,18 +159,27 @@ void quat2AB()
   {
     for (int j = 0; j < act; j++)
     {
-			/***********************************
-					imu error: imu[1][1], [1][3], [1][5];
-										 imu[2][3];
-										 imu[3][1], [3][5];
-										 imu[5][0], [5][1], [5][3], [5][4]	
-					***********************************/
+			/*********************************************
+			imu error: imu[1][1], [1][3], [1][5];
+								 imu[2][3];
+								 imu[3][1], [3][5];
+								 imu[5][0], [5][1], [5][3], [5][4]	
+			*********************************************/
+			quat0.w() = QUAT0[i][j][0];
+	    quat0.x() = QUAT0[i][j][1];
+	    quat0.y() = QUAT0[i][j][2];
+	    quat0.z() = QUAT0[i][j][3];
+
+			Rinit = quat0;
+
+			Rtrans = Rconfig[i][j]*Rinit.transpose();
+
 			if ((i == 1 && j == 1) || (i == 1 && j == 3) || (i == 1 && j == 5) || 
 					(i == 2 && j == 3) ||
 					(i == 3 && j == 1) || (i == 3 && j == 5) || 
 					(i == 5 && j == 0) || (i == 5 && j == 1) || (i == 5 && j == 3) || (i == 5 && j == 4))
 			{
-				R[i][j] = E;
+				R[i][j] = Rinit;
 			}
 			else
 			{
@@ -129,13 +187,9 @@ void quat2AB()
 		    quat.x() = imur[i][j][1];
 		    quat.y() = imur[i][j][2];
 		    quat.z() = imur[i][j][3];
-
-		    quat0.w() = QUAT0[i][j][0];
-		    quat0.x() = QUAT0[i][j][1];
-		    quat0.y() = QUAT0[i][j][2];
-		    quat0.z() = QUAT0[i][j][3];
-
-		    R[i][j] = getActuatorR(quat0, quat);		
+								
+		    R[i][j] = getActuatorR(quat0, quat, Rtrans);
+				Rtr[i][j] = transR(quat, Rtrans);		
 			}      			              
     }
   }
@@ -144,48 +198,103 @@ void quat2AB()
   {		
 		if (i == 1)
 		{	
-			R1 = AverageR(R[i][0], R[i][2], R[i][4]);
-			R2 = AverageR(R[2][1], R[2][3], R[2][5]);
+			/*R1 = AverageR(R[i][0], R[i][2], R[i][4]);
+			R2 = AverageR(R[2][1], R[2][3], R[2][5]);*/
+			/*R1 = R[1][0];
+			R2 = R[2][1];*/
+			R1 = R[1][0];
+			R2 = R[2][0];
 		}
 		else if (i == 2)
 		{
-			R1 = AverageR(R[i][0], R[i][2], R[i][4]);
-			R2 = AverageR(R[2][1], R[2][1], R[2][5]);
+			/*R1 = AverageR(R[i][0], R[i][2], R[i][4]);
+			R2 = AverageR(R[2][1], R[2][1], R[2][5]);*/
+			/*R1 = R[i][0];
+			R2 = R[i][1];*/
+			R1 = R[2][0];
+			R2 = R[3][0];
 		}
 		else if (i == 3)
 		{
-			R1 = AverageR(R[i][0], R[i][2], R[i][4]);
-			R2 = AverageR(R[i][3], R[i][3], R[i][3]);
+			/*R1 = AverageR(R[i][0], R[i][2], R[i][4]);
+			R2 = AverageR(R[i][3], R[i][3], R[i][3]);*/
+			/*R1 = R[i][0];
+			R2 = R[i][3];*/
+			R1 = R[3][0];
+			R2 = R[4][0];
 		}
 		else if (i == 5)
 		{
-					R1 = AverageR(R[i][2], R[i][2], R[i][2]);
-					R2 = AverageR(R[i][5], R[i][5], R[i][5]);
+			/*R1 = AverageR(R[i][2], R[i][2], R[i][2]);
+			R2 = AverageR(R[i][5], R[i][5], R[i][5]);*/
+			/*R1 = R[i][2];
+			R2 = R[i][5];*/
+			R1 = R[4][0];
+			R2 = R[5][0];
 		}
 		else
 		{
-			R1 = AverageR(R[i][0], R[i][2], R[i][4]);
-			R2 = AverageR(R[i][1], R[i][3], R[i][5]);
+			/*R1 = AverageR(R[i][0], R[i][2], R[i][4]);
+			R2 = AverageR(R[i][1], R[i][3], R[i][5]);*/
+			R1 = R[i][0];
+			R2 = R[i+1][0];
 		}
 		
     dR = R1.transpose()*R2;
 					
-			printf("Segment[%d]\n",i);
-			/*if (i == 5)
-			{
-				printf("imu:%f, %f, %f, %f\n",imur[i][0][0],imur[i][0][1],imur[i][0][2],imur[i][0][3]);	
-				printf("imu:%f, %f, %f, %f\n",imur[i][2][0],imur[i][2][1],imur[i][2][2],imur[i][2][3]);	
-				printf("imu:%f, %f, %f, %f\n",imur[i][4][0],imur[i][4][1],imur[i][4][2],imur[i][4][3]);
+		//printf("Segment[%d]\n",i);
+		/*if (i == 5)
+		{
+			printf("imu:%f, %f, %f, %f\n",imur[i][0][0],imur[i][0][1],imur[i][0][2],imur[i][0][3]);	
+			printf("imu:%f, %f, %f, %f\n",imur[i][2][0],imur[i][2][1],imur[i][2][2],imur[i][2][3]);	
+			printf("imu:%f, %f, %f, %f\n",imur[i][4][0],imur[i][4][1],imur[i][4][2],imur[i][4][3]);
 
-				printf("imu:%f, %f, %f, %f\n",imur[i][1][0],imur[i][1][1],imur[i][1][2],imur[i][1][3]);	
-				printf("imu:%f, %f, %f, %f\n",imur[i][3][0],imur[i][3][1],imur[i][3][2],imur[i][3][3]);	
-				printf("imu:%f, %f, %f, %f\n",imur[i][5][0],imur[i][5][1],imur[i][5][2],imur[i][5][3]);				
-			}*/
+			printf("imu:%f, %f, %f, %f\n",imur[i][1][0],imur[i][1][1],imur[i][1][2],imur[i][1][3]);	
+			printf("imu:%f, %f, %f, %f\n",imur[i][3][0],imur[i][3][1],imur[i][3][2],imur[i][3][3]);	
+			printf("imu:%f, %f, %f, %f\n",imur[i][5][0],imur[i][5][1],imur[i][5][2],imur[i][5][3]);				
+		}*/
+		
+		if (i == 0 || i == 1)
+		{
+			Matrix3f Rtemp;
+			printf("segment[%d]\n", i);
+			Rtemp = R[i][0].transpose()*R[i+1][0];
+			std::cout<<Rtemp.format(printmatrix)<<sep;
 			
-			std::cout<<R1.format(printmatrix)<<sep;
-			std::cout<<R2.format(printmatrix)<<sep;
-			std::cout<<dR.format(printmatrix)<<sep;					
-					
+			Rtemp = R[i][0].transpose()*R[i+1][1];
+			std::cout<<Rtemp.format(printmatrix)<<sep;
+
+			Rtemp = R[i][0].transpose()*R[i+1][2];
+			std::cout<<Rtemp.format(printmatrix)<<sep;
+
+			Rtemp = R[i][0].transpose()*R[i][1];
+			std::cout<<Rtemp.format(printmatrix)<<sep;
+
+			Rtemp = R[i][0].transpose()*R[i][3];
+			std::cout<<Rtemp.format(printmatrix)<<sep;
+
+			Rtemp = R[i][0].transpose()*R[i][5];
+			std::cout<<Rtemp.format(printmatrix)<<sep;
+
+			Rtemp = R[i][2].transpose()*R[i+1][0];
+			std::cout<<Rtemp.format(printmatrix)<<sep;
+
+			Rtemp = R[i][2].transpose()*R[i+1][1];
+			std::cout<<Rtemp.format(printmatrix)<<sep;
+
+			Rtemp = R[i][2].transpose()*R[i+1][2];
+			std::cout<<Rtemp.format(printmatrix)<<sep;
+
+			Rtemp = R[i][2].transpose()*R[i][1];
+			std::cout<<Rtemp.format(printmatrix)<<sep;
+
+			Rtemp = R[i][2].transpose()*R[i][3];
+			std::cout<<Rtemp.format(printmatrix)<<sep;
+
+			Rtemp = R[i][2].transpose()*R[i][5];
+			std::cout<<Rtemp.format(printmatrix)<<sep;
+		}
+														
     alphar[i] = acos(dR(2,2));
 		
     if (abs(dR(2,2)-1) < 1e-3)
@@ -222,9 +331,9 @@ int main(int argc, char **argv)
   ros::Rate loop_rate(100); 
 
   ROS_INFO("Ready for State_Estimator_Node");
-
+	
+	Rconfig_init();
 	E = Matrix3f::Identity();
-	Rtrans_init();
 	inFile.open("/home/ubuntu/catkin_ws/src/origarm_ros/predefined_param/imu_data.txt", ios::in);
   
    if (!inFile)
