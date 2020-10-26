@@ -63,6 +63,25 @@ int time_hor;
 int time_min;
 int time_sec;
 
+//imu active, return 1, inactive return 0
+int ActiveIMU(QUATERNION current, QUATERNION prev)
+{
+	int result;
+	if ((current.imuData[0] - prev.imuData[0]) == 0 &&
+		(current.imuData[1] - prev.imuData[1]) == 0 &&
+		(current.imuData[2] - prev.imuData[2]) == 0 &&
+		(current.imuData[3] - prev.imuData[3]) == 0)
+	{
+		result = 0;
+	}
+	else
+	{
+		result = 1;
+	}
+
+	return result;
+}
+
 void pressureCallback(const origarm_ros::Command_Pre_Open& pressured)
 {	
 	for(int i = 0; i < seg; i++)
@@ -343,7 +362,7 @@ int main(int argc, char* argv[])
 		//printf("CommandPressure        | sensorData\r\n"); 
 		for (int i = 0; i < seg; i++)
 		{
-			printf("Data[%d]: %hd %hd %hd %hd %hd %hd| %hd %hd %hd %hd %hd %hd| %hu %hu %hu %hu %hu %hu\r\n", i, 
+			printf("Data[%d]: %hd %hd %hd %hd %hd %hd| %hd %hd %hd %hd %hd %hd| %d %d %d %d %d %d| %d %d %d %d %d %d\r\n", i, 
 				commandData.data[i][0].values[0], 
 				commandData.data[i][1].values[0], 
 				commandData.data[i][2].values[0], 
@@ -361,22 +380,52 @@ int main(int argc, char* argv[])
 				sensorData.data[i][2].distance,
 				sensorData.data[i][3].distance,
 				sensorData.data[i][4].distance,
-				sensorData.data[i][5].distance);			
+				sensorData.data[i][5].distance,
+				ActiveIMU(sensorData.data[i][0].quaternion, sensorData_last.data[i][0].quaternion),
+				ActiveIMU(sensorData.data[i][1].quaternion, sensorData_last.data[i][1].quaternion),
+				ActiveIMU(sensorData.data[i][2].quaternion, sensorData_last.data[i][2].quaternion),
+				ActiveIMU(sensorData.data[i][3].quaternion, sensorData_last.data[i][3].quaternion),
+				ActiveIMU(sensorData.data[i][4].quaternion, sensorData_last.data[i][4].quaternion),
+				ActiveIMU(sensorData.data[i][5].quaternion, sensorData_last.data[i][5].quaternion)
+				);			
 		}
 
 		origarm_ros::Sensor Sensor;
+
 		for (int i = 0; i < seg; i++)
 		{
 			for (int j = 0; j < act; j++)
 			{
 				Sensor.sensor_segment[i].sensor_actuator[j].pressure = sensorData.data[i][j].pressure;
 				Sensor.sensor_segment[i].sensor_actuator[j].distance = sensorData.data[i][j].distance;
+				
+				int imu_act = ActiveIMU(sensorData.data[i][j].quaternion, sensorData_last.data[i][j].quaternion);
+				Sensor.sensor_segment[i].sensor_actuator[j].imu_active = imu_act;
+
 				Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.w = sensorData.data[i][j].quaternion.imuData[0]/32768.0;
 				Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.x = sensorData.data[i][j].quaternion.imuData[1]/32768.0;
 				Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.y = sensorData.data[i][j].quaternion.imuData[2]/32768.0;
-				Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.z = sensorData.data[i][j].quaternion.imuData[3]/32768.0;				
+				Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.z = sensorData.data[i][j].quaternion.imuData[3]/32768.0;
+
+				// if (imu_act == 0)
+				// {
+				// 	Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.w = 0;
+				// 	Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.x = 0;
+				// 	Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.y = 0;
+				// 	Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.z = 0;
+				// }
+				// else
+				// {
+				// 	Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.w = sensorData.data[i][j].quaternion.imuData[0]/32768.0;
+				// 	Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.x = sensorData.data[i][j].quaternion.imuData[1]/32768.0;
+				// 	Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.y = sensorData.data[i][j].quaternion.imuData[2]/32768.0;
+				// 	Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.z = sensorData.data[i][j].quaternion.imuData[3]/32768.0;
+				// }
 			}
 		}
+
+		memcpy(&sensorData_last, &sensorData, sizeof(SPIDATA_T));
+
 		pub1.publish(Sensor);
 		
 		time(&rawtime);

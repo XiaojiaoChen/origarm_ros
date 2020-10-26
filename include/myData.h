@@ -38,6 +38,8 @@ typedef struct SPIDATA_R_TAG{
 SPIDATA_T sensorData;
 SPIDATA_R commandData;
 
+SPIDATA_T sensorData_last;
+
 //ABL->Pressure
 float k0 = 1700;
 float length0 = 0.055;

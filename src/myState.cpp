@@ -171,3 +171,4 @@ float getSegmentB(Matrix3f segmentCoord1, Matrix3f segmentCoord2)
 // dist2Length()
 // input is the distance read from distance sensor data, calculate corresponding segment L
 // write in State_Estimator.cpp
+

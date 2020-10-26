@@ -33,7 +33,7 @@ using namespace std;
 int Calibration_flag = 0;
 int key_no[11];
 int16_t imur[seg][act][4];
-float imu_init[seg][act][4];
+float imu_init_data[seg][act][4];
 
 
 void keyCallback(const origarm_ros::keynumber& key)
@@ -58,14 +58,13 @@ void SensorCallback(const origarm_ros::Sensor& sensordata)
 	{
 		for (int j = 0; j < act; j++)
 		{
-			imu_init[i][j][0] = sensordata.sensor_segment[i].sensor_actuator[j].pose.orientation.w; //double check
-	        imu_init[i][j][1] = sensordata.sensor_segment[i].sensor_actuator[j].pose.orientation.x;
-	        imu_init[i][j][2] = sensordata.sensor_segment[i].sensor_actuator[j].pose.orientation.y;
-	        imu_init[i][j][3] = sensordata.sensor_segment[i].sensor_actuator[j].pose.orientation.z;
+			imu_init_data[i][j][0] = sensordata.sensor_segment[i].sensor_actuator[j].pose.orientation.w; //double check
+	        imu_init_data[i][j][1] = sensordata.sensor_segment[i].sensor_actuator[j].pose.orientation.x;
+	        imu_init_data[i][j][2] = sensordata.sensor_segment[i].sensor_actuator[j].pose.orientation.y;
+	        imu_init_data[i][j][3] = sensordata.sensor_segment[i].sensor_actuator[j].pose.orientation.z;
 		}
 	}
 }
-
 
 int main(int argc, char **argv)
 {
@@ -77,31 +76,33 @@ int main(int argc, char **argv)
 	ros::Subscriber sub2 = nh.subscribe("key_number", 1, keyCallback);
 
 	ofstream data;
-  data.open("/home/ubuntu/Desktop/imu_data.txt", ios::app);
-  	//data.open("/home/lijing/catkin_ws/src/origarm_ros/imu_data.txt", ios::app);
+  
 
 
 	while (ros::ok())
 	{
 		if (Calibration_flag == 1)
 		{
+			data.open("/home/ubuntu/catkin_ws/src/origarm_ros/predefined_param/imu_data_test.txt", ios::trunc);
+
 			//write imu data into yaml file/imu_data.txt
 			for (int i = 0; i < seg; i++)
 			{
 				for (int j = 0; j < act; j++)
 				{
-					data<<imu_init[i][j][0]<<" "<<imu_init[i][j][1]<<" "<<imu_init[i][j][2]<<" "<<imu_init[i][j][3]<<endl;
+					data<<imu_init_data[i][j][0]<<" "<<imu_init_data[i][j][1]<<" "<<imu_init_data[i][j][2]<<" "<<imu_init_data[i][j][3]<<endl;
 				}
 			}
-			printf("data[0][0][0]:%f\n",imu_init[0][0][0]);
-			printf("data[1][0][0]:%f\n",imu_init[1][0][0]);
+			printf("data[0][0][0]:%f\n",imu_init_data[0][0][0]);
+			printf("data[1][0][0]:%f\n",imu_init_data[1][0][0]);
 			printf(" KEY_EQUAL pressed! Calibration starts!\n");
+			data.close();
 		}	
 			
 		ros::spinOnce();
 		r.sleep();    //sleep for 1/r sec
 	}
 
-	data.close();
+	
 	return 0;
 }
