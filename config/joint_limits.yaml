@@ -1,0 +1,391 @@
+joint_limits:
+  phantom_joint_segment_0_1_beta:
+    has_position_limits: true
+    min_position: -5
+    max_position: 5
+    has_velocity_limits: true
+    max_velocity: 1.5
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_0_2_alpha:
+    has_position_limits: true
+    min_position: 0
+    max_position: 0.5
+    has_velocity_limits: true
+    max_velocity: 1.5
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_0_3_translation:
+    has_position_limits: true
+    min_position: 0.03
+    max_position: 0.085
+    has_velocity_limits: true
+    max_velocity: 10
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_0_4_alpha:
+    has_position_limits: true
+    min_position: 0
+    max_position: 0.5
+    has_velocity_limits: true
+    max_velocity: 1.5
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_0_5_betaN:
+    has_position_limits: true
+    min_position: -5
+    max_position: 5
+    has_velocity_limits: true
+    max_velocity: 10
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_1_1_beta:
+    has_position_limits: true
+    min_position: -5
+    max_position: 5
+    has_velocity_limits: true
+    max_velocity: 1.5
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_1_2_alpha:
+    has_position_limits: true
+    min_position: 0
+    max_position: 0.5
+    has_velocity_limits: true
+    max_velocity: 1.5
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_1_3_translation:
+    has_position_limits: true
+    min_position: 0.03
+    max_position: 0.085
+    has_velocity_limits: true
+    max_velocity: 10
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_1_4_alpha:
+    has_position_limits: true
+    min_position: 0
+    max_position: 0.5
+    has_velocity_limits: true
+    max_velocity: 1.5
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_1_5_betaN:
+    has_position_limits: true
+    min_position: -5
+    max_position: 5
+    has_velocity_limits: true
+    max_velocity: 10
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_2_1_beta:
+    has_position_limits: true
+    min_position: -5
+    max_position: 5
+    has_velocity_limits: true
+    max_velocity: 1.5
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_2_2_alpha:
+    has_position_limits: true
+    min_position: 0
+    max_position: 0.5
+    has_velocity_limits: true
+    max_velocity: 1.5
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_2_3_translation:
+    has_position_limits: true
+    min_position: 0.03
+    max_position: 0.085
+    has_velocity_limits: true
+    max_velocity: 10
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_2_4_alpha:
+    has_position_limits: true
+    min_position: 0
+    max_position: 0.5
+    has_velocity_limits: true
+    max_velocity: 1.5
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_2_5_betaN:
+    has_position_limits: true
+    min_position: -5
+    max_position: 5
+    has_velocity_limits: true
+    max_velocity: 10
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_3_1_beta:
+    has_position_limits: true
+    min_position: -5
+    max_position: 5
+    has_velocity_limits: true
+    max_velocity: 1.5
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_3_2_alpha:
+    has_position_limits: true
+    min_position: 0
+    max_position: 0.5
+    has_velocity_limits: true
+    max_velocity: 1.5
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_3_3_translation:
+    has_position_limits: true
+    min_position: 0.03
+    max_position: 0.085
+    has_velocity_limits: true
+    max_velocity: 10
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_3_4_alpha:
+    has_position_limits: true
+    min_position: 0
+    max_position: 0.5
+    has_velocity_limits: true
+    max_velocity: 1.5
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_3_5_betaN:
+    has_position_limits: true
+    min_position: -5
+    max_position: 5
+    has_velocity_limits: true
+    max_velocity: 10
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_4_1_beta:
+    has_position_limits: true
+    min_position: -5
+    max_position: 5
+    has_velocity_limits: true
+    max_velocity: 1.5
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_4_2_alpha:
+    has_position_limits: true
+    min_position: 0
+    max_position: 0.5
+    has_velocity_limits: true
+    max_velocity: 1.5
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_4_3_translation:
+    has_position_limits: true
+    min_position: 0.03
+    max_position: 0.085
+    has_velocity_limits: true
+    max_velocity: 10
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_4_4_alpha:
+    has_position_limits: true
+    min_position: 0
+    max_position: 0.5
+    has_velocity_limits: true
+    max_velocity: 1.5
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_4_5_betaN:
+    has_position_limits: true
+    min_position: -5
+    max_position: 5
+    has_velocity_limits: true
+    max_velocity: 10
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_5_1_beta:
+    has_position_limits: true
+    min_position: -5
+    max_position: 5
+    has_velocity_limits: true
+    max_velocity: 1.5
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_5_2_alpha:
+    has_position_limits: true
+    min_position: 0
+    max_position: 0.5
+    has_velocity_limits: true
+    max_velocity: 1.5
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_5_3_translation:
+    has_position_limits: true
+    min_position: 0.03
+    max_position: 0.085
+    has_velocity_limits: true
+    max_velocity: 10
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_5_4_alpha:
+    has_position_limits: true
+    min_position: 0
+    max_position: 0.5
+    has_velocity_limits: true
+    max_velocity: 1.5
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+
+  phantom_joint_segment_5_5_betaN:
+    has_position_limits: true
+    min_position: -5
+    max_position: 5
+    has_velocity_limits: true
+    max_velocity: 10
+    has_acceleration_limits: true
+    max_acceleration: 20
+    has_jerk_limits: true
+    max_jerk: 200
+    has_effort_limits: true
+    max_effort: 255
+

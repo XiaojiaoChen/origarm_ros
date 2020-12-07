@@ -50,8 +50,8 @@ static uint32_t speed = 5000000;
 static uint16_t delay;
 static int verbose;
 
-int16_t Cmd_pressure[seg][act];
-bool commandType_[seg][act];
+int16_t Cmd_pressure[SEGNUM][ACTNUM];
+bool commandType_[SEGNUM][ACTNUM];
 int segNumber;
 int controlmode;
 int status;
@@ -65,9 +65,9 @@ int time_sec;
 
 void pressureCallback(const origarm_ros::Command_Pre_Open& pressured)
 {	
-	for(int i = 0; i < seg; i++)
+	for(int i = 0; i < SEGNUM; i++)
 	{
-		for (int j = 0; j < act; j++)
+		for (int j = 0; j < ACTNUM; j++)
 		{
 			Cmd_pressure[i][j] = pressured.segment[i].command[j].pressure;
 			commandType_[i][j] = pressured.segment[i].command[j].valve;
@@ -88,9 +88,9 @@ void modeNumberCallback(const origarm_ros::modenumber& msg)
 
 static void writeCommand()
 {
-	for (int i = 0; i < seg; i++)
+	for (int i = 0; i < SEGNUM; i++)
 	{
-		for (int j = 0; j < act; j++)
+		for (int j = 0; j < ACTNUM; j++)
 		{
 			if (commandType_[i][j] == 0)
 			{
@@ -341,7 +341,7 @@ int main(int argc, char* argv[])
 
 		printf("time:%d, segN:%d, mode:%d, status: %d\r\n", t, segNumber, controlmode, status); 
 		//printf("CommandPressure        | sensorData\r\n"); 
-		for (int i = 0; i < seg; i++)
+		for (int i = 0; i < SEGNUM; i++)
 		{
 			printf("Data[%d]: %hd %hd %hd %hd %hd %hd| %hd %hd %hd %hd %hd %hd| %hu %hu %hu %hu %hu %hu\r\n", i, 
 				commandData.data[i][0].values[0], 
@@ -365,9 +365,9 @@ int main(int argc, char* argv[])
 		}
 
 		origarm_ros::Sensor Sensor;
-		for (int i = 0; i < seg; i++)
+		for (int i = 0; i < SEGNUM; i++)
 		{
-			for (int j = 0; j < act; j++)
+			for (int j = 0; j < ACTNUM; j++)
 			{
 				Sensor.sensor_segment[i].sensor_actuator[j].pressure = sensorData.data[i][j].pressure;
 				Sensor.sensor_segment[i].sensor_actuator[j].distance = sensorData.data[i][j].distance;
@@ -386,9 +386,9 @@ int main(int argc, char* argv[])
 		time_min = timeinfo->tm_min;
 		time_sec = timeinfo->tm_sec;
 		
-		for (int p = 0; p < seg; p++)
+		for (int p = 0; p < SEGNUM; p++)
 		{
-			for (int q = 0; q < act; q++)
+			for (int q = 0; q < ACTNUM; q++)
 			{
 				data << time_day <<" "<<time_hor<<" "<<time_min<<" "<<time_sec<<" "<<commandData.data[p][q].values[0]<<" "<< sensorData.data[p][q].pressure <<" "<< sensorData.data[p][q].distance 
 						 <<" "<< sensorData.data[p][q].quaternion.imuData[0]/32768.0 <<" "<< sensorData.data[p][q].quaternion.imuData[1]/32768.0 <<" "<< sensorData.data[p][q].quaternion.imuData[2]/32768.0 <<" "<< sensorData.data[p][q].quaternion.imuData[3]/32768.0

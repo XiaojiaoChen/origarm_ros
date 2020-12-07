@@ -1,0 +1,286 @@
+origarmRigidKE:
+  # Publish all joint states -----------------------------------
+  joints_update:
+    type: joint_state_controller/JointStateController
+    publish_rate: 50
+    
+  # Position Controllers for segment 0---------------------------------------
+  phantom_joint_segment_0_1_beta_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_0_1_beta
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_0_2_alpha2_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_0_2_alpha2
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_0_3_translation_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_0_3_translation
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_0_4_alpha2_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_0_4_alpha2
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_0_5_betaN_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_0_5_betaN
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+      # Position Controllers for segment 0---------------------------------------
+  phantom_joint_segment_1_1_beta_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_1_1_beta
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_1_2_alpha2_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_1_2_alpha2
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_1_3_translation_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_1_3_translation
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_1_4_alpha2_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_1_4_alpha2
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_1_5_betaN_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_1_5_betaN
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+      # Position Controllers for segment 0---------------------------------------
+  phantom_joint_segment_2_1_beta_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_2_1_beta
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_2_2_alpha2_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_2_2_alpha2
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_2_3_translation_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_2_3_translation
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_2_4_alpha2_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_2_4_alpha2
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_2_5_betaN_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_2_5_betaN
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+      # Position Controllers for segment 0---------------------------------------
+  phantom_joint_segment_3_1_beta_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_3_1_beta
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_3_2_alpha2_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_3_2_alpha2
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_3_3_translation_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_3_3_translation
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_3_4_alpha2_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_3_4_alpha2
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_3_5_betaN_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_3_5_betaN
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+      # Position Controllers for segment 0---------------------------------------
+  phantom_joint_segment_4_1_beta_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_4_1_beta
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_4_2_alpha2_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_4_2_alpha2
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_4_3_translation_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_4_3_translation
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_4_4_alpha2_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_4_4_alpha2
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_4_5_betaN_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_4_5_betaN
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+      # Position Controllers for segment 0---------------------------------------
+  phantom_joint_segment_5_1_beta_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_5_1_beta
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_5_2_alpha2_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_5_2_alpha2
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_5_3_translation_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_5_3_translation
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_5_4_alpha2_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_5_4_alpha2
+    pid: {p: 10, i: 0.01,  d: 0.1}
+
+  phantom_joint_segment_5_5_betaN_position_controller:
+    type: position_controllers/JointPositionController
+    joint: phantom_joint_segment_5_5_betaN
+    pid: {p: 10, i: 0.01,  d: 0.1}
+ 
+  
+#PID values for effor_controllers/JointPositionController
+  gazebo_ros_control:
+    pid_gains:
+      phantom_joint_segment_0_1_beta:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_0_2_alpha2:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_0_3_translation:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_0_4_alpha2:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_0_5_betaN:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_1_1_beta:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_1_2_alpha2:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_1_3_translation:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_1_4_alpha2:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_1_5_betaN:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_2_1_beta:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_2_2_alpha2:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_2_3_translation:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_2_4_alpha2:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_2_5_betaN:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_3_1_beta:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_3_2_alpha2:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_3_3_translation:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_3_4_alpha2:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_3_5_betaN:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_4_1_beta:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_4_2_alpha2:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_4_3_translation:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_4_4_alpha2:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_4_5_betaN:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_5_1_beta:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_5_2_alpha2:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_5_3_translation:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_5_4_alpha2:
+        p: 50.0
+        i: 0.01
+        d: 1.0
+      phantom_joint_segment_5_5_betaN:
+        p: 50.0
+        i: 0.01
+        d: 1.0

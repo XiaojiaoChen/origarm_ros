@@ -13,56 +13,56 @@
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 
-float b1[seg];
-float btem[seg];
-float b2[seg];
-float b3[seg];
-float pressureD[seg][act];
-float alphad[seg];                //ABL desired value
-float betad[seg];
-float lengthd[seg];
+float b1[SEGNUM];
+float btem[SEGNUM];
+float b2[SEGNUM];
+float b3[SEGNUM];
+float pressureD[SEGNUM][ACTNUM];
+float alphad[SEGNUM];                //ABL desired value
+float betad[SEGNUM];
+float lengthd[SEGNUM];
 
-float ajoy[seg];
-float bjoy[seg];
-float ljoy[seg];
+float ajoy[SEGNUM];
+float bjoy[SEGNUM];
+float ljoy[SEGNUM];
 
-float apos[seg];
-float bpos[seg];
-float lpos[seg];
+float apos[SEGNUM];
+float bpos[SEGNUM];
+float lpos[SEGNUM];
 
 float l0;
 
-float Texta[seg];                 //external torque
-float Textb[seg];
-float Tx[seg];
-float Ty[seg];
+float Texta[SEGNUM];                 //external torque
+float Textb[SEGNUM];
+float Tx[SEGNUM];
+float Ty[SEGNUM];
 float Fl = 0;
-float phycD[seg];
-float physD[seg];
-float phypD[seg]; 
+float phycD[SEGNUM];
+float physD[SEGNUM];
+float phypD[SEGNUM]; 
 
 float pLimitOptimal = 0;
-float dalphaRatio[seg];
-float dbeta[seg];
-float dlength[seg];
+float dalphaRatio[SEGNUM];
+float dbeta[SEGNUM];
+float dlength[SEGNUM];
 
-float alphar[seg];                //ABL real value, calculated by sensor data
-float betar[seg];
-float lengthr[seg];
+float alphar[SEGNUM];                //ABL real value, calculated by sensor data
+float betar[SEGNUM];
+float lengthr[SEGNUM];
 
-float phycFeedbackAlpha[seg];
-float physFeedbackAlpha[seg];
-float phycFeedbackBeta[seg];
-float physFeedbackBeta[seg];
-float phycFeedback[seg];
-float physFeedback[seg];
-float phypFeedback[seg];
-float pressureDFeed[seg][act];
-float pressureDBack[seg][act];
+float phycFeedbackAlpha[SEGNUM];
+float physFeedbackAlpha[SEGNUM];
+float phycFeedbackBeta[SEGNUM];
+float physFeedbackBeta[SEGNUM];
+float phycFeedback[SEGNUM];
+float physFeedback[SEGNUM];
+float phypFeedback[SEGNUM];
+float pressureDFeed[SEGNUM][ACTNUM];
+float pressureDBack[SEGNUM][ACTNUM];
 
 int feedbackFlag = 0;
 
-float openingD[seg][act];
+float openingD[SEGNUM][ACTNUM];
 int mode_;
 
 using namespace std;
@@ -74,14 +74,14 @@ PID_Type *lengthPID = newPID(  1,  0.01, 0, 0.005, 0.1, 0.1);
 
 void initParameter()
 {
-  for (int i = 0; i < seg; i++)
+  for (int i = 0; i < SEGNUM; i++)
   {
     ajoy[i] = 0;
     bjoy[i] = 0;
     ljoy[i] = length0;
   }
 
-  for (int i = 0; i < seg; i++)
+  for (int i = 0; i < SEGNUM; i++)
   {
     apos[i] = 0;
     bpos[i] = 0;
@@ -92,7 +92,7 @@ void initParameter()
 //ABL->Pressure D:desired
 void ABLD2PD()
 {
-  for (int i = 0; i < seg; i ++)
+  for (int i = 0; i < SEGNUM; i ++)
   {
     b1[i] = 2*C1*(lengthd[i]-length0)/(radR*6);
     btem[i] = C1*alphad[i]/6;
@@ -113,7 +113,7 @@ void FeedbackController(int feedbackFlag)
 {
   if (mode_ < 3)
   {
-    for (int i = 0; i < seg; i++)
+    for (int i = 0; i < SEGNUM; i++)
     {
       alphad[i]  = ajoy[i];
       betad[i]   = bjoy[i];
@@ -122,7 +122,7 @@ void FeedbackController(int feedbackFlag)
   }
   else
   {
-    for (int i = 0; i < seg; i++)
+    for (int i = 0; i < SEGNUM; i++)
     {
       alphad[i]  = apos[i];
       betad[i]   = bpos[i];
@@ -130,7 +130,7 @@ void FeedbackController(int feedbackFlag)
     }
   }
 
-  for (int i = 0; i < seg; i++)
+  for (int i = 0; i < SEGNUM; i++)
   {
     Tx[i] = Texta[i]/crossA/radR-C1*alphad[i];
     Ty[i] = Textb[i]/crossA/radR;
@@ -158,7 +158,7 @@ void FeedbackController(int feedbackFlag)
     
   if(feedbackFlag)
   {
-    for (int i = 0; i < seg; i++)
+    for (int i = 0; i < SEGNUM; i++)
     {
       dalphaRatio[i] = updatePID(alphaPID,1,alphar[i]/alphad[i]);
       dbeta[i]       = updatePID(betaPID,betad[i],betar[i]);
@@ -184,18 +184,18 @@ void FeedbackController(int feedbackFlag)
   }
   else
   {
-    for(int i = 0; i < seg; i++)
+    for(int i = 0; i < SEGNUM; i++)
     {
-      for (int j = 0; j < act; j++)
+      for (int j = 0; j < ACTNUM; j++)
       {
         pressureDBack[i][j] = 0;
       }
     }
   }
 
-  for (int i = 0; i < seg; i++)
+  for (int i = 0; i < SEGNUM; i++)
   {
-    for (int j = 0; j < act; j++)
+    for (int j = 0; j < ACTNUM; j++)
     {
         pressureD[i][j] = pressureDFeed[i][j] + pressureDBack[i][j];
     }
@@ -218,7 +218,7 @@ class ABL_controller
 
     void States(const origarm_ros::States& msg)
     {
-      for (int i = 0; i < seg; i++)
+      for (int i = 0; i < SEGNUM; i++)
       {
         alphar[i] = msg.ABL.segment[i].A;
         betar[i] = msg.ABL.segment[i].B;
@@ -236,7 +236,7 @@ class ABL_controller
     void ABL_joy(const origarm_ros::Command_ABL& msg)
     {
 
-      for (int i = 0; i < seg; i++)
+      for (int i = 0; i < SEGNUM; i++)
       {
         ajoy[i] = msg.segment[i].A;
         bjoy[i] = msg.segment[i].B;
@@ -247,7 +247,7 @@ class ABL_controller
 
     void ABL_ik(const origarm_ros::Command_ABL& msg)
     {
-      for (int i = 0; i < seg; i++)
+      for (int i = 0; i < SEGNUM; i++)
       {
         apos[i] = msg.segment[i].A;
         bpos[i] = msg.segment[i].B;
@@ -269,9 +269,9 @@ class ABL_controller
       //control mode
       //mode[0]: 1 abl; mode[1]: 3 abl; mode[2]: 9 abl; mode[3]: 1 xyz; mode[4]: 3 xyz; mode[5]: 9 xyz
       //mode[0]: joyA;  mode[1]: joyB;  mode[2]: joyX;  mode[3]: joyY;  mode[4]: joyRB; mode[5]: joyLB
-      for (int i = 0; i < seg; i++)
+      for (int i = 0; i < SEGNUM; i++)
       {
-        for (int j = 0; j < act; j++)
+        for (int j = 0; j < ACTNUM; j++)
         {
           Cmd_P_O.segment[i].command[j].pressure = pressureD[i][j]/100;     //send hPa to spi_node 
           Cmd_P_O.segment[i].command[j].valve    = 1;                       //bool == 1, commandType == pressureCommandType

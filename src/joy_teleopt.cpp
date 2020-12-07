@@ -33,125 +33,125 @@ using Eigen::Quaternionf;
 using namespace std;
 
 //save into files
-int save_flag = 0;
+static int save_flag = 0;
 
 //keyboard mapping
-int key_no[10];
+static int key_no[10];
 
 //joystick mapping
-float joyLx;
-float joyLy;
-float joyRx;
-float joyRy;
-float joyLT;
-float joyRT;
-int joyLB;		//mode[5]
-int joyRB;	    //mode[4]	
-int joyX;		//mode[2]
-int joyY;		//mode[3]
-int joyA;       //mode[0]
-int joyB;		//mode[1]
-int joyCrossY;	
-int joyCrossX;	
-int joyUp;		
-int joyDown;	
-int joyLeft;	
-int joyRight;	
+static float joyLx;
+static float joyLy;
+static float joyRx;
+static float joyRy;
+static float joyLT;
+static float joyRT;
+static int joyLB;		//mode[5]
+static int joyRB;	    //mode[4]
+static int joyX;		//mode[2]
+static int joyY;		//mode[3]
+static int joyA;       //mode[0]
+static int joyB;		//mode[1]
+static int joyCrossY;
+static int joyCrossX;
+static int joyUp;
+static int joyDown;
+static int joyLeft;
+static int joyRight;
 
-int last_joyRB;
-int last_joyLB;
-int last_joyX;
-int last_joyY;
-int last_joyA;
-int last_joyB;
-int last_joyUp;		
-int last_joyDown;	
-int last_joyLeft;	
-int last_joyRight;	
+static int last_joyRB;
+static int last_joyLB;
+static int last_joyX;
+static int last_joyY;
+static int last_joyA;
+static int last_joyB;
+static int last_joyUp;
+static int last_joyDown;
+static int last_joyLeft;
+static int last_joyRight;
 
-int enable;  
-int disable; 
-int last_enable;
-int last_disable;
-int status;
+static int enable;
+static int disable;
+static int last_enable;
+static int last_disable;
+static int status;
 
 //Write ABL
-int segNumber;
-float alpha;
-float beta;
-float length = length0;
-float segAlpha_[3];
-float segBeta_[3];
-float segLength_[3];
-float segAlpha[9];
-float segBeta[9];
-float segLength[9];
+static int segNumber;
+static float alpha;
+static float beta;
+static float length = length0;
+static float segAlpha_[3];
+static float segBeta_[3];
+static float segLength_[3];
+static float segAlpha[9];
+static float segBeta[9];
+static float segLength[9];
 
-float a_scale = 0.003;
-float b_scale = 0.002;
-float l_scale = 0.00003;
+static float a_scale = 0.003;
+static float b_scale = 0.002;
+static float l_scale = 0.00003;
 
-float l_max =  0.08;
-float l_min =  0.03;
-float a_max =  M_PI/2;
-float a_min = -M_PI/2;
-float b_max =  M_PI;
-float b_min = -M_PI;
+static float l_max =  0.08;
+static float l_min =  0.03;
+static float a_max =  M_PI/2;
+static float a_min = -M_PI/2;
+static float b_max =  M_PI;
+static float b_min = -M_PI;
 
 //write Opening
-float belloConfigurationR = 0.06;
-float Rmax = 1.0;
+static float belloConfigurationR = 0.06;
+static float Rmax = 1.0;
 
-float rawAngle;
-float rawAmplitude;
-float rawAmplitudeMax;
-float angleCommand;
-float amplitudeCommand;
-float bellowProjection[6];
-float bellowConfigurationPx[6];
-float bellowConfigurationPy[6];
-float openingBase;
-float OpeningResult[6];
+static float rawAngle;
+static float rawAmplitude;
+static float rawAmplitudeMax;
+static float angleCommand;
+static float amplitudeCommand;
+static float bellowProjection[6];
+static float bellowConfigurationPx[6];
+static float bellowConfigurationPy[6];
+static float openingBase;
+static float OpeningResult[6];
 
 //Write XYZ unit:m
-float x = x_origin;
-float y = y_origin;
-float z = z_origin;
-float segx_ = x_origin;
-float segy_ = y_origin;
-float segz_ = z_origin*6;
-float segqx_ = 1;
-float segqy_ = 0;
-float segqz_ = 0;
-float segqw_ = 1;
+static float x = x_origin;
+static float y = y_origin;
+static float z = z_origin;
+static float segx_ = x_origin;
+static float segy_ = y_origin;
+static float segz_ = z_origin*6;
+static float segqx_ = 1;
+static float segqy_ = 0;
+static float segqz_ = 0;
+static float segqw_ = 1;
 
-float x_scale = 0.00001;
-float y_scale = 0.00001;
-float z_scale = 0.0001;
+static float x_scale = 0.00001;
+static float y_scale = 0.00001;
+static float z_scale = 0.0001;
 
-float x_max =  0.06;
-float x_min = -0.06;
-float y_max =  0.06;
-float y_min = -0.06;
+static float x_max =  0.06;
+static float x_min = -0.06;
+static float y_max =  0.06;
+static float y_min = -0.06;
 
-float z_max =  0.08;
-float z_min =  0.01;
-float z_max9 = z_max*9;
-float z_min9 = z_min*9;
-float z_max6 = z_max*6;
-float z_min6 = z_min*6;
+static float z_max =  0.08;
+static float z_min =  0.01;
+static float z_max9 = z_max*9;
+static float z_min9 = z_min*9;
+static float z_max6 = z_max*6;
+static float z_min6 = z_min*6;
 
 //Internal parameters
 //ABL calculated by XYZ
-float alphad;
-float betad;
-float lengthd;
-float segAlphad_[3];
-float segBetad_[3];
-float segLengthd_[3];
-float segAlphad[9];
-float segBetad[9];
-float segLengthd[9];
+static float alphad;
+static float betad;
+static float lengthd;
+static float segAlphad_[3];
+static float segBetad_[3];
+static float segLengthd_[3];
+static float segAlphad[9];
+static float segBetad[9];
+static float segLengthd[9];
 
 //control mode
 //mode[0]: 1 abl; mode[1]: 3 abl; mode[2]: 9 abl; mode[3]: 1 xyz; mode[4]: 3 xyz;
@@ -830,7 +830,7 @@ int main(int argc, char **argv)
 	ros::Rate r(100);     //Hz
 
 	ofstream savedata;
-    savedata.open("/home/ubuntu/Desktop/demo_traj.txt", ios::app);
+    savedata.open("demo_traj.txt", ios::app);
 
 	ros::Subscriber sub1 = nh.subscribe("joy", 1, joyCallback);	
 	ros::Subscriber sub2 = nh.subscribe("key_number", 1, keyCallback);
@@ -940,7 +940,7 @@ int main(int argc, char **argv)
 			Cmd_ABL.segment[0].B = beta;
 			Cmd_ABL.segment[0].L = length;
 
-			for (int i = 1; i < seg; i++)
+			for (int i = 1; i < SEGNUM; i++)
 			{
 				Cmd_ABL.segment[i].A = 0;
 				Cmd_ABL.segment[i].B = 0;
@@ -962,7 +962,7 @@ int main(int argc, char **argv)
 				printf("ABL3: alpha: %f, beta: %f, length: %f\r\n", segAlpha_[int(i/2)]/2, segBeta_[int(i/2)], segLength_[int(i/2)]/2);	
 			}
 
-			for (int i = 6; i < seg; i++)
+			for (int i = 6; i < SEGNUM; i++)
 			{
 				Cmd_ABL.segment[i].A = 0;
 				Cmd_ABL.segment[i].B = 0;
@@ -982,7 +982,7 @@ int main(int argc, char **argv)
 				printf("ABL6: alpha: %f, beta: %f, length: %f\r\n", segAlpha[i], segBeta[i], segLength[i]);	
 			}
 
-			for (int i = 6; i < seg; i++)
+			for (int i = 6; i < SEGNUM; i++)
 			{
 				Cmd_ABL.segment[i].A = 0;
 				Cmd_ABL.segment[i].B = 0;

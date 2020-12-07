@@ -150,7 +150,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].L = demo_l/6;
  				}
 
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -176,7 +176,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].L = demo_l/6;
  				}
 
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -202,7 +202,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].L = demo_l/6;
  				}
 
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -228,7 +228,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].L = demo_l/6;
  				}
 
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -255,7 +255,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].L = demo_l/6;
  				}
 
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -336,7 +336,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].L = demo_l/6;
  				}
 				
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -363,7 +363,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].L = demo_l/6;
  				}
 
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -463,7 +463,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].B = b_seg2[1];
  					Command_ABL_demo.segment[i].L = l_seg2[1]/3;
  				}
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -501,7 +501,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].B = b_seg2[1];
  					Command_ABL_demo.segment[i].L = l_seg2[1]/3;
  				}
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -516,7 +516,7 @@ int main(int argc, char **argv)
  			}		
 			
 			//seg1, reset				
- 			for (int i = 0; i < seg; i++)
+ 			for (int i = 0; i < SEGNUM; i++)
  			{
  				Command_ABL_demo.segment[i].A = 0;
  				Command_ABL_demo.segment[i].B = 0;
@@ -552,7 +552,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].B = b_seg2[1];
  					Command_ABL_demo.segment[i].L = l_seg2[1]/3;
  				}
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -590,7 +590,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].B = b_seg2[1];
  					Command_ABL_demo.segment[i].L = l_seg2[1]/3;
  				}
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -605,7 +605,7 @@ int main(int argc, char **argv)
  			}		
 
 			//seg2, reset				
- 			for (int i = 0; i < seg; i++)
+ 			for (int i = 0; i < SEGNUM; i++)
  			{
  				Command_ABL_demo.segment[i].A = 0;
  				Command_ABL_demo.segment[i].B = 0;
@@ -642,7 +642,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].B = b_seg2[1];
  					Command_ABL_demo.segment[i].L = l_seg2[1]/3;
  				}
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -685,7 +685,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].B = b_seg2[1];
  					Command_ABL_demo.segment[i].L = l_seg2[1]/3;
  				}
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -724,7 +724,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].B = b_seg2[1];
  					Command_ABL_demo.segment[i].L = l_seg2[1]/3;
  				}
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -1132,7 +1132,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].B = b_seg3[2];
  					Command_ABL_demo.segment[i].L = l_seg3[2]/2;
  				}
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -1183,7 +1183,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].B = b_seg3[2];
  					Command_ABL_demo.segment[i].L = l_seg3[2]/2;
  				}
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -1234,7 +1234,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].B = b_seg3[2];
  					Command_ABL_demo.segment[i].L = l_seg3[2]/2;
  				}
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -1284,7 +1284,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].B = b_seg3[2];
  					Command_ABL_demo.segment[i].L = l_seg3[2]/2;
  				}
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -1335,7 +1335,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].B = b_seg3[2];
  					Command_ABL_demo.segment[i].L = l_seg3[2]/2;
  				}
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -2044,7 +2044,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].B = b_seg6[i];
  					Command_ABL_demo.segment[i].L = l_seg6[i];
  				}
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -2099,7 +2099,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].B = b_seg6[i];
  					Command_ABL_demo.segment[i].L = l_seg6[i];
  				}
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -2155,7 +2155,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].B = b_seg6[i];
  					Command_ABL_demo.segment[i].L = l_seg6[i];
  				}
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -2205,7 +2205,7 @@ int main(int argc, char **argv)
  					Command_ABL_demo.segment[i].B = b_seg6[i];
  					Command_ABL_demo.segment[i].L = l_seg6[i];
  				}
- 				for (int i = 6; i < seg; i++)
+ 				for (int i = 6; i < SEGNUM; i++)
  				{
  					Command_ABL_demo.segment[i].A = 0;
  					Command_ABL_demo.segment[i].B = 0;
@@ -2236,7 +2236,7 @@ int main(int argc, char **argv)
 		}
 		else
 		{
-			for (int i = 0; i < seg; i++)
+			for (int i = 0; i < SEGNUM; i++)
 			{
 				Command_ABL_demo.segment[i].A = 0;
 				Command_ABL_demo.segment[i].B = 0;

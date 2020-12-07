@@ -1,0 +1,59 @@
+<launch>
+
+    <!-- Load joint controller configurations from YAML file to parameter server -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <!-- Note: the world_name is with respect to GAZEBO_RESOURCE_PATH environmental variable -->
+
+    </include>
+
+    <arg name="rvizconfig" default="$(find origarm_ros)/model/rvizconfig.rviz" />
+    <arg name="model" default="$(find origarm_ros)/model/urdf/origarmRigidKE.urdf"/>
+    <param name="robot_description" command="$(find xacro)/xacro $(arg model)" />
+
+    <rosparam file="$(find origarm_ros)/config/gazebo_control_PID_parameters.yaml" command="load"/>
+    <rosparam file="$(find origarm_ros)/config/joint_limits.yaml" command="load"/>
+
+    <node name="mybot_spawn" pkg="gazebo_ros" type="spawn_model" output="screen" args="-urdf -param robot_description -model origarmRigidKE">
+    </node>
+
+    <!-- load the controllers -->
+    <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" ns="/origarmRigidKE" args="joints_update
+    phantom_joint_segment_0_1_beta_position_controller
+    phantom_joint_segment_0_2_alpha2_position_controller
+    phantom_joint_segment_0_3_translation_position_controller
+    phantom_joint_segment_0_4_alpha2_position_controller
+    phantom_joint_segment_0_5_betaN_position_controller
+    phantom_joint_segment_1_1_beta_position_controller
+    phantom_joint_segment_1_2_alpha2_position_controller
+    phantom_joint_segment_1_3_translation_position_controller
+    phantom_joint_segment_1_4_alpha2_position_controller
+    phantom_joint_segment_1_5_betaN_position_controller
+    phantom_joint_segment_2_1_beta_position_controller
+    phantom_joint_segment_2_2_alpha2_position_controller
+    phantom_joint_segment_2_3_translation_position_controller
+    phantom_joint_segment_2_4_alpha2_position_controller
+    phantom_joint_segment_2_5_betaN_position_controller
+    phantom_joint_segment_3_1_beta_position_controller
+    phantom_joint_segment_3_2_alpha2_position_controller
+    phantom_joint_segment_3_3_translation_position_controller
+    phantom_joint_segment_3_4_alpha2_position_controller
+    phantom_joint_segment_3_5_betaN_position_controller
+    phantom_joint_segment_4_1_beta_position_controller
+    phantom_joint_segment_4_2_alpha2_position_controller
+    phantom_joint_segment_4_3_translation_position_controller
+    phantom_joint_segment_4_4_alpha2_position_controller
+    phantom_joint_segment_4_5_betaN_position_controller
+    phantom_joint_segment_5_1_beta_position_controller
+    phantom_joint_segment_5_2_alpha2_position_controller
+    phantom_joint_segment_5_3_translation_position_controller
+    phantom_joint_segment_5_4_alpha2_position_controller
+    phantom_joint_segment_5_5_betaN_position_controller
+    "/>
+
+    <!-- convert joint states to TF transforms for rviz, etc -->
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen" />
+    <node name="rqt_gui" pkg="rqt_gui" type="rqt_gui" output="screen" />
+
+    <!--node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" /-->
+
+</launch>

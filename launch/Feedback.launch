@@ -1,4 +1,4 @@
 <launch>
     <node pkg="origarm_ros" name="spi_node" type="spi_node" />
-    <node pkg="origarm_ros" name="StateEstimator_node" type="State_Estimator" output="screen"/>
+    <node pkg="origarm_ros" name="State_Estimator" type="State_Estimator" output="screen"/>
 </launch>

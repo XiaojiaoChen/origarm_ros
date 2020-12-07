@@ -1,0 +1,304 @@
+<?xml version="1.0"?>
+<robot name="origarmRigidKE"
+  xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:property name="radiusPlate" value="0.095" />
+
+  <xacro:property name="alpha_seg_min" value="0" />
+  <xacro:property name="alpha_seg_max" value="0.5" />
+  <xacro:property name="beta_seg_min" value="${-pi*2}" />
+  <xacro:property name="beta_seg_max" value="${pi*2}" />
+  <xacro:property name="length_seg_offset" value="0.055" />
+  <xacro:property name="length_seg_min" value="-0.02" />
+  <xacro:property name="length_seg_max" value="0.03" />
+
+  <!-- Import Rviz colors -->
+  <xacro:include filename="$(find origarm_ros)/model/urdf/materials.xacro" />
+
+  <link name="world"/>
+
+  <joint name="fixed" type="fixed">
+    <parent link="world"/>
+    <child link="plate_-1"/>
+    <origin xyz="0 0 1" rpy="${pi} 0 0"/>
+  </joint>
+
+
+  <xacro:macro name="plate" params="platenum">
+    <link name="plate_${platenum}">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://origarm_ros/model/mesh/origarmPlate_m.STL"/>
+        </geometry>
+        <material name="aluminum"/>
+      </visual>
+      <collision>
+        <geometry>
+          <cylinder radius="${radiusPlate}" length="0.005"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.127" />
+        <inertia ixx="0.00032197" ixy="0.0" ixz="0.0" iyy="0.00032197" iyz="0.0" izz="0.00064284" />
+      </inertial>
+    </link>
+  </xacro:macro>
+
+  <xacro:macro name="phantom_link" params="snum num_in">
+    <link name="phantom_link_${snum}_${num_in}">
+      <visual>
+        <geometry>
+          <cylinder radius="0.005" length="0.002"/>
+        </geometry>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <material name="blue"/>
+      </visual>
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.01" />
+        <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+      </inertial>
+    </link>
+  </xacro:macro>
+
+
+
+
+
+  <xacro:macro name="phantom_joint_1_beta" params="snum">
+    <joint name="phantom_joint_segment_${snum}_1_beta" type="revolute">
+      <parent link="plate_${snum-1}"/>
+      <child link="phantom_link_${snum}_${1}"/>
+      <axis xyz="0 0 1"/>
+      <origin xyz="0 0 0" />
+      <limit effort="200" lower="${beta_seg_min}" upper="${beta_seg_max}" velocity="20"/>
+      <dynamics damping="0.7" friction="0.3"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="phantom_joint_2_alpha2" params="snum">
+    <joint name="phantom_joint_segment_${snum}_2_alpha2" type="revolute">
+      <parent link="phantom_link_${snum}_${1}"/>
+      <child link="phantom_link_${snum}_${2}"/>
+      <axis xyz="0 1 0"/>
+      <origin xyz="0 0 0" />
+      <limit effort="200" lower="${alpha_seg_min/2}" upper="${alpha_seg_max/2}" velocity="20"/>
+      <dynamics damping="0.7" friction="0.3"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="phantom_joint_3_translation" params="snum">
+    <joint name="phantom_joint_segment_${snum}_3_translation" type="prismatic">
+      <parent link="phantom_link_${snum}_${2}"/>
+      <child link="phantom_link_${snum}_${3}"/>
+      <axis xyz="0 0 1"/>
+      <origin xyz="0 0 ${length_seg_offset}"/>
+      <limit effort="200" lower="${length_seg_min}" upper="${length_seg_max}" velocity="20"/>
+      <dynamics damping="0.7" friction="0.5"/>
+    </joint>
+  </xacro:macro>
+
+
+  <xacro:macro name="phantom_joint_4_alpha2" params="snum">
+    <joint name="phantom_joint_segment_${snum}_4_alpha2" type="revolute">
+      <parent link="phantom_link_${snum}_${3}"/>
+      <child link="phantom_link_${snum}_${4}"/>
+      <axis xyz="0 1 0"/>
+      <origin xyz="0 0 0" />
+      <mimic joint="phantom_joint_segment_${snum}_2_alpha2" multiplier="1" offset="0" />
+      <limit effort="200" lower="${alpha_seg_min/2}" upper="${alpha_seg_max/2}" velocity="20"/>
+      <dynamics damping="0.7" friction="0.3"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="phantom_joint_5_betaN" params="snum">
+    <joint name="phantom_joint_segment_${snum}_5_betaN" type="revolute">
+      <parent link="phantom_link_${snum}_${4}"/>
+      <child link="plate_${snum}"/>
+      <axis xyz="0 0 1"/>
+      <origin xyz="0 0 0" />
+      <mimic joint="phantom_joint_segment_${snum}_1_beta" multiplier="-1" offset="0" />
+      <limit effort="200" lower="${beta_seg_min}" upper="${beta_seg_max}" velocity="20"/>
+      <dynamics damping="0.7" friction="0.3"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="segment" params="segnum">
+    <xacro:phantom_joint_1_beta snum="${segnum}"/>
+    <xacro:phantom_link snum="${segnum}" num_in="1"/>
+    <xacro:phantom_joint_2_alpha2 snum="${segnum}"/>
+    <xacro:phantom_link snum="${segnum}" num_in="2"/>
+    <xacro:phantom_joint_3_translation snum="${segnum}"/>
+    <xacro:phantom_link snum="${segnum}" num_in="3"/>
+    <xacro:phantom_joint_4_alpha2 snum="${segnum}"/>
+    <xacro:phantom_link snum="${segnum}" num_in="4"/>
+    <xacro:phantom_joint_5_betaN snum="${segnum}"/>
+    <xacro:plate platenum="${segnum}"/>
+  </xacro:macro>
+
+  <xacro:plate platenum="-1"/>
+  <xacro:segment segnum="0"/>
+  <xacro:segment segnum="1"/>
+  <xacro:segment segnum="2"/>
+  <xacro:segment segnum="3"/>
+  <xacro:segment segnum="4"/>
+  <xacro:segment segnum="5"/>
+
+
+
+
+
+
+
+
+
+  <!-- ros_control plugin      -->
+  <!-- Add gazebo transmission -->
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/origarmRigidKE</robotNamespace>
+    </plugin>
+  </gazebo>
+
+  <xacro:macro name="joint_trans" params="segnum jointname">
+    <transmission name="trans_segment_${segnum}_${jointname}">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="phantom_joint_segment_${segnum}_${jointname}">
+        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="actuator_segment_${segnum}_${jointname}">
+        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+  </xacro:macro>
+
+  <xacro:macro name="seg_trans" params="snum">
+    <xacro:joint_trans segnum="${snum}" jointname="1_beta"/>
+    <xacro:joint_trans segnum="${snum}" jointname="2_alpha2"/>
+    <xacro:joint_trans segnum="${snum}" jointname="3_translation"/>
+    <xacro:joint_trans segnum="${snum}" jointname="4_alpha2"/>
+    <xacro:joint_trans segnum="${snum}" jointname="5_betaN"/>
+  </xacro:macro>
+
+  <xacro:seg_trans snum="0"/>
+  <xacro:seg_trans snum="1"/>
+  <xacro:seg_trans snum="2"/>
+  <xacro:seg_trans snum="3"/>
+  <xacro:seg_trans snum="4"/>
+  <xacro:seg_trans snum="5"/>
+
+
+
+
+
+
+
+
+  <!-- Add gazebo dynamic labels for links-->
+  <!-- gazebo dynamics of phantom links -->
+  <xacro:macro name="gazebo_dynamics_link_phantom" params="snum lnum">
+    <gazebo reference="phantom_link_${snum}_${lnum}">
+      <gravity>false</gravity>
+      <dampingFactor>0.1</dampingFactor>
+      <mu1>0.2</mu1>
+      <mu2>0.2</mu2>
+      <kp>1e15</kp>
+      <kd>1e13</kd>
+      <selfCollide>true</selfCollide>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- gazebo dynamics of plates -->
+  <xacro:macro name="gazebo_dynamics_link_plate" params="snum">
+    <gazebo reference="plate_${snum}">
+      <material>Gazebo/aluminum</material>
+      <dampingFactor>0.1</dampingFactor>
+      <mu1>0.2</mu1>
+      <mu2>0.2</mu2>
+      <kp>1e15</kp>
+      <kd>1e13</kd>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:macro name="gazebo_dynamics_link_seg" params="segnum">
+    <xacro:gazebo_dynamics_link_phantom snum="${segnum}" lnum="0"/>
+    <xacro:gazebo_dynamics_link_phantom snum="${segnum}" lnum="1"/>
+    <xacro:gazebo_dynamics_link_phantom snum="${segnum}" lnum="2"/>
+    <xacro:gazebo_dynamics_link_phantom snum="${segnum}" lnum="3"/>
+    <xacro:gazebo_dynamics_link_phantom snum="${segnum}" lnum="4"/>
+    <xacro:gazebo_dynamics_link_phantom snum="${segnum}" lnum="5"/>
+    <xacro:gazebo_dynamics_link_plate snum="${segnum}"/>
+  </xacro:macro>
+
+  <xacro:gazebo_dynamics_link_seg segnum="0"/>
+  <xacro:gazebo_dynamics_link_seg segnum="1"/>
+  <xacro:gazebo_dynamics_link_seg segnum="2"/>
+  <xacro:gazebo_dynamics_link_seg segnum="3"/>
+  <xacro:gazebo_dynamics_link_seg segnum="4"/>
+  <xacro:gazebo_dynamics_link_seg segnum="5"/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <!-- Add gazebo dynamic labels for links-->
+  <!--Gazebo joint dynamics properties-->
+  <xacro:macro name="gazebo_dynamics_joint_1_beta" params="segnum">
+    <gazebo reference="phantom_joint_segment_${segnum}_1_beta">
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:macro name="gazebo_dynamics_joint_2_alpha2" params="segnum">
+    <gazebo reference="phantom_joint_segment_${segnum}_2_alpha2">
+      <springStiffness>20</springStiffness>
+      <springReference>0</springReference>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:macro name="gazebo_dynamics_joint_3_translation" params="segnum">
+    <gazebo reference="phantom_joint_segment_${segnum}_3_translation">
+      <springStiffness>15000</springStiffness>
+      <springReference>0</springReference>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:macro name="gazebo_dynamics_joint_4_alpha2" params="segnum">
+    <gazebo reference="phantom_joint_segment_${segnum}_4_alpha2">
+      <springStiffness>20</springStiffness>
+      <springReference>0</springReference>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:macro name="gazebo_dynamics_joint_5_betaN" params="segnum">
+    <gazebo reference="phantom_joint_segment_${segnum}_5_betaN">
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:macro name="gazebo_dynamics_joint_seg" params="snum">
+    <xacro:gazebo_dynamics_joint_1_beta segnum="${snum}"/>
+    <xacro:gazebo_dynamics_joint_2_alpha2 segnum="${snum}"/>
+    <xacro:gazebo_dynamics_joint_3_translation segnum="${snum}"/>
+    <xacro:gazebo_dynamics_joint_4_alpha2 segnum="${snum}"/>
+    <xacro:gazebo_dynamics_joint_5_betaN segnum="${snum}"/>
+  </xacro:macro>
+
+  <xacro:gazebo_dynamics_joint_seg snum="0"/>
+  <xacro:gazebo_dynamics_joint_seg snum="1"/>
+  <xacro:gazebo_dynamics_joint_seg snum="2"/>
+  <xacro:gazebo_dynamics_joint_seg snum="3"/>
+  <xacro:gazebo_dynamics_joint_seg snum="4"/>
+  <xacro:gazebo_dynamics_joint_seg snum="5"/>
+
+
+</robot>

@@ -13,9 +13,16 @@ roscpp
 std_msgs
 std_srvs
 geometry_msgs
-message_generation)
+message_generation
+urdf
+moveit_core
+moveit_ros_planning_interface)
 
 find_package(cmake_modules REQUIRED)
+
+find_package(xacro REQUIRED)
+
+find_package(Eigen3 REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -42,12 +49,6 @@ find_package(cmake_modules REQUIRED)
 ##     * add a exec_depend tag for "message_runtime"
 ## * In this file (CMakeLists.txt):
 ##   * add "message_generation" and every package in MSG_DEP_SET to
-find_package(catkin REQUIRED COMPONENTS
-  message_generation
-  roscpp
-)
-
-find_package(Eigen3 REQUIRED)
 
 ##   * add "message_runtime" and every package in MSG_DEP_SET to
 ##     catkin_package(CATKIN_DEPENDS ...)
@@ -127,6 +128,8 @@ generate_messages(
 catkin_package(
     CATKIN_DEPENDS
   message_runtime
+  moveit_core
+  moveit_ros_planning_interface
 #  INCLUDE_DIRS include
 #  LIBRARIES origarm_ros
 #  CATKIN_DEPENDS other_catkin_pkg
@@ -137,6 +140,9 @@ catkin_package(
 ## Build ##
 ###########
 
+file(GLOB xacro_files model/urdf/origarmRigidKE.urdf.xacro)
+xacro_add_files(${xacro_files} TARGET media_files)
+
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
@@ -146,12 +152,23 @@ include_directories(
 include_directories($EIGEN3_INCLUDE_DIR)
 add_definitions(${EIGEN_DEFINITIONS})
 
-## Declare a C++ library
- add_library(${PROJECT_NAME}
-  src/myPID.cpp
-	src/myState.cpp
- )
 
+## Declare a C++ library
+add_library(myPID
+  src/myPID.cpp
+ )
+add_dependencies(myPID ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(myPID
+  ${catkin_LIBRARIES}
+)
+
+add_library(myFunction
+  src/myFunction.cpp
+)
+add_dependencies(myFunction ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+target_link_libraries(myFunction
+ ${catkin_LIBRARIES}
+)
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
@@ -173,9 +190,7 @@ add_definitions(${EIGEN_DEFINITIONS})
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
- target_link_libraries(${PROJECT_NAME}
-   ${catkin_LIBRARIES}   
- )
+
 
 #############
 ## Install ##
@@ -186,10 +201,10 @@ add_definitions(${EIGEN_DEFINITIONS})
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-# catkin_install_python(PROGRAMS
-#   scripts/my_python_script
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+ catkin_install_python(PROGRAMS
+   scripts/pythonnodetest.py
+   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+ )
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
@@ -199,11 +214,12 @@ add_definitions(${EIGEN_DEFINITIONS})
 
 ## Mark libraries for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_libraries.html
- install(TARGETS ${PROJECT_NAME}
+ install(TARGETS myFunction
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
  )
+
 
 ## Mark cpp header files for installation
 # install(DIRECTORY include/${PROJECT_NAME}/
@@ -235,15 +251,15 @@ add_definitions(${EIGEN_DEFINITIONS})
 add_executable(State_Estimator
   src/State_Estimator.cpp
 )
-add_dependencies(State_Estimator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(State_Estimator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(State_Estimator
-  ${catkin_LIBRARIES}
+  ${catkin_LIBRARIES} myFunction
 )
 
 add_executable(Camera
   src/Camera.cpp
 )
-add_dependencies(Camera ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(Camera ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(Camera
   ${catkin_LIBRARIES}
 )
@@ -251,7 +267,7 @@ target_link_libraries(Camera
 add_executable(COMMUNICATION_STM
   src/COMMUNICATION_STM.cpp
 )
-add_dependencies(COMMUNICATION_STM ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(COMMUNICATION_STM ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(COMMUNICATION_STM
   ${catkin_LIBRARIES}
 )
@@ -259,7 +275,7 @@ target_link_libraries(COMMUNICATION_STM
 add_executable(Position_controller
   src/Position_controller.cpp
 )
-add_dependencies(Position_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(Position_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(Position_controller
   ${catkin_LIBRARIES}
 )
@@ -267,56 +283,58 @@ target_link_libraries(Position_controller
 add_executable(ABL_controller
   src/ABL_controller.cpp
 )
-add_dependencies(ABL_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(ABL_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(ABL_controller
   ${catkin_LIBRARIES}
 )
 
 #Jing
 add_executable(spi_node src/spi_node.cpp)       
-add_dependencies(spi_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(spi_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(spi_node                        
    ${catkin_LIBRARIES}
  )
 
 add_executable(joy_teleopt src/joy_teleopt.cpp) 
-add_dependencies(joy_teleopt ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(joy_teleopt ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(joy_teleopt             
    ${catkin_LIBRARIES}
  )
 
 add_executable(keyboard src/keyboard.cpp) 
-add_dependencies(keyboard ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(keyboard ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(keyboard             
    ${catkin_LIBRARIES}
  )
 
 add_executable(demo_abl src/demo_abl.cpp) 
-add_dependencies(keyboard ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(keyboard ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(demo_abl             
    ${catkin_LIBRARIES}
  )
 
 add_executable(demo_picknplace src/demo_picknplace.cpp) 
-add_dependencies(demo_picknplace ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(demo_picknplace ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(demo_picknplace             
    ${catkin_LIBRARIES}
  )
 
 add_executable(demo_xyz src/demo_xyz.cpp) 
-add_dependencies(demo_xyz ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(demo_xyz ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(demo_xyz             
    ${catkin_LIBRARIES}
  ) 
 
 add_executable(demo_payload src/demo_payload.cpp) 
-add_dependencies(demo_payload ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(demo_payload ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(demo_payload             
    ${catkin_LIBRARIES}
  )
 
-add_executable(IMU_calibration src/IMU_calibration.cpp) 
-add_dependencies(IMU_calibration ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(IMU_calibration             
-   ${catkin_LIBRARIES}
- )
+add_executable(kinematicsEquivalence
+  src/kinematicsEquivalence.cpp
+)
+add_dependencies(kinematicsEquivalence ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+target_link_libraries(kinematicsEquivalence
+  ${catkin_LIBRARIES}
+)

@@ -20,14 +20,14 @@ const char defualt_path[] = "/dev/input/by-path/platform-fd500000.pcie-pci-0000:
 //const char defualt_path[] = "/dev/input/by-path/platform-i8042-serio-0-event-kbd"; //AT Translated Set 2 keyboard
 
 
-int keycode;
-int value[10];
+static int keycode;
+static int value[10];
 
 int main(int argc, char** argv)
 {
 	int fd;
 	struct input_event event;
-	char *path;
+  const char *path;
 
 	printf("This is a keyboard input device demo. \r\n");
 
@@ -36,10 +36,9 @@ int main(int argc, char** argv)
 	else
 		path = (char *)defualt_path;*/
 
-	path = (char *)defualt_path;
+  path = defualt_path;
 
-	fd = open(path, O_RDONLY);
-	printf("fd: %d\r\n", fd);
+  fd = open(path, O_RDONLY);
 
 	if (fd < 0)
 	{

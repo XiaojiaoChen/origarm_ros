@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>origarm_ros</name>
-  <version>0.0.0</version>
+  <version>1.0.0</version>
   <description>The origarm_ros package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="hcy@todo.todo">hcy</maintainer>
+  <maintainer email="yii402072495@gmail.com">hcy</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
@@ -49,7 +49,7 @@
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
-  
+
 
   <build_depend>message_generation</build_depend>
   <build_depend>roscpp</build_depend>
@@ -58,22 +58,33 @@
   <build_depend>std_srvs</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>sensor_msgs</build_depend>
+  <build_depend>urdf</build_depend>
+  <build_depend>moveit_core</build_depend>
+  <build_depend>moveit_ros_planning_interface</build_depend>
+
+
 
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>rospy</build_export_depend>
   <build_export_depend>std_msgs</build_export_depend>
   <build_export_depend>std_srvs</build_export_depend>
   <build_export_depend>geometry_msgs</build_export_depend>
-	<build_export_depend>sensor_msgs</build_export_depend>
+  <build_export_depend>sensor_msgs</build_export_depend>
   <build_export_depend>message_generation</build_export_depend>
-  
-	<exec_depend>rospy</exec_depend>
+  <build_export_depend>urdf</build_export_depend>
+  <build_export_depend>moveit_core</build_export_depend>
+  <build_export_depend>moveit_ros_planning_interface</build_export_depend>
+
+  <exec_depend>rospy</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>std_srvs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
-	<exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>message_runtime</exec_depend>
+  <exec_depend>urdf</exec_depend>
+  <exec_depend>moveit_core</exec_depend>
+  <exec_depend>moveit_ros_planning_interface</exec_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
