@@ -1,1 +1,1 @@
-int32[11] KEY_CODE
+uint16 keycodePressed
