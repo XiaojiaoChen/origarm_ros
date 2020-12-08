@@ -3,6 +3,7 @@
 #include <Eigen/Geometry>
 #include <fstream>
 #include <iostream>
+#include <linux/input-event-codes.h>
 
 #include "math.h"
 #include "myData.h"
@@ -63,10 +64,10 @@ static const int calculate_alpha_using_cur_cur_flag = 0;
 static const int calculate_alpha_using_cur_nex_flag = 1;
 
 /*Path to save the IMU data at zero position*/
-static const string quat0DefaultPath = "~/catkin_ws/src/origarm_ros/predefined_param/default_data_imu0.txt";
-static const string quattDummyPath = "~/catkin_ws/src/origarm_ros/predefined_param/imu_move_segment0.txt";
-static const string quatSavePath = "~/catkin_ws/src/origarm_ros/predefined_param/data_imu0.txt";
-static const string quatReadPath = quatSavePath;
+static const string quat0DefaultPath = "/home/ubuntu/catkin_ws/src/origarm_ros/predefined_param/default_data_imu0.txt";
+static const string quattDummyPath = "/home/ubuntu/catkin_ws/src/origarm_ros/predefined_param/imu_move_segment0.txt";
+static const string quatSavePath = "/home/ubuntu/catkin_ws/src/origarm_ros/predefined_param/data_imu0.txt";
+static const string quatReadPath = "/home/ubuntu/catkin_ws/src/origarm_ros/predefined_param/data_imu0.txt";
 
 /*Indication of whether the IMU is working well*/
 static int goodIMU[SEGNUM][ACTNUM] = {
@@ -87,15 +88,19 @@ static void saveQuatToFile(Quaternionf (&qua)[SEGNUM][ACTNUM], string filePath)
     ofstream data;
     data.open(filePath, ios::trunc); // ios::app
     // write imu data into yaml file/imu_data.txt
+    cout<<"Saving current IMU data to"+filePath<<endl;
     for (int i = 0; i < SEGNUM; i++)
     {
         for (int j = 0; j < ACTNUM; j++)
         {
             data << qua[i][j].w() << " " << qua[i][j].x() << " " << qua[i][j].y()
                  << " " << qua[i][j].z() << endl;
+            cout << qua[i][j].w() << " " << qua[i][j].x() << " " << qua[i][j].y()
+                 << " " << qua[i][j].z() << endl;
         }
     }
     data.close();
+    cout<<"IMU data Saved"<<endl;
 }
 
 /**
@@ -106,14 +111,18 @@ static void saveQuatToFile(Quaternionf (&qua)[SEGNUM][ACTNUM], string filePath)
 static void readQuatFromFile(string filePath, Quaternionf (&qua)[SEGNUM][ACTNUM])
 {
     ifstream inFile;
-    inFile.open(filePath, ios::in);
 
+    inFile.open(filePath, ios::in);
     if (inFile.fail())
     {
         cout << "unable to open the IMU file in " << filePath << ". The IMU default values will be used in " << quat0DefaultPath << endl;
-        inFile.open(quat0DefaultPath, ios::in);
+        inFile.close();
+        filePath=quat0DefaultPath;
+        inFile.open(filePath, ios::in);
+        
     }
 
+    cout<<"Reading IMU data from"+filePath<<endl;
     if (!inFile.eof())
     {
         for (int p = 0; p < SEGNUM; p++)
@@ -121,9 +130,12 @@ static void readQuatFromFile(string filePath, Quaternionf (&qua)[SEGNUM][ACTNUM]
             for (int q = 0; q < ACTNUM; q++)
             {
                 inFile >> qua[p][q].w() >> qua[p][q].x() >> qua[p][q].y() >> qua[p][q].z();
+                cout << qua[p][q].w() << " " << qua[p][q].x() << " " << qua[p][q].y()
+                 << " " << qua[p][q].z() << endl;
             }
         }
     }
+    cout<<"IMU data Read completed"<<endl;
     inFile.close();
 }
 
@@ -214,10 +226,11 @@ public:
 
     void keyCallback(const origarm_ros::keynumber &key)
     {
-        if (key.KEY_CODE[10] > 0) // 'C' pressed
+        if (key.keycodePressed == KEY_C) // 'C' pressed
         {
+            printf(" KEY_C pressed!\r\n");
             saveQuatToFile(QuattInIMU, quatSavePath);
-            printf(" KEY_EQUAL pressed! IMU Calibration Completes!\n");
+
         }
     }
 

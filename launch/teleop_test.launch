@@ -1,14 +1,12 @@
 <launch>
     <node pkg="joy" name="joy_node" type="joy_node" /> 
-    <node pkg="origarm_ros" name="keyboard_node" type="keyboard" />
+    <node pkg="origarm_ros" name="keyboard_node" type="keyboard"/>
     <node pkg="origarm_ros" name="joystick_node" type="joy_teleopt" launch-prefix="xterm -e"/>
     <node pkg="origarm_ros" name="Position_controller_node" type="Position_controller" />   
     <node pkg="origarm_ros" name="ABL_controller" type="ABL_controller"/>
     <node pkg="origarm_ros" name="spi_node" type="spi_node"/>
-    <node pkg="origarm_ros" name="State_Estimator_node" type="State_Estimator" output="screen"/>
-    <node pkg="origarm_ros" name="IMU_calibration" type="IMU_calibration" launch-prefix="xterm -e"/> 
+    <node pkg="origarm_ros" name="State_Estimator_node" type="State_Estimator" launch-prefix="xterm -e"/>
     <node pkg="origarm_ros" name="ik_srv" type="IK_9SEG.py"/>
-    <node pkg="origarm_ros" name="simulation_gui" type="Simulation.py"/>
-    <node pkg="rqt_graph" name="rqt_graph_node" type="rqt_graph"/>   
+  
 </launch>
 

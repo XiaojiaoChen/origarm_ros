@@ -15,30 +15,77 @@
 
 using namespace std;
 
-const char defualt_path[] = "/dev/input/by-path/platform-fd500000.pcie-pci-0000:01:00.0-usb-0:1.4:1.0-event-kbd"; //keyboard
-//const char defualt_path[] = "/dev/input/by-path/platform-fd500000.pcie-pci-0000:01:00.0-usb-0:1.1:1.0-event-kbd"; //keyboard
-//const char defualt_path[] = "/dev/input/by-path/platform-i8042-serio-0-event-kbd"; //AT Translated Set 2 keyboard
+
+std::string exeCMD(const char* cmd){
+	char buffer[128];
+	std::string result="";
+	FILE* pipe=popen(cmd,"r");
+	if(!pipe) throw std::runtime_error("popen() failed");
+	try{
+		while(fgets(buffer,sizeof(buffer),pipe)!=NULL){
+			result+=buffer;
+		}
+	}
+	catch(...){
+		pclose(pipe);
+		throw;
+	}
+	pclose(pipe);
+	return result;
+}
 
 
-static int keycode;
-static int value[10];
+std::string keyboard_eventX = "";
+std::string keyboard_path = "";
+
+
+static void initKeyboardPermission(){
+
+	std::string keyboard_cmd="ls -l /dev/input/by-path/*event-kbd";
+
+	cout<<"Executing: "+keyboard_cmd<<endl;
+
+	std::string cmdRet=exeCMD(keyboard_cmd.c_str());
+
+	cout<<"Keyboard Permission Status:"<<endl<<cmdRet<<endl;
+
+
+	std::stringstream cmdRetStream(cmdRet);
+	vector<string> tokens;
+	string intermediate;
+	while(getline(cmdRetStream,intermediate,' ')){
+		tokens.push_back(intermediate);
+	}
+	keyboard_path=tokens[tokens.size()-3];
+	keyboard_eventX=tokens[tokens.size()-1].substr(tokens[tokens.size()-1].find("event"));
+	cout<<"Keyboard ID: "<<keyboard_path<<"  "<<keyboard_eventX<<endl;
+	
+	string cmdPermissionString="sudo chmod a+rw /dev/input/"+keyboard_eventX;
+	cout<<"Excecuting: "+cmdPermissionString<<endl;
+	system(cmdPermissionString.c_str());
+
+	
+	cmdRet=exeCMD(keyboard_cmd.c_str());
+
+	cout<<"Keyboard Permission Status Changed to:"<<endl<<cmdRet<<endl;
+
+	cout<<"Waiting for input..."<<endl;
+
+}
 
 int main(int argc, char** argv)
 {
 	int fd;
 	struct input_event event;
-  const char *path;
-
+    const char *path;
+	
 	printf("This is a keyboard input device demo. \r\n");
 
-	/*if (argc > 1)
-		path = argv[1];
-	else
-		path = (char *)defualt_path;*/
+	initKeyboardPermission();
+	
+  	path = keyboard_path.c_str();
 
-  path = defualt_path;
-
-  fd = open(path, O_RDONLY);
+ 	fd = open(path, O_RDONLY);
 
 	if (fd < 0)
 	{
@@ -46,14 +93,12 @@ int main(int argc, char** argv)
 			"Please confirm the path or you have permission to do this. \n", path);
 		exit(1);
 	}
-	printf("Test device: %s. \nWaiting for input...\n", path);
-
+	
 	ros::init(argc, argv, "keyboard");
 	ros::NodeHandle n;
 	ros::Publisher pub = n.advertise<origarm_ros::keynumber>("key_number",100);
 	ros::Rate r(100);
-	
-
+	origarm_ros::keynumber keycode;
 	while (ros::ok())
 	{		
 		if (read(fd, &event, sizeof(event)) == sizeof(event))
@@ -62,44 +107,18 @@ int main(int argc, char** argv)
 			if (event.type == EV_KEY)
 			{
 				//two lines output including pressing value == 1, & releasing value == 0, long time pressing value == 2
-				/*printf("Event: time %ld.%ld, type %d, code %d, value %d\n",
+				printf("Event: time %ld.%ld, type %d, code %d, value %d\n",
 					event.time.tv_sec,event.time.tv_usec,
 					event.type,
 					event.code,
-					event.value);*/
+					event.value);
 
-				/*printf("Event: type %d, code %d, value %d\n",
-					event.type,
-					event.code,
-					event.value);*/
-				
-				if (event.code == KEY_0)
-				{
-					keycode = 0;
-				}
-				else if (event.code == KEY_EQUAL)
-				{
-					keycode = 10;
-				}				
-				else
-				{
-					keycode = (int16_t)event.code - 1; 
-				}
-
-				value[keycode] = event.value;
-									
+				keycode.keycodePressed=	event.code;
 			}
 		}
 
-		//std_msgs::Int16 keyboard;		
-		origarm_ros::keynumber key_number;
-		for (int i = 0; i < 11; i++)
-		{
-			key_number.KEY_CODE[i] = value[i];
-		}					
-
-		pub.publish(key_number);
-		// printf("KEY %d pressed\n", keycode);
+		pub.publish(keycode);
+		printf("KEY %d pressed\n", keycode.keycodePressed);
 
 		ros::spinOnce();
 		r.sleep();
