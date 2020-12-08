@@ -8,23 +8,31 @@
 #include <urdf/model.h>
 #include <iostream>
 #include <vector>
-
+#include "stdio.h"
 
 std::string urdf_path_ab;
 
 sensor_msgs::JointState jointStateRigid;
 urdf::Model keModel;
 
+float quantToDecimal(double val,uint8_t num){
+    int n=1;
+    for(int i=0;i<num;i++)
+      n*=10;
+    val=round((val*n))/n;
+    return val;
+}
+
 void callback(const origarm_ros::States &msg)
 {
   int k = 0;
   for (int i = 0; i < SEGNUM; i++)
   {
-    jointStateRigid.position[k++] = msg.ABL.segment[i].B;
-    jointStateRigid.position[k++] = msg.ABL.segment[i].A / 2.0f;
-    jointStateRigid.position[k++] = msg.ABL.segment[i].L;
-    jointStateRigid.position[k++] = msg.ABL.segment[i].A / 2.0f;
-    jointStateRigid.position[k++] = -msg.ABL.segment[i].B;
+    jointStateRigid.position[k++] = quantToDecimal(msg.ABL.segment[i].B,2);
+    jointStateRigid.position[k++] = quantToDecimal(msg.ABL.segment[i].A / 2.0f,2);
+    jointStateRigid.position[k++] = quantToDecimal(msg.ABL.segment[i].L,0);
+    jointStateRigid.position[k++] = quantToDecimal(msg.ABL.segment[i].A / 2.0f,2);
+    jointStateRigid.position[k++] = quantToDecimal(-msg.ABL.segment[i].B,2);
   }
 }
 
@@ -34,9 +42,9 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "kinematicsEquivalence_node");
 
   ros::NodeHandle n;
-  ros::AsyncSpinner spinner(1);
+  ros::AsyncSpinner spinner(2);
   spinner.start();
-  ros::Rate loop_rate(10);
+  ros::Rate loop_rate(100);
   ros::Subscriber sub = n.subscribe("States", 100, &callback);
   ros::Publisher pub = n.advertise<sensor_msgs::JointState>("joint_states", 100);
 
@@ -47,6 +55,7 @@ int main(int argc, char **argv)
     ROS_ERROR("Failed to parse urdf file");
     return -1;
   }
+
 
   /*Init the msg with joint names and 0 position, skip the first fixed joint*/
   for (auto it = ++keModel.joints_.begin(); it != keModel.joints_.end(); it++)
@@ -156,6 +165,7 @@ int main(int argc, char **argv)
     pub.publish(jointStateRigid);
     ros::spinOnce();
     loop_rate.sleep();
+
   }
 
   return 0;
