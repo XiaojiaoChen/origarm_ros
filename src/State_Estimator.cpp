@@ -5,6 +5,7 @@
 #include <iostream>
 #include <linux/input-event-codes.h>
 
+#include "ros/package.h"
 #include "math.h"
 #include "myData.h"
 #include "myFunction.h"
@@ -12,6 +13,7 @@
 #include "origarm_ros/States.h"
 #include "origarm_ros/keynumber.h"
 #include "ros/ros.h"
+#include <time.h>
 
 #define DEBUG_DISPLAY 0
 #define DUMMY_QUAT_USED 0
@@ -64,10 +66,12 @@ static const int calculate_alpha_using_cur_cur_flag = 0;
 static const int calculate_alpha_using_cur_nex_flag = 1;
 
 /*Path to save the IMU data at zero position*/
-static const string quat0DefaultPath = "/home/ubuntu/catkin_ws/src/origarm_ros/predefined_param/default_data_imu0.txt";
-static const string quattDummyPath = "/home/ubuntu/catkin_ws/src/origarm_ros/predefined_param/imu_move_segment0.txt";
-static const string quatSavePath = "/home/ubuntu/catkin_ws/src/origarm_ros/predefined_param/data_imu0.txt";
-static const string quatReadPath = "/home/ubuntu/catkin_ws/src/origarm_ros/predefined_param/data_imu0.txt";
+
+static string quat0DefaultFileName = "default_data_imu0.txt";
+static string quattDummyFileName = "imu_move_segment0.txt";
+static string quatSaveFileName = "data_imu0.txt";
+static string quatReadFileName = "data_imu0.txt";
+static string IMUDataPath = "";
 
 /*Indication of whether the IMU is working well*/
 static int goodIMU[SEGNUM][ACTNUM] = {
@@ -77,6 +81,21 @@ static int goodIMU[SEGNUM][ACTNUM] = {
     {1, 0, 0, 1, 0, 0},
     {1, 1, 0, 1, 0, 1},
     {0, 1, 0, 0, 1, 0}};
+
+std::string getTimeString()
+{
+
+    time_t rawtime;
+    struct tm *timeinfo;
+    char buffer[100];
+
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+
+    strftime(buffer, 100, "%G_%h_%e_%H_%M_%S", timeinfo);
+    std::string ret = buffer;
+    return ret;
+}
 
 /**
  * @brief Save IMU data to file
@@ -88,7 +107,7 @@ static void saveQuatToFile(Quaternionf (&qua)[SEGNUM][ACTNUM], string filePath)
     ofstream data;
     data.open(filePath, ios::trunc); // ios::app
     // write imu data into yaml file/imu_data.txt
-    cout<<"Saving current IMU data to"+filePath<<endl;
+    cout << "Saving current IMU data to" + filePath << endl;
     for (int i = 0; i < SEGNUM; i++)
     {
         for (int j = 0; j < ACTNUM; j++)
@@ -100,7 +119,7 @@ static void saveQuatToFile(Quaternionf (&qua)[SEGNUM][ACTNUM], string filePath)
         }
     }
     data.close();
-    cout<<"IMU data Saved"<<endl;
+    cout << "IMU data Saved" << endl;
 }
 
 /**
@@ -111,18 +130,17 @@ static void saveQuatToFile(Quaternionf (&qua)[SEGNUM][ACTNUM], string filePath)
 static void readQuatFromFile(string filePath, Quaternionf (&qua)[SEGNUM][ACTNUM])
 {
     ifstream inFile;
-
     inFile.open(filePath, ios::in);
     if (inFile.fail())
     {
-        cout << "unable to open the IMU file in " << filePath << ". The IMU default values will be used in " << quat0DefaultPath << endl;
         inFile.close();
-        filePath=quat0DefaultPath;
+        cout << "unable to open the IMU file in " << filePath;
+        filePath = IMUDataPath + quat0DefaultFileName;
+        cout << ". The IMU default values will be used in " << filePath << endl;
         inFile.open(filePath, ios::in);
-        
     }
 
-    cout<<"Reading IMU data from"+filePath<<endl;
+    cout << "Reading IMU data from" + filePath << endl;
     if (!inFile.eof())
     {
         for (int p = 0; p < SEGNUM; p++)
@@ -131,11 +149,11 @@ static void readQuatFromFile(string filePath, Quaternionf (&qua)[SEGNUM][ACTNUM]
             {
                 inFile >> qua[p][q].w() >> qua[p][q].x() >> qua[p][q].y() >> qua[p][q].z();
                 cout << qua[p][q].w() << " " << qua[p][q].x() << " " << qua[p][q].y()
-                 << " " << qua[p][q].z() << endl;
+                     << " " << qua[p][q].z() << endl;
             }
         }
     }
-    cout<<"IMU data Read completed"<<endl;
+    cout << "IMU data Read completed" << endl;
     inFile.close();
 }
 
@@ -229,8 +247,14 @@ public:
         if (key.keycodePressed == KEY_C) // 'C' pressed
         {
             printf(" KEY_C pressed!\r\n");
-            saveQuatToFile(QuattInIMU, quatSavePath);
-
+            string path = IMUDataPath + quatSaveFileName;
+            saveQuatToFile(QuattInIMU, path);
+        }
+        else if (key.keycodePressed == KEY_R) // 'r' pressed
+        {
+            printf(" KEY_R pressed! Saving IMU data...\r\n");
+            std::string path = IMUDataPath + "Rec_IMU_" + getTimeString() + ".txt";
+            saveQuatToFile(QuattInIMU, path);
         }
     }
 
@@ -323,7 +347,8 @@ static void InitFrames()
     }
 
     /*Read the IMU body frame at time 0 in the IMU Base*/
-    readQuatFromFile(quatReadPath, Quat0InIMU);
+    string path = IMUDataPath + quatReadFileName;
+    readQuatFromFile(path, Quat0InIMU);
     for (int i = 0; i < SEGNUM; i++)
     {
         for (int j = 0; j < ACTNUM; j++)
@@ -332,11 +357,10 @@ static void InitFrames()
         }
     }
 
-
-#if DUMMY_QUAT_USED==1
-/*****************Debug Only.  Uncomment in real application***********************/
-/*Read dummy IMU body frame at time t in the IMU Base*/
-    readQuatFromFile(quattDummyPath, QuattInIMU);
+#if DUMMY_QUAT_USED == 1
+    /*****************Debug Only.  Uncomment in real application***********************/
+    /*Read dummy IMU body frame at time t in the IMU Base*/
+    readQuatFromFile(IMUDataPath + quattDummyFileName, QuattInIMU);
     for (int i = 0; i < SEGNUM; i++)
     {
         for (int j = 0; j < ACTNUM; j++)
@@ -703,7 +727,15 @@ void estimateABL()
 
 int main(int argc, char **argv)
 {
+
+
+
     ros::init(argc, argv, "State_Estimator_Node");
+
+    IMUDataPath = ros::package::getPath("origarm_ros") + "/predefined_param/";
+    cout << "IMUDataPath:" << IMUDataPath << endl;
+
+    InitFrames();
 
     State_Estimator stateEstimator;
 
@@ -715,8 +747,9 @@ int main(int argc, char **argv)
 
     ROS_INFO("Ready for State_Estimator_Node");
 
-    InitFrames();
 
+
+    int printFre = 0;
     while (ros::ok())
     {
 
@@ -724,25 +757,29 @@ int main(int argc, char **argv)
 
         stateEstimator.pub();
 
-        printf("A[0]:%d, [1]:%d, [2]:%d, [3]:%d, [4]:%d, [5]:%d  | B[0]:%d, [1]:%d, [2]:%d, [3]:%d, [4]:%d, [5]:%d  |  L[0]:%d, [1]:%d, [2]:%d, [3]:%d, [4]:%d, [5]:%d\n",
-               (int)(alphaDeg[0]),
-               (int)(alphaDeg[1]),
-               (int)(alphaDeg[2]),
-               (int)(alphaDeg[3]),
-               (int)(alphaDeg[4]),
-               (int)(alphaDeg[5]),
-               (int)(betaDeg[0]),
-               (int)(betaDeg[1]),
-               (int)(betaDeg[2]),
-               (int)(betaDeg[3]),
-               (int)(betaDeg[4]),
-               (int)(betaDeg[5]),
-               (int)(lengthMM[0]),
-               (int)(lengthMM[1]),
-               (int)(lengthMM[2]),
-               (int)(lengthMM[3]),
-               (int)(lengthMM[4]),
-               (int)(lengthMM[5]));
+        if (printFre++ > 50)
+        {
+            printf("A[0]:%d, [1]:%d, [2]:%d, [3]:%d, [4]:%d, [5]:%d  | B[0]:%d, [1]:%d, [2]:%d, [3]:%d, [4]:%d, [5]:%d  |  L[0]:%d, [1]:%d, [2]:%d, [3]:%d, [4]:%d, [5]:%d\n",
+                   (int)(alphaDeg[0]),
+                   (int)(alphaDeg[1]),
+                   (int)(alphaDeg[2]),
+                   (int)(alphaDeg[3]),
+                   (int)(alphaDeg[4]),
+                   (int)(alphaDeg[5]),
+                   (int)(betaDeg[0]),
+                   (int)(betaDeg[1]),
+                   (int)(betaDeg[2]),
+                   (int)(betaDeg[3]),
+                   (int)(betaDeg[4]),
+                   (int)(betaDeg[5]),
+                   (int)(lengthMM[0]),
+                   (int)(lengthMM[1]),
+                   (int)(lengthMM[2]),
+                   (int)(lengthMM[3]),
+                   (int)(lengthMM[4]),
+                   (int)(lengthMM[5]));
+            printFre = 0;
+        }
 
 #if DEBUG_DISPLAY == 1
         displayAllMatrix();
