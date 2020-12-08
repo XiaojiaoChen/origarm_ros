@@ -4,19 +4,6 @@
   <arg name="rvizconfig" default="$(find origarm_ros)/model/rvizconfig.rviz" />
   <param name="robot_description" command="$(find xacro)/xacro $(arg model)" />
 
-
-  <!--node pkg="joy" name="joy_node" type="joy_node" /-->
-  <!--node pkg="origarm_ros" name="keyboard_node" type="keyboard" /-->
-
-  <node name="joystick_node" pkg="origarm_ros" type="joy_teleopt" output="screen" launch-prefix="gnome-terminal -x   "/>
-
-  <node name="Position_controller_node" pkg="origarm_ros" type="Position_controller" />
-
-  <node name="ABL_controller_node" pkg="origarm_ros" type="ABL_controller"/>
-
-  <!--node pkg="origarm_ros" name="spi_node" type="spi_node"/-->
-  <node name="State_Estimator_node" pkg="origarm_ros" type="State_Estimator" launch-prefix="gnome-terminal -x"/>
-
   <node name="kinematicsEquivalence_node" pkg="origarm_ros" type="kinematicsEquivalence" />
 
   <!--node name="joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" /-->

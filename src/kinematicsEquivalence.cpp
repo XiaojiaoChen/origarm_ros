@@ -36,9 +36,9 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "kinematicsEquivalence_node");
 
   ros::NodeHandle n;
-  ros::AsyncSpinner spinner(1);
+  ros::AsyncSpinner spinner(2);
   spinner.start();
-  ros::Rate loop_rate(10);
+  ros::Rate loop_rate(100);
   ros::Subscriber sub = n.subscribe("States", 100, &callback);
   ros::Publisher pub = n.advertise<sensor_msgs::JointState>("joint_states", 100);
 

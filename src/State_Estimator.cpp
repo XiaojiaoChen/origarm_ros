@@ -13,7 +13,7 @@
 #include "ros/ros.h"
 
 #define DEBUG_DISPLAY 0
-#define DUMMY_QUAT_USED 1
+#define DUMMY_QUAT_USED 0
 
 using namespace Eigen;
 using Eigen::Matrix3f;
@@ -63,9 +63,9 @@ static const int calculate_alpha_using_cur_cur_flag = 0;
 static const int calculate_alpha_using_cur_nex_flag = 1;
 
 /*Path to save the IMU data at zero position*/
-static const string quat0DefaultPath = "/home/softarm/catkin_ws/src/origarm_ros/predefined_param/default_data_imu0.txt";
-static const string quattDummyPath = "/home/softarm/catkin_ws/src/origarm_ros/predefined_param/imu_move_segment0.txt";
-static const string quatSavePath = "/home/softarm/catkin_ws/src/origarm_ros/predefined_param/data_imu0.txt";
+static const string quat0DefaultPath = "~/catkin_ws/src/origarm_ros/predefined_param/default_data_imu0.txt";
+static const string quattDummyPath = "~/catkin_ws/src/origarm_ros/predefined_param/imu_move_segment0.txt";
+static const string quatSavePath = "~/catkin_ws/src/origarm_ros/predefined_param/data_imu0.txt";
 static const string quatReadPath = quatSavePath;
 
 /*Indication of whether the IMU is working well*/
