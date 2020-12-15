@@ -345,7 +345,7 @@ int main(int argc, char* argv[])
 		//printf("CommandPressure        | sensorData\r\n"); 
 		for (int i = 0; i < SEGNUM; i++)
 		{
-			printf("Data[%d]: %hd %hd %hd %hd %hd %hd| %hd %hd %hd %hd %hd %hd| %d %d %d %d %d %dr\n", i, 
+			printf("Data[%d]: %hd %hd %hd %hd %hd %hd| %hd %hd %hd %hd %hd %hd| %d %d %d %d %d %d\r\n", i, 
 				commandData.data[i][0].values[0], 
 				commandData.data[i][1].values[0], 
 				commandData.data[i][2].values[0], 
