@@ -172,37 +172,37 @@ void keyCallback(const origarm_ros::keynumber &key)
 	int i = 0;
 	switch (key.keycodePressed)
 	{
-	case KEY_0:
-		segNumber = 0;
-		break;
-	case KEY_1:
-		segNumber = 1;
-		break;
-	case KEY_2:
-		segNumber = 2;
-		break;
-	case KEY_3:
-		segNumber = 3;
-		break;
-	case KEY_4:
-		segNumber = 4;
-		break;
-	case KEY_5:
-		segNumber = 5;
-		break;
-	case KEY_6:
-		segNumber = 6;
-		break;
-	case KEY_7:
-		segNumber = 7;
-		break;
-	case KEY_8:
-		segNumber = 8;
-		break;
-	case KEY_9:
-		segNumber = 9;
-		break;
-	}
+		case KEY_0:
+			segNumber = 0;
+			break;
+		case KEY_1:
+			segNumber = 1;
+			break;
+		case KEY_2:
+			segNumber = 2;
+			break;
+		case KEY_3:
+			segNumber = 3;
+			break;
+		case KEY_4:
+			segNumber = 4;
+			break;
+		case KEY_5:
+			segNumber = 5;
+			break;
+		case KEY_6:
+			segNumber = 6;
+			break;
+		case KEY_7:
+			segNumber = 7;
+			break;
+		case KEY_8:
+			segNumber = 8;
+			break;
+		case KEY_9:
+			segNumber = 9;
+			break;
+		}
 }
 
 //joystick callback
@@ -496,7 +496,7 @@ void writeABL2(int joystickFLag)
 			}
 		}
 	}
-	else if (joystickFLag == 0) // not consider the consistency when switching mode, once switching mode from / to mode[2], 2 abl, it will start from initial pose
+	else // not consider the consistency when switching mode, once switching mode from / to mode[2], 2 abl, it will start from initial pose
 	{
 		segAlpha_2[segNumber] = 0;
 		segBeta_2[segNumber] = 0;
@@ -506,9 +506,9 @@ void writeABL2(int joystickFLag)
 	for (int i = 0; i < 2; i++)
 	{
 		segBeta_2[i] = constrain2PI(segBeta_2[i]);
-		segAlpha_2[i] = CONSTRAIN(segAlpha_2[i], a_min * 2, a_max * 2);
+		segAlpha_2[i] = CONSTRAIN(segAlpha_2[i], a_min * 3, a_max * 3);
 		segBeta_2[i] = CONSTRAIN(segBeta_2[i], b_min, b_max);
-		segLength_2[i] = CONSTRAIN(segLength_2[i], l_min * 2, l_max * 2);
+		segLength_2[i] = CONSTRAIN(segLength_2[i], l_min * 3, l_max * 3);
 	}
 }
 
@@ -908,6 +908,11 @@ void Init_parameter()
 		segLength_[i] = length0 * 2;
 	}
 
+	for (int i = 0; i < 2; i++)
+	{
+		segLength_2[i] = length0 * 3;
+	}
+
 	//for Write Opening
 	for (int i = 0; i < 6; i++)
 	{
@@ -994,11 +999,11 @@ int main(int argc, char **argv)
 			{
 				writeABL3(1); //joystick -> ABL3
 				writeABL9(2); //ABL3     -> ABL9
-				writeXYZ3(0); //ABL3     -> XYZ3
+				writeXYZ3(0); //ABL3     -> XYZ3 
 			}
 			else if (mode == 2) //ABL_9 control mode
 			{
-				writeABL9(1); //joystick -> ABL9
+				writeABL9(1); //joystick -> ABL9				
 			}
 			// else if (mode == 3) //XYZ_1 control mode
 			// {
@@ -1036,14 +1041,14 @@ int main(int argc, char **argv)
 			{
 				segAlpha_[i] = 0;
 				segBeta_[i] = 0;
-				segLength_[i] = length0 * 2;
+				segLength_[i] = length0 * 2.0;
 			}
 
 			for (int i = 0; i < 2; i++)
 			{
 				segAlpha_2[i]  = 0;
 				segBeta_2[i]   = 0;
-				segLength_2[i] = 0;
+				segLength_2[i] = 0.165;
 			}
 
 			alpha = 0;
