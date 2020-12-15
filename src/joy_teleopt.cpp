@@ -496,7 +496,7 @@ void writeABL2(int joystickFLag)
 			}
 		}
 	}
-	else // not consider the consistency when switching mode, once switching mode from / to mode[2], 2 abl, it will start from initial pose
+	else // not consider the consistency when switching mode, once switching mode from / to mode[2], 2 abl, it will remain its last pose
 	{
 		segAlpha_2[segNumber] = 0;
 		segBeta_2[segNumber] = 0;
