@@ -337,3 +337,21 @@ add_dependencies(kinematicsEquivalence ${${PROJECT_NAME}_EXPORTED_TARGETS} ${cat
 target_link_libraries(kinematicsEquivalence
   ${catkin_LIBRARIES}
 )
+
+add_executable(demo_kinematic_2seg src/demo_kinematic_2seg.cpp) 
+add_dependencies(demo_kinematic_2seg ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+target_link_libraries(demo_kinematic_2seg            
+   ${catkin_LIBRARIES}
+ )
+
+add_executable(demo_kinematic_3seg src/demo_kinematic_3seg.cpp) 
+add_dependencies(demo_kinematic_3seg ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+target_link_libraries(demo_kinematic_3seg             
+   ${catkin_LIBRARIES}
+ )
+
+add_executable(demo_trajectory src/demo_trajectory.cpp) 
+add_dependencies(demo_trajectory ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+target_link_libraries(demo_trajectory            
+   ${catkin_LIBRARIES}
+ )

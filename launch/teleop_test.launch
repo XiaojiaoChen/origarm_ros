@@ -6,7 +6,6 @@
     <node pkg="origarm_ros" name="ABL_controller" type="ABL_controller"/>
     <node pkg="origarm_ros" name="spi_node" type="spi_node"/>
     <node pkg="origarm_ros" name="State_Estimator_node" type="State_Estimator" launch-prefix="xterm -e"/>
-    <node pkg="origarm_ros" name="ik_srv" type="IK_9SEG.py"/>
-  
+    <node pkg="origarm_ros" name="ik_srv" type="IK_9SEG.py"/>  
 </launch>
 

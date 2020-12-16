@@ -81,6 +81,9 @@ static int segNumber;
 static float alpha;
 static float beta;
 static float length = length0;
+static float segAlpha_2[2];
+static float segBeta_2[2];
+static float segLength_2[2];
 static float segAlpha_[3];
 static float segBeta_[3];
 static float segLength_[3];
@@ -155,8 +158,12 @@ static float segBetad[9];
 static float segLengthd[9];
 
 //control mode
-//mode[0]: 1 abl; mode[1]: 3 abl; mode[2]: 9 abl; mode[3]: 1 xyz; mode[4]: 3 xyz;
-//mode[0]: joyA;  mode[1]: joyB;  mode[2]: joyX;  mode[3]: joyY;  mode[4]: joyRB;
+//mode[0]: 1 abl; mode[1]: 3 abl; mode[2]: 9 abl; mode[3]: 1 xyz; mode[4]: 3 xyz; mode[5]: 
+//mode[0]: joyA;  mode[1]: joyB;  mode[2]: joyX;  mode[3]: joyY;  mode[4]: joyRB; mode[5]:
+
+//moddifed version 
+//mode[0]: 1 abl; mode[1]: 3 abl; mode[2]: 9 abl; mode[3]: 2 abl; mode[4]: 3 xyz; mode[5]: 
+//mode[0]: joyA;  mode[1]: joyB;  mode[2]: joyX;  mode[3]: joyY;  mode[4]: joyRB; mode[5]: 
 int mode;
 
 //keyboard callback
@@ -165,37 +172,37 @@ void keyCallback(const origarm_ros::keynumber &key)
 	int i = 0;
 	switch (key.keycodePressed)
 	{
-	case KEY_0:
-		segNumber = 0;
-		break;
-	case KEY_1:
-		segNumber = 1;
-		break;
-	case KEY_2:
-		segNumber = 2;
-		break;
-	case KEY_3:
-		segNumber = 3;
-		break;
-	case KEY_4:
-		segNumber = 4;
-		break;
-	case KEY_5:
-		segNumber = 5;
-		break;
-	case KEY_6:
-		segNumber = 6;
-		break;
-	case KEY_7:
-		segNumber = 7;
-		break;
-	case KEY_8:
-		segNumber = 8;
-		break;
-	case KEY_9:
-		segNumber = 9;
-		break;
-	}
+		case KEY_0:
+			segNumber = 0;
+			break;
+		case KEY_1:
+			segNumber = 1;
+			break;
+		case KEY_2:
+			segNumber = 2;
+			break;
+		case KEY_3:
+			segNumber = 3;
+			break;
+		case KEY_4:
+			segNumber = 4;
+			break;
+		case KEY_5:
+			segNumber = 5;
+			break;
+		case KEY_6:
+			segNumber = 6;
+			break;
+		case KEY_7:
+			segNumber = 7;
+			break;
+		case KEY_8:
+			segNumber = 8;
+			break;
+		case KEY_9:
+			segNumber = 9;
+			break;
+		}
 }
 
 //joystick callback
@@ -422,6 +429,87 @@ void writeABL1(int joystickFLag)
 	alpha = CONSTRAIN(alpha, a_min, a_max);
 	beta = CONSTRAIN(beta, b_min, b_max);
 	length = CONSTRAIN(length, l_min, l_max);
+}
+
+void writeABL2(int joystickFLag)
+{
+	if (joystickFLag == 1)
+	{		
+		if (joyLy > 0.05)
+		{
+			segAlpha_2[segNumber] = segAlpha_2[segNumber] + a_scale;
+		}
+		else if (joyLy < -0.05)
+		{
+			segAlpha_2[segNumber] = segAlpha_2[segNumber] - a_scale;
+		}
+
+		if (joyRx > 0.05)
+		{
+			if (joyRx > 0.5)
+			{
+				segBeta_2[segNumber] = segBeta_2[segNumber] + 2 * b_scale;
+			}
+			else
+			{
+				segBeta_2[segNumber] = segBeta_2[segNumber] + b_scale;
+			}
+		}
+		else if (joyRx < -0.05)
+		{
+			if (joyRx < -0.5)
+			{
+				segBeta_2[segNumber] = segBeta_2[segNumber] - 2 * b_scale;
+			}
+			else
+			{
+				segBeta_2[segNumber] = segBeta_2[segNumber] - b_scale;
+			}
+		}
+
+		if (joyLT != 1 && joyRT != 1)
+		{
+		}
+		else if (abs(joyLT - 1) > 0.05)
+		{
+			if (abs(joyLT - 1) > 1)
+			{
+				segLength_2[segNumber] = segLength_2[segNumber] + 2 * l_scale;
+			}
+			else
+			{
+				segLength_2[segNumber] = segLength_2[segNumber] + l_scale;
+			}
+		}
+		else if (abs(joyRT - 1) > 0.05)
+		{
+			if (abs(joyRT - 1) > 0.05)
+			{
+				if (abs(joyRT - 1) > 1)
+				{
+					segLength_2[segNumber] = segLength_2[segNumber] - 2 * l_scale;
+				}
+				else
+				{
+					segLength_2[segNumber] = segLength_2[segNumber] - l_scale;
+				}
+			}
+		}
+	}
+	else // not consider the consistency when switching mode, once switching mode from / to mode[2], 2 abl, it will remain its last pose
+	{
+		segAlpha_2[segNumber] = 0;
+		segBeta_2[segNumber] = 0;
+		segLength_2[segNumber] = 0.055 * 3;
+	}
+
+	for (int i = 0; i < 2; i++)
+	{
+		segBeta_2[i] = constrain2PI(segBeta_2[i]);
+		segAlpha_2[i] = CONSTRAIN(segAlpha_2[i], a_min * 3, a_max * 3);
+		segBeta_2[i] = CONSTRAIN(segBeta_2[i], b_min, b_max);
+		segLength_2[i] = CONSTRAIN(segLength_2[i], l_min * 3, l_max * 3);
+	}
 }
 
 void writeABL3(int joystickFLag)
@@ -820,6 +908,11 @@ void Init_parameter()
 		segLength_[i] = length0 * 2;
 	}
 
+	for (int i = 0; i < 2; i++)
+	{
+		segLength_2[i] = length0 * 3;
+	}
+
 	//for Write Opening
 	for (int i = 0; i < 6; i++)
 	{
@@ -845,9 +938,12 @@ void help_menu()
 		 << " X   |"
 		 << "  length +: joyLT  , length -: joyRT  ; " << endl;
 	cout << "                                                                               " << endl;
-	cout << " 3: 1 segment xyz(test) |"
+	cout << " 3: 2 segment abl       |"
 		 << " Y   |"
 		 << "  x+: joyRx +, x-: joyRx -;             " << endl;
+	// cout << " 3: 1 segment xyz(test) |"
+	// 	 << " Y   |"
+	// 	 << "  x+: joyRx +, x-: joyRx -;             " << endl;
 	cout << " 4: 6 segment xyz       |"
 		 << " RB  |"
 		 << "  y+: joyRy +, y-: joyRy -;             " << endl;
@@ -891,7 +987,7 @@ int main(int argc, char **argv)
 		if (status == 1)
 		{
 			//control mode
-			//mode[0]: 1 abl; mode[1]: 3 abl; mode[2]: 9 abl; mode[3]: 1 xyz; mode[4]: 3 xyz;
+			//mode[0]: 1 abl; mode[1]: 3 abl; mode[2]: 9 abl; mode[3]: 2 abl; mode[4]: 3 xyz;
 			//mode[0]: joyA;  mode[1]: joyB;  mode[2]: joyX;  mode[3]: joyY;  mode[4]: joyRB;
 
 			if (mode == 0) //ABL_1 control mode
@@ -903,16 +999,20 @@ int main(int argc, char **argv)
 			{
 				writeABL3(1); //joystick -> ABL3
 				writeABL9(2); //ABL3     -> ABL9
-				writeXYZ3(0); //ABL3     -> XYZ3
+				writeXYZ3(0); //ABL3     -> XYZ3 
 			}
 			else if (mode == 2) //ABL_9 control mode
 			{
-				writeABL9(1); //joystick -> ABL9
+				writeABL9(1); //joystick -> ABL9				
 			}
-			else if (mode == 3) //XYZ_1 control mode
+			// else if (mode == 3) //XYZ_1 control mode
+			// {
+			// 	writeXYZ1(1); //joystick -> XYZ1
+			// 	writeABL1(0); //XYZ1     -> ABL1
+			// }
+			else if (mode == 3)
 			{
-				writeXYZ1(1); //joystick -> XYZ1
-				writeABL1(0); //XYZ1     -> ABL1
+				writeABL2(1); //joystick  -> ABL2
 			}
 			else if (mode == 4) //XYZ_3 control mode
 			{
@@ -941,7 +1041,14 @@ int main(int argc, char **argv)
 			{
 				segAlpha_[i] = 0;
 				segBeta_[i] = 0;
-				segLength_[i] = length0 * 2;
+				segLength_[i] = length0 * 2.0;
+			}
+
+			for (int i = 0; i < 2; i++)
+			{
+				segAlpha_2[i]  = 0;
+				segBeta_2[i]   = 0;
+				segLength_2[i] = 0.165;
 			}
 
 			alpha = 0;
@@ -977,15 +1084,15 @@ int main(int argc, char **argv)
 		{
 			for (int i = 0; i < 6; i++)
 			{
-			Cmd_ABL.segment[i].A = alpha;
-			Cmd_ABL.segment[i].B = beta;
-			Cmd_ABL.segment[i].L = length;
+				Cmd_ABL.segment[i].A = alpha;
+				Cmd_ABL.segment[i].B = beta;
+				Cmd_ABL.segment[i].L = length;
 			}
 			for (int i = 6; i < SEGNUM; i++)
 			{
-			Cmd_ABL.segment[i].A = 0;
-			Cmd_ABL.segment[i].B = 0;
-			Cmd_ABL.segment[i].L = length0;
+				Cmd_ABL.segment[i].A = 0;
+				Cmd_ABL.segment[i].B = 0;
+				Cmd_ABL.segment[i].L = length0;
 			}
 
 			printf("ABL1: alpha: %f, beta: %f, length: %f\r\n", alpha, beta, length);
@@ -1032,7 +1139,7 @@ int main(int argc, char **argv)
 
 			pub1.publish(Cmd_ABL);
 		}
-		else if (mode == 3)
+		/*else if (mode == 3)
 		{
 			Cmd_Position.pose.position.x = x;
 			Cmd_Position.pose.position.y = y;
@@ -1043,6 +1150,26 @@ int main(int argc, char **argv)
 			printf("XYZ1: x: %f, y: %f, z: %f\r\n", x, y, z);
 
 			pub3.publish(Cmd_Position);
+		}*/
+		else if (mode == 3)
+		{
+			for (int i = 0; i < 6; i++)
+			{
+				Cmd_ABL.segment[i].A = segAlpha_2[int(i / 3)] / 3;
+				Cmd_ABL.segment[i].B = segBeta_2[int(i / 3)];
+				Cmd_ABL.segment[i].L = segLength_2[int(i / 3)] / 3;
+
+				printf("ABL2: alpha: %f, beta: %f, length: %f\r\n", segAlpha_2[int(i / 3)] / 3, segBeta_2[int(i / 3)], segLength_2[int(i / 3)] / 3);
+			}
+
+			for (int i = 6; i < SEGNUM; i++)
+			{
+				Cmd_ABL.segment[i].A = 0;
+				Cmd_ABL.segment[i].B = 0;
+				Cmd_ABL.segment[i].L = length0;
+			}
+
+			pub1.publish(Cmd_ABL);
 		}
 		else if (mode == 4)
 		{
@@ -1062,20 +1189,34 @@ int main(int argc, char **argv)
 		//write into files
 		if (save_flag == 1)
 		{
-			if (mode == 1)
+			if (mode == 0)
 			{
-				savedata << 1 << " " << 10000 << " " << 10000 << " " << 10000 << " " << segAlpha_[0] / 2 << " " << segBeta_[0] << " " << segLength_[0] / 2
+				savedata << 0 << " " << 10000 << " " << 10000 << " " << 10000 
+				         << " " << alpha / 6 << " " << beta << " " << length / 6
+						 << " " << alpha / 6 << " " << beta << " " << length / 6
+						 << " " << alpha / 6 << " " << beta << " " << length / 6
+						 << " " << alpha / 6 << " " << beta << " " << length / 6
+						 << " " << alpha / 6 << " " << beta << " " << length / 6
+						 << " " << alpha / 6 << " " << beta << " " << length / 6
+						 << endl;
+				printf("%s\n", "write mode 0 data, 1 segment");
+			}
+			else if (mode == 1)
+			{
+				savedata << 1 << " " << 10000 << " " << 10000 << " " << 10000 
+						 << " " << segAlpha_[0] / 2 << " " << segBeta_[0] << " " << segLength_[0] / 2
 						 << " " << segAlpha_[0] / 2 << " " << segBeta_[0] << " " << segLength_[0] / 2
 						 << " " << segAlpha_[1] / 2 << " " << segBeta_[1] << " " << segLength_[1] / 2
 						 << " " << segAlpha_[1] / 2 << " " << segBeta_[1] << " " << segLength_[1] / 2
 						 << " " << segAlpha_[2] / 2 << " " << segBeta_[2] << " " << segLength_[2] / 2
 						 << " " << segAlpha_[2] / 2 << " " << segBeta_[2] << " " << segLength_[2] / 2
 						 << endl;
-				printf("%s\n", "write mode 1 data");
+				printf("%s\n", "write mode 1 data, 3 segments");
 			}
 			else if (mode == 2)
 			{
-				savedata << 2 << " " << 10000 << " " << 10000 << " " << 10000 << " " << segAlpha[0] << " " << segBeta[0] << " " << segLength[0]
+				savedata << 2 << " " << 10000 << " " << 10000 << " " << 10000 
+						 << " " << segAlpha[0] << " " << segBeta[0] << " " << segLength[0]
 						 << " " << segAlpha[1] << " " << segBeta[1] << " " << segLength[1]
 						 << " " << segAlpha[2] << " " << segBeta[2] << " " << segLength[2]
 						 << " " << segAlpha[3] << " " << segBeta[3] << " " << segLength[3]
@@ -1083,11 +1224,25 @@ int main(int argc, char **argv)
 						 << " " << segAlpha[5] << " " << segBeta[5] << " " << segLength[5]
 						 << endl;
 
-				printf("%s\n", "write mode 2 data");
+				printf("%s\n", "write mode 2 data, 9 segments");
+			}
+			else if (mode == 3)
+			{
+				savedata << 3 << " " << 10000 << " " << 10000 << " " << 10000 
+				<< " " << segAlpha_2[0] / 3 << " " << segBeta_2[0] << " " << segLength_2[0] / 3
+				<< " " << segAlpha_2[0] / 3 << " " << segBeta_2[0] << " " << segLength_2[0] / 3
+				<< " " << segAlpha_2[0] / 3 << " " << segBeta_2[0] << " " << segLength_2[0] / 3
+				<< " " << segAlpha_2[1] / 3 << " " << segBeta_2[1] << " " << segLength_2[1] / 3
+				<< " " << segAlpha_2[1] / 3 << " " << segBeta_2[1] << " " << segLength_2[1] / 3
+				<< " " << segAlpha_2[1] / 3 << " " << segBeta_2[1] << " " << segLength_2[1] / 3
+				<< endl;
+
+				printf("%s\n", "write mode 3 data, 2 segments");
 			}
 			else if (mode == 4)
 			{
-				savedata << 4 << " " << segx_ << " " << segy_ << " " << segz_ << " " << segAlphad_[0] << " " << segBetad_[0] << " " << segLengthd_[0]
+				savedata << 4 << " " << segx_ << " " << segy_ << " " << segz_ 
+						 << " " << segAlphad_[0] << " " << segBetad_[0] << " " << segLengthd_[0]
 						 << " " << segAlphad_[0] << " " << segBetad_[0] << " " << segLengthd_[0]
 						 << " " << segAlphad_[1] << " " << segBetad_[1] << " " << segLengthd_[1]
 						 << " " << segAlphad_[1] << " " << segBetad_[1] << " " << segLengthd_[1]

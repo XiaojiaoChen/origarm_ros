@@ -111,7 +111,7 @@ void ABLD2PD()
 //calculate PressureFeedback
 void FeedbackController(int feedbackFlag) 
 {
-  if (mode_ < 3)
+  if (mode_ <= 3) // mode modified, change mode[3] to 2 abl control
   {
     for (int i = 0; i < SEGNUM; i++)
     {
