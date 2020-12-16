@@ -73,31 +73,34 @@ int time_sec;
 int flag_saveSensor=0;
 string sensorDataFileName="";
 ofstream sensorDataStream;
+ros::Time sensorDataBeginTime;
 std::string getTimeString()
 {
-
     time_t rawtime;
     struct tm *timeinfo;
     char buffer[100];
 
     time(&rawtime);
     timeinfo = localtime(&rawtime);
+	struct timeval time_now{};
+	gettimeofday(&time_now,nullptr);
+	time_t msecs_time=time_now.tv_usec;
+	time_t msec=(msecs_time/1000)%1000;
 
     strftime(buffer, 100, "%G_%h_%d_%H_%M_%S", timeinfo);
-    std::string ret = buffer;
+    std::string ret1 = buffer;
+	std::string ret=ret1+"_"+std::to_string(msec);
     return ret;
 }
 
 std::string getTimeNsecString()
 {
 	ros::Time curtime = ros::Time::now();
-	uint64_t curNsec=curtime.toNSec();
-  
-   
-    std::string ret = std::to_string(curNsec);
+	ros::Duration pasttime=curtime-sensorDataBeginTime;
+	int64_t pasttimems=pasttime.toNSec()/1000000;  
+    std::string ret = std::to_string(pasttimems);
     return ret;
 }
-
 
 /**
  * @brief Save IMU data to file
@@ -115,7 +118,7 @@ static void saveSelectedToFile(string filePath)
     {
         for (int q = 0; q < ACTNUM; q++)
         {
-           data << curtime<<" "<<p<<" "<<q<<" "<<commandData.data[p][q].values[0]<<" "<< sensorData.data[p][q].pressure <<" "<< sensorData.data[p][q].distance 
+           data <<p<<" "<<q<<" "<<commandData.data[p][q].values[0]<<" "<< sensorData.data[p][q].pressure <<" "<< sensorData.data[p][q].distance 
 			<<" "<< sensorData.data[p][q].quaternion.imuData[0] <<" "<< sensorData.data[p][q].quaternion.imuData[1] <<" "<< sensorData.data[p][q].quaternion.imuData[2] <<" "<< sensorData.data[p][q].quaternion.imuData[3]
 			<< endl;
         }
@@ -140,7 +143,7 @@ static void saveSensorDataToFile()
 			<< endl;
         }
     }
-	sensorDataStream << endl;
+	sensorDataStream << endl;	
 }
 
 
@@ -150,27 +153,26 @@ void keyCallback(const origarm_ros::keynumber &key)
         {
             printf(" KEY_D pressed!\r\n");
 			 			flag_saveSensor=1;
+			sensorDataBeginTime=ros::Time::now();			 
 			 sensorDataFileName = "sensorData_" + getTimeString() + ".txt";
-			 sensorDataStream.open(SensorDataPath+sensorDataFileName, ios::trunc); // ios::app
+			 sensorDataStream.open(SensorDataPath+sensorDataFileName, ios::app); // ios::app
 				// write imu data into yaml file/imu_data.txt
-				cout << "Saving sensor data to" + SensorDataPath+sensorDataFileName << endl;
+				cout << "Saving sensor data to" + SensorDataPath + sensorDataFileName << endl;
 
         }
- 		else if (key.keycodePressed == KEY_F) // 'F' pressed
+ 		else if (key.keycodePressed == KEY_G) // 'G' pressed
         {
 			flag_saveSensor=0;
 			sensorDataStream.close();
 			cout << "Sensor data Saved" << endl;
         }
-		else if (key.keycodePressed == KEY_I) // 'F' pressed
+		else if (key.keycodePressed == KEY_I) // 'I' pressed
         {
 
 			printf(" KEY_I pressed!\r\n");
-			saveSelectedToFile((SelectedDataPath + getTimeString()+".txt"));
+			saveSelectedToFile((SelectedDataPath + "selectedData_" + getTimeString()+".txt"));
 			cout << "Selected data Saved" << endl;
-        }
-
-            
+        }           
     }
 
 
@@ -251,11 +253,11 @@ static void transfer(int fd, uint8_t const *tx, uint8_t const *rx, size_t len)
 	}
 
 	ret = ioctl(fd, SPI_IOC_MESSAGE(1), &tr);
-	printf("ret:%d\r\n", ret);
+	//printf("ret:%d\r\n", ret);
 	if (ret < 1)
 		pabort("can't send spi message");
 	
-	printf("data transfer\r\n");
+	//printf("data transfer\r\n");
 }
 
 static void print_usage(const char *prog)
@@ -451,7 +453,7 @@ int main(int argc, char* argv[])
 		
 		transfer(fd, (uint8_t *)(&commandData), (uint8_t *)(&sensorData), sizeof(SPIDATA_R));
 
-		printf("time:%d, segN:%d, mode:%d, status: %d\r\n", t, segNumber, controlmode, status); 
+		/*printf("time:%d, segN:%d, mode:%d, status: %d\r\n", t, segNumber, controlmode, status); 
 		//printf("CommandPressure        | sensorData\r\n"); 
 		for (int i = 0; i < SEGNUM; i++)
 		{
@@ -475,7 +477,7 @@ int main(int argc, char* argv[])
 				sensorData.data[i][4].distance,
 				sensorData.data[i][5].distance
 				);			
-		}
+		}*/
 
 		origarm_ros::Sensor Sensor;
 		for (int i = 0; i < SEGNUM; i++)

@@ -9,6 +9,7 @@
 #include <vector>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <linux/input-event-codes.h>
 
 #include "origarm_ros/Command_ABL.h"
@@ -35,9 +36,8 @@ using namespace std;
 
 //save into files
 static int save_flag = 0;
-
-//keyboard mapping
-static int key_no[10];
+string trajPointFileName = "";
+ofstream savedata;
 
 //joystick mapping
 static float joyLx;
@@ -166,6 +166,25 @@ static float segLengthd[9];
 //mode[0]: joyA;  mode[1]: joyB;  mode[2]: joyX;  mode[3]: joyY;  mode[4]: joyRB; mode[5]: 
 int mode;
 
+std::string getTimeString()
+{
+    time_t rawtime;
+    struct tm *timeinfo;
+    char buffer[100];
+
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+	struct timeval time_now{};
+	gettimeofday(&time_now,nullptr);
+	time_t msecs_time=time_now.tv_usec;
+	time_t msec=(msecs_time/1000)%1000;
+
+    strftime(buffer, 100, "%G_%h_%d_%H_%M_%S", timeinfo);
+    std::string ret = buffer;
+	//std::string ret=ret1+"_"+std::to_string(msec);
+    return ret;
+}
+
 //keyboard callback
 void keyCallback(const origarm_ros::keynumber &key)
 {
@@ -281,7 +300,7 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr &joy)
 	//save into files
 	if (joyLB == 1 && last_joyLB == 0)
 	{
-		save_flag = 1;
+		save_flag = 1;		
 	}
 	else
 	{
@@ -963,10 +982,7 @@ int main(int argc, char **argv)
 	ros::init(argc, argv, "joy_teleopt");
 	ros::NodeHandle nh;
 	ros::Rate r(100); //Hz
-
-	ofstream savedata;
-	savedata.open("demo_traj.txt", ios::app);
-
+	
 	ros::Subscriber sub1 = nh.subscribe("joy", 1, joyCallback);
 	ros::Subscriber sub2 = nh.subscribe("key_number", 1, keyCallback);
 	ros::Subscriber sub3 = nh.subscribe("Cmd_ABL_ik", 1, ABLCallback);
@@ -977,6 +993,9 @@ int main(int argc, char **argv)
 	//ros::Publisher  pub5  = nh.advertise<origarm_ros::SegOpening>("Cmd_Opening", 100);
 
 	Init_parameter();
+
+	trajPointFileName = "trajp_" + getTimeString();
+	savedata.open("/home/ubuntu/catkin_ws/src/origarm_ros/data/" + trajPointFileName + ".txt", ios::trunc);
 
 	while (ros::ok())
 	{
@@ -1188,7 +1207,7 @@ int main(int argc, char **argv)
 
 		//write into files
 		if (save_flag == 1)
-		{
+		{			
 			if (mode == 0)
 			{
 				savedata << 0 << " " << 10000 << " " << 10000 << " " << 10000 
