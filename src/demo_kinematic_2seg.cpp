@@ -6,21 +6,32 @@
 #include "origarm_ros/Command_ABL.h"
 #include "myData.h"
 
-// six points, each points inclde {a1,b1,l1,a2,b2,l2}
-float p[7][6] = {
-					 {0,   M_PI/3,   0.165,    0, M_PI/3,   0.165},
-					 {0.9, M_PI/3,   0.165, -0.9, M_PI/3,   0.165},
-					 {0.9, M_PI*2/3, 0.165, -0.9, M_PI*2/3, 0.165},
-					 {0.9, M_PI,     0.165, -0.9, M_PI,     0.165},
-					 {0.9, M_PI*4/3, 0.165, -0.9, M_PI*4/3, 0.165},
-					 {0.9, M_PI*5/3, 0.165, -0.9, M_PI*5/3, 0.165},
-					 {0.9, M_PI*2,   0.165, -0.9, M_PI*2,   0.165}
-				};
+// n points, each points inclde {a1,b1,l1,a2,b2,l2}
+float genetraj(float ps, float pe, int step, int tstep)
+{
+	float pm = ps + step*(pe-ps)/(tstep-1); 
+	return pm;
+}
 
-int k = 0;
 const int mt = 1000; //1ms
-int ts = 2000*mt;     //time sleep at each point
-int tstep[]={8000*mt, 8000*mt, 8000*mt, 8000*mt, 8000*mt, 8000*mt};
+int ts = 10*mt;      //time sleep at each point
+int tsleep = 5000*mt;
+int tstep[]={1200, 500, 200};
+int flag = 1;
+
+// right point with larger radius
+// float alpha1 =  0.433002;
+// float alpha2 = -0.321001;
+// float length1 = 0.0459096;
+// float length2 = 0.0508099;
+
+// point with smaller radius
+float alpha1 =  0.198;
+float alpha2 = -0.139;
+float length1 = 0.0403279;
+float length2 = 0.0475594;
+
+float beta;
 
 int main(int argc, char **argv)
 {
@@ -34,46 +45,106 @@ int main(int argc, char **argv)
 	{				
 		origarm_ros::Command_ABL Command_ABL_demo;
 		
-		if (k < 7)
+		//change beta 0->2*pi
+		if (flag == 1)
 		{
-			for (int i = 0; i < 3; i++)
+			beta = 0;
+			for (int i = 0; i < 500; i++)
 			{
-				Command_ABL_demo.segment[i].A = p[k][0]/3;
-				Command_ABL_demo.segment[i].B = p[k][1];
-				Command_ABL_demo.segment[i].L = p[k][2]/3;
-			}
+				for (int i = 0; i < 3; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha1;
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length1;
+				}
+				for (int i = 3; i < 6; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha2;
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length2;
+				}
+				for (int i = 6; i < SEGNUM; i++)
+				{
+					Command_ABL_demo.segment[i].A = 0;
+					Command_ABL_demo.segment[i].B = 0;
+					Command_ABL_demo.segment[i].L = length0;
+				}
 
-			for (int i = 3; i < 6; i++)
+				pub1.publish(Command_ABL_demo);					
+				usleep(ts);
+				flag = 2;
+			}			
+		}
+		else if (flag == 2)
+		{
+			for (int i = 0; i < tstep[0]; i++)
 			{
-				Command_ABL_demo.segment[i].A = p[k][3]/3;
-				Command_ABL_demo.segment[i].B = p[k][4];
-				Command_ABL_demo.segment[i].L = p[k][5]/3;
-			}
+				beta = genetraj(0, 2*M_PI, i, tstep[0]);
+				for (int i = 0; i < 3; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha1;
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length1;
+				}
+				for (int i = 3; i < 6; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha2;
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length2;
+				}
+				for (int i = 6; i < SEGNUM; i++)
+				{
+					Command_ABL_demo.segment[i].A = 0;
+					Command_ABL_demo.segment[i].B = 0;
+					Command_ABL_demo.segment[i].L = length0;
+				}
 
-			for (int i = 6; i < 9; i++)
+				pub1.publish(Command_ABL_demo);					
+				usleep(ts);
+
+				flag = 0; 			
+			}			
+		}
+		else if (flag == 3)
+		{
+			beta = 0;
+			for (int i = 0; i < 200; i++)
 			{
-				Command_ABL_demo.segment[i].A = 0;
-				Command_ABL_demo.segment[i].B = 0;
-				Command_ABL_demo.segment[i].L = 0.055;
+				for (int i = 0; i < 3; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha1;
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length1;
+				}
+				for (int i = 3; i < 6; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha2;
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length2;
+				}
+				for (int i = 6; i < SEGNUM; i++)
+				{
+					Command_ABL_demo.segment[i].A = 0;
+					Command_ABL_demo.segment[i].B = 0;
+					Command_ABL_demo.segment[i].L = length0;
+				}
+
+				pub1.publish(Command_ABL_demo);					
+				usleep(ts);
+				flag = 0;
 			}
-			
-				pub1.publish(Command_ABL_demo);	
-				// printf("Target point: %d, %f, %f, %f, %f, %f, %f\r\n", k, p[k][0], p[k][1], p[k][2]/3, p[k][3], p[k][4], p[k][5]/3);
-				//usleep(tstep[k]);
-				usleep(ts);	
-				k = k + 1;						
 		}
 		else
-		{			
+		{
 			for (int i = 0; i < 9; i++)
 			{
 				Command_ABL_demo.segment[i].A = 0;
 				Command_ABL_demo.segment[i].B = 0;
-				Command_ABL_demo.segment[i].L = 0.055;
+				Command_ABL_demo.segment[i].L = length0;
 			}
-			
-			pub1.publish(Command_ABL_demo);				
 		}
+						
+		pub1.publish(Command_ABL_demo);				
 
 		r.sleep();
 	}

@@ -453,7 +453,7 @@ int main(int argc, char* argv[])
 		
 		transfer(fd, (uint8_t *)(&commandData), (uint8_t *)(&sensorData), sizeof(SPIDATA_R));
 
-		/*printf("time:%d, segN:%d, mode:%d, status: %d\r\n", t, segNumber, controlmode, status); 
+		printf("time:%d, segN:%d, mode:%d, status: %d\r\n", t, segNumber, controlmode, status); 
 		//printf("CommandPressure        | sensorData\r\n"); 
 		for (int i = 0; i < SEGNUM; i++)
 		{
@@ -477,7 +477,7 @@ int main(int argc, char* argv[])
 				sensorData.data[i][4].distance,
 				sensorData.data[i][5].distance
 				);			
-		}*/
+		}
 
 		origarm_ros::Sensor Sensor;
 		for (int i = 0; i < SEGNUM; i++)

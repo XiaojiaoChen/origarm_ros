@@ -6,69 +6,74 @@
 #include "origarm_ros/Command_ABL.h"
 #include "myData.h"
 
-// six points, each points inclde {a1,b1,l1,a2,b2,l2,a3,b3,l3}
-float p[7][9] = {
-					 {0,   M_PI/3,   0.11, 0, M_PI/3,   0.11,    0, M_PI/3,   0.11},	
-					 {0.6, M_PI/3,   0.11, 0, M_PI/3,   0.11, -0.6, M_PI/3,   0.11},
-					 {0.6, M_PI*2/3, 0.11, 0, M_PI*2/3, 0.11, -0.6, M_PI*2/3, 0.11},
-					 {0.6, M_PI*3/3, 0.11, 0, M_PI*3/3, 0.11, -0.6, M_PI*3/3, 0.11},
-					 {0.6, M_PI*4/3, 0.11, 0, M_PI*4/3, 0.11, -0.6, M_PI*4/3, 0.11},
-					 {0.6, M_PI*5/3, 0.11, 0, M_PI*5/3, 0.11, -0.6, M_PI*5/3, 0.11},
-					 {0.6, M_PI*6/3, 0.11, 0, M_PI*6/3, 0.11, -0.6, M_PI*6/3, 0.11}
-				};
+// n points, each points inclde {a1,b1,l1,a2,b2,l2}
+float genetraj(float ps, float pe, int step, int tstep)
+{
+	float pm = ps + step*(pe-ps)/(tstep-1); 
+	return pm;
+}
 
-int k = 0;
 const int mt = 1000; //1ms
-int ts = 2000*mt;     //time sleep at each point
-int tstep[]={1000*mt, 8000*mt, 8000*mt, 8000*mt, 8000*mt, 8000*mt, 8000*mt};
+int ts = 10*mt;     //time sleep at each point
+int tstep[]={800, 500};
+int flag = 1;
+
+float alpha1 =  0.433002;
+float alpha2 =  0.0;
+float alpha3 = -0.321001;
+float length1 = 0.0509096;
+float length2 = 0.0548099;
+float length3 = 0.0548099;
+float beta;
 
 int main(int argc, char **argv)
 {
-	ros::init(argc, argv, "demo_kinematic_3seg");
+	ros::init(argc, argv, "demo_kinematic_2seg");
 	ros::NodeHandle nh;	
 	ros::Rate r(100);     //Hz
 
-	ros::Publisher  pub1 = nh.advertise<origarm_ros::Command_ABL>("Cmd_ABL_joy", 100);
+	ros::Publisher  pub1 = nh.advertise<origarm_ros::Command_ABL>("Cmd_ABL_joy", 100);	
 
 	while (ros::ok())
-	{		
+	{				
 		origarm_ros::Command_ABL Command_ABL_demo;
-
-		if ( k < 7 )
+		
+		//change beta 0->2*pi
+		if (flag)
 		{
-			for (int i = 0; i < 2; i++)
+			for (int i = 0; i < tstep[0]; i++)
 			{
-				Command_ABL_demo.segment[i].A = p[k][0]/2;
-				Command_ABL_demo.segment[i].B = p[k][1];
-				Command_ABL_demo.segment[i].L = p[k][2]/2;
-			}
+				beta = genetraj(0, 2*M_PI, i, tstep[0]);
+				for (int i = 0; i < 2; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha1;
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length1;
+				}
+				for (int i = 2; i < 4; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha2;
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length2;
+				}
+				for (int i = 4; i < 6; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha3;
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length3;
+				}
+				for (int i = 6; i < SEGNUM; i++)
+				{
+					Command_ABL_demo.segment[i].A = 0;
+					Command_ABL_demo.segment[i].B = 0;
+					Command_ABL_demo.segment[i].L = length0;
+				}
 
-			for (int i = 2; i < 4; i++)
-			{
-				Command_ABL_demo.segment[i].A = p[k][3]/2;
-				Command_ABL_demo.segment[i].B = p[k][4];
-				Command_ABL_demo.segment[i].L = p[k][5]/2;
-			}
+				pub1.publish(Command_ABL_demo);					
+				usleep(ts);
 
-			for (int i = 4; i < 6; i++)
-			{
-				Command_ABL_demo.segment[i].A = p[k][6]/2;
-				Command_ABL_demo.segment[i].B = p[k][7];
-				Command_ABL_demo.segment[i].L = p[k][8]/2;
-			}
-
-			for (int i = 6; i < 9; i++)
-			{
-				Command_ABL_demo.segment[i].A = 0;
-				Command_ABL_demo.segment[i].B = 0;
-				Command_ABL_demo.segment[i].L = 0.055;
-			}
-			
-				pub1.publish(Command_ABL_demo);	
-				// printf("Target point: %d, %f, %f, %f, %f, %f, %f, %f, %f, %f\r\n", k, p[k][0], p[k][1], p[k][2], p[k][3], p[k][4], p[k][5], p[k][6], p[k][7], p[k][8]);
-				//usleep(tstep[k]);
-				usleep(ts);	
-				k = k + 1;			
+				flag = 0; 			
+			}			
 		}
 		else
 		{
@@ -78,10 +83,9 @@ int main(int argc, char **argv)
 				Command_ABL_demo.segment[i].B = 0;
 				Command_ABL_demo.segment[i].L = 0.055;
 			}
-			
-			pub1.publish(Command_ABL_demo);	
 		}
-														
+						
+		pub1.publish(Command_ABL_demo);						
 		r.sleep();
 	}
 	

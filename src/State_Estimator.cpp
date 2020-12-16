@@ -82,6 +82,8 @@ static int goodIMU[SEGNUM][ACTNUM] = {
     {1, 1, 0, 1, 0, 1},
     {0, 1, 0, 0, 1, 0}};
 
+static void InitFrames();
+
 std::string getTimeString()
 {
 
@@ -249,6 +251,7 @@ public:
             printf(" KEY_C pressed!\r\n");
             string path = IMUDataPath + quatSaveFileName;
             saveQuatToFile(QuattInIMU, path);
+            InitFrames();
         }
         else if (key.keycodePressed == KEY_R) // 'r' pressed
         {
@@ -331,7 +334,7 @@ static int goodActuator(int p, int q)
  * 3. Calculate the transformation matrix of IMU Base in the ARM Base
  * 4. define the plate pose at time 0 in the Arm base, which are all identities.
  */
-static void InitFrames()
+void InitFrames()
 {
     /*set the IMU body frame at time 0 in the ARM Base*/
 
@@ -757,7 +760,7 @@ int main(int argc, char **argv)
 
         stateEstimator.pub();
 
-        if (printFre++ > 50)
+        if (printFre++ > 2)
         {
             printf("A[0]:%d, [1]:%d, [2]:%d, [3]:%d, [4]:%d, [5]:%d  | B[0]:%d, [1]:%d, [2]:%d, [3]:%d, [4]:%d, [5]:%d  |  L[0]:%d, [1]:%d, [2]:%d, [3]:%d, [4]:%d, [5]:%d\n",
                    (int)(alphaDeg[0]),
