@@ -149,14 +149,15 @@ void keyCallback(const origarm_ros::keynumber &key)
         if (key.keycodePressed == KEY_D) // 'C' pressed
         {
             printf(" KEY_D pressed!\r\n");
-			 			flag_saveSensor=1;
+			 			
 			 sensorDataFileName = "sensorData_" + getTimeString() + ".txt";
 			 sensorDataStream.open(SensorDataPath+sensorDataFileName, ios::trunc); // ios::app
+			 flag_saveSensor=1;
 				// write imu data into yaml file/imu_data.txt
 				cout << "Saving sensor data to" + SensorDataPath+sensorDataFileName << endl;
 
         }
- 		else if (key.keycodePressed == KEY_F) // 'F' pressed
+ 		else if (key.keycodePressed == KEY_G) // 'G' pressed
         {
 			flag_saveSensor=0;
 			sensorDataStream.close();
