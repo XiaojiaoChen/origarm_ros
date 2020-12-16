@@ -83,9 +83,6 @@
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>urdf</exec_depend>
-  <exec_depend>moveit_core</exec_depend>
-  <exec_depend>moveit_ros_planning_interface</exec_depend>
-
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->

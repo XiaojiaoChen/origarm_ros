@@ -92,7 +92,7 @@ std::string getTimeString()
     time(&rawtime);
     timeinfo = localtime(&rawtime);
 
-    strftime(buffer, 100, "%G_%h_%e_%H_%M_%S", timeinfo);
+    strftime(buffer, 100, "%G_%h_%d_%H_%M_%S", timeinfo);
     std::string ret = buffer;
     return ret;
 }
