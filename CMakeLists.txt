@@ -15,8 +15,7 @@ std_srvs
 geometry_msgs
 message_generation
 urdf
-moveit_core
-moveit_ros_planning_interface)
+)
 
 find_package(cmake_modules REQUIRED)
 
