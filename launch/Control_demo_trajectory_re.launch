@@ -1,0 +1,7 @@
+<launch>
+	<node pkg="origarm_ros" name="demo_trajectory" type="demo_trajectory_regenerate"/>  
+    <!--<node pkg="origarm_ros" name="keyboard_node" type="keyboard" launch-prefix="xterm -e"/> -->
+    <node pkg="origarm_ros" name="ABL_controller_Node" type="ABL_controller"/> 
+    <node pkg="origarm_ros" name="spi_node" type="spi_node" output="screen" />         
+    <!-- <node pkg="rqt_graph" name="rqt_graph_node" type="rqt_graph"/>     -->
+</launch>

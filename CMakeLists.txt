@@ -355,3 +355,9 @@ add_dependencies(demo_trajectory ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 target_link_libraries(demo_trajectory            
    ${catkin_LIBRARIES}
  )
+
+add_executable(demo_trajectory_regenerate src/demo_trajectory_regenerate.cpp) 
+add_dependencies(demo_trajectory_regenerate ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+target_link_libraries(demo_trajectory_regenerate           
+   ${catkin_LIBRARIES}
+ )
