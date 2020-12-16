@@ -11,6 +11,7 @@
 #include "origarm_ros/Sensor_Act.h"
 #include "origarm_ros/modenumber.h"
 #include "origarm_ros/segnumber.h"
+#include <linux/input-event-codes.h>
 
 #include "myData.h"
 
@@ -30,7 +31,10 @@
 #include <time.h>
 #include <fstream>
 #include <sys/time.h>
+#include <ros/time.h>
+#include "ros/package.h"
 
+#include "origarm_ros/keynumber.h"
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
 using namespace std;
@@ -50,6 +54,9 @@ static uint32_t speed = 5000000;
 static uint16_t delay;
 static int verbose;
 
+string SensorDataPath ="";
+string SelectedDataPath = "";
+
 int16_t Cmd_pressure[SEGNUM][ACTNUM];
 bool commandType_[SEGNUM][ACTNUM];
 int segNumber;
@@ -63,6 +70,108 @@ int time_hor;
 int time_min;
 int time_sec;
 
+int flag_saveSensor=0;
+string sensorDataFileName="";
+ofstream sensorDataStream;
+std::string getTimeString()
+{
+
+    time_t rawtime;
+    struct tm *timeinfo;
+    char buffer[100];
+
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+
+    strftime(buffer, 100, "%G_%h_%d_%H_%M_%S", timeinfo);
+    std::string ret = buffer;
+    return ret;
+}
+
+std::string getTimeNsecString()
+{
+	ros::Time curtime = ros::Time::now();
+	uint64_t curNsec=curtime.toNSec();
+  
+   
+    std::string ret = std::to_string(curNsec);
+    return ret;
+}
+
+
+/**
+ * @brief Save IMU data to file
+ * 
+ * @param filePath The path where the data is to be stored
+ */
+static void saveSelectedToFile(string filePath)
+{
+    ofstream data;
+    data.open(filePath, ios::trunc); // ios::app
+    
+    cout << "Saving current IMU data to" + filePath << endl;
+	std::string curtime=getTimeNsecString();
+    for (int p = 0; p< 6; p++)
+    {
+        for (int q = 0; q < ACTNUM; q++)
+        {
+           data << curtime<<" "<<p<<" "<<q<<" "<<commandData.data[p][q].values[0]<<" "<< sensorData.data[p][q].pressure <<" "<< sensorData.data[p][q].distance 
+			<<" "<< sensorData.data[p][q].quaternion.imuData[0] <<" "<< sensorData.data[p][q].quaternion.imuData[1] <<" "<< sensorData.data[p][q].quaternion.imuData[2] <<" "<< sensorData.data[p][q].quaternion.imuData[3]
+			<< endl;
+        }
+    }
+    data.close();
+    cout << "Selected data Saved" << endl;
+}
+
+
+/**
+ * @brief Save Cmd and sensor data to opened stream sensorDataStream
+ */
+static void saveSensorDataToFile()
+{
+	std::string curtime=getTimeNsecString();
+    for (int p = 0; p< 6; p++)
+    {
+        for (int q = 0; q < ACTNUM; q++)
+        {
+           sensorDataStream << curtime<<" "<<p<<" "<<q<<" "<<commandData.data[p][q].values[0]<<" "<< sensorData.data[p][q].pressure <<" "<< sensorData.data[p][q].distance 
+			<<" "<< sensorData.data[p][q].quaternion.imuData[0] <<" "<< sensorData.data[p][q].quaternion.imuData[1] <<" "<< sensorData.data[p][q].quaternion.imuData[2] <<" "<< sensorData.data[p][q].quaternion.imuData[3]
+			<< endl;
+        }
+    }
+	sensorDataStream << endl;
+}
+
+
+void keyCallback(const origarm_ros::keynumber &key)
+    {
+        if (key.keycodePressed == KEY_D) // 'C' pressed
+        {
+            printf(" KEY_D pressed!\r\n");
+			 			flag_saveSensor=1;
+			 sensorDataFileName = "sensorData_" + getTimeString() + ".txt";
+			 sensorDataStream.open(SensorDataPath+sensorDataFileName, ios::trunc); // ios::app
+				// write imu data into yaml file/imu_data.txt
+				cout << "Saving sensor data to" + SensorDataPath+sensorDataFileName << endl;
+
+        }
+ 		else if (key.keycodePressed == KEY_F) // 'F' pressed
+        {
+			flag_saveSensor=0;
+			sensorDataStream.close();
+			cout << "Sensor data Saved" << endl;
+        }
+		else if (key.keycodePressed == KEY_I) // 'F' pressed
+        {
+
+			printf(" KEY_I pressed!\r\n");
+			saveSelectedToFile((SelectedDataPath + getTimeString()+".txt"));
+			cout << "Selected data Saved" << endl;
+        }
+
+            
+    }
 
 
 void pressureCallback(const origarm_ros::Command_Pre_Open& pressured)
@@ -278,6 +387,9 @@ int main(int argc, char* argv[])
 	ros::NodeHandle nh;
 	ROS_INFO("spi_node starts!");	
 	
+	SensorDataPath = ros::package::getPath("origarm_ros") + "/data/sensorData/";
+	SelectedDataPath = ros::package::getPath("origarm_ros") + "/data/selectedData/";
+
 	int ret = 0;
 	int fd;
 
@@ -322,9 +434,7 @@ int main(int argc, char* argv[])
 
   int t = 0;
 
-  ofstream data;
-  data.open("/home/ubuntu/Desktop/data.txt", ios::app);
-	
+  ros::Subscriber key_sub_ = nh.subscribe("key_number", 1, keyCallback);
   ros::Subscriber sub1 = nh.subscribe("Command_Pre_Open", 1, pressureCallback);
   ros::Subscriber sub2 = nh.subscribe("modenumber", 1, modeNumberCallback);	
   ros::Subscriber sub3 = nh.subscribe("segnumber", 1, segNumberCallback);
@@ -387,21 +497,8 @@ int main(int argc, char* argv[])
 
 		pub1.publish(Sensor);
 		
-		time(&rawtime);
-		timeinfo = localtime(&rawtime);
-		time_day = timeinfo->tm_mday;
-		time_hor = timeinfo->tm_hour;
-		time_min = timeinfo->tm_min;
-		time_sec = timeinfo->tm_sec;
-		
-		for (int p = 0; p < SEGNUM; p++)
-		{
-			for (int q = 0; q < ACTNUM; q++)
-			{
-				data << time_day <<" "<<time_hor<<" "<<time_min<<" "<<time_sec<<" "<<commandData.data[p][q].values[0]<<" "<< sensorData.data[p][q].pressure <<" "<< sensorData.data[p][q].distance 
-						 <<" "<< sensorData.data[p][q].quaternion.imuData[0]/32768.0 <<" "<< sensorData.data[p][q].quaternion.imuData[1]/32768.0 <<" "<< sensorData.data[p][q].quaternion.imuData[2]/32768.0 <<" "<< sensorData.data[p][q].quaternion.imuData[3]/32768.0
-						 << endl;
-			}
+		if(flag_saveSensor){
+			saveSensorDataToFile();
 		}
 				
 		t = t+1;
@@ -414,7 +511,6 @@ int main(int argc, char* argv[])
 	}
 
 	close(fd);
-	data.close();
 	return ret;
 
 }
