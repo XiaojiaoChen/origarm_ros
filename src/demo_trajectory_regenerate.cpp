@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <Eigen/Eigen>
 
 #include "origarm_ros/Command_Position.h"
 #include "origarm_ros/Command_ABL.h"
@@ -18,18 +19,21 @@ using namespace std;
 
 ifstream inFile;
 const int ms = 1000;  //1ms
-int ts = 10*ms;
+int ts = 1000*ms;
 
 int mode_in;
 float x_in, y_in, z_in;
 float a_in[6], b_in[6], l_in[6];
 
-vector<float> s_A1;
-vector<float> s_B1;
-vector<float> s_L1;
-vector<float> s_A2;
-vector<float> s_B2;
-vector<float> s_L2;
+int flag = 1;
+
+vector<vector<float>> s_A;
+vector<vector<float>> s_B;
+vector<vector<float>> s_L;
+
+vector<vector<float>> state_A;
+vector<vector<float>> state_B;
+vector<vector<float>> state_L;
 
 //generate single point by defining starting and ending point
 static float genetraj(float ps, float pe, int step, int tstep)
@@ -38,11 +42,17 @@ static float genetraj(float ps, float pe, int step, int tstep)
 	return pm;
 }
 
-// read state information from File
+//read state information from File
 static void readFromFile()
 {
+	vector<float> s_a;
+	vector<float> s_b;
+	vector<float> s_l;
+	vector<float> s_a1;
+	vector<float> s_b1;
+	vector<float> s_l1;
 
-	inFile.open("/home/lijing/catkin_ws/src/origarm_ros/predefined_param/trajp_2seg.txt", ios::in);
+	inFile.open("/home/ubuntu/catkin_ws/src/origarm_ros/predefined_param/trajp_2seg.txt", ios::in);
 
 	if (!inFile)
 	{
@@ -54,46 +64,75 @@ static void readFromFile()
 		while (!inFile.eof())
 		{
 			inFile>>mode_in>>x_in>>y_in>>z_in>>a_in[0]>>b_in[0]>>l_in[0]>>a_in[1]>>b_in[1]>>l_in[1]>>a_in[2]>>b_in[2]>>l_in[2]>>a_in[3]>>b_in[3]>>l_in[3]>>a_in[4]>>b_in[4]>>l_in[4]>>a_in[5]>>b_in[5]>>l_in[5];
+		
+			for (int i = 0; i < 6; i++)
+			{
+				s_a.push_back(a_in[i]);
+				s_b.push_back(b_in[i]);
+				s_l.push_back(l_in[i]);
+			}			
 
-			s_A1.push_back(a_in[0]);
-			s_B1.push_back(b_in[0]);
-			s_L1.push_back(l_in[0]);
-			s_A2.push_back(a_in[3]);
-			s_B2.push_back(b_in[3]);
-			s_L2.push_back(l_in[3]);	
-		}
+			if (s_a.size() < 6)
+			{
+				printf("%s\n", ".............");
+			}
+			else
+			{
+				s_a1.assign(s_a.end()-6, s_a.end());
+				s_b1.assign(s_b.end()-6, s_b.end());
+				s_l1.assign(s_l.end()-6, s_l.end());
+
+				s_A.push_back(s_a1);
+				s_B.push_back(s_b1);
+				s_L.push_back(s_l1);
+			}			
+		}		
 	}
-
-	// printf("read from file: %f\n", s_A1[0]);
-	// printf("read from file: %f\n", s_A1[1]);
-	// printf("read from file: %f\n", s_A1[2]);
 
 	inFile.close();	
 }
 
-static vector<float> LinearDiffTrajGeneration(vector<float> & vect1, int tstep)
+static vector<vector<float>> LinearDiffTrajGeneration(vector<vector<float>> & vect1, int tstep)
 {
-	int vectsize = sizeof(vect1);
+	int vectsize = vect1.size(); // return row size of 2d vector, size of timestamp read from file
 	
-	// float[size] state;
-	vector<float> state;
+	vector< vector<float> > state;
+	vector<float> state1;
+	vector<float> state_1;
 
-	for (int j = 0; j < vectsize-1; j++)
+	int t = 0;
+
+	for (int i = 0; i < 6; i++)
 	{
-		float ps = vect1[j];
-		float pe = vect1[j+1];
-
-		// printf("traj generate: %f\n", ps);
-		// printf("traj generate: %f\n", pe);
-
-		for (int i = 0; i < tstep-1; i++)
+		for (int j = 0; j < vectsize-1; j++)
 		{
-			float mp = genetraj(ps, pe, i, tstep);
-			state.push_back(mp);
-			// printf("traj generate: %f\n", mp);
+			float ps = vect1[j][i];
+			float pe = vect1[j+1][i];
+			// printf("ps: %f, pe: %f\n", ps, pe);
 
-		}			
+			for (int k = 0; k < tstep-1; k++)
+			{
+				float pm = genetraj(ps, pe, k, tstep);
+				state1.push_back(pm);				
+				// printf("state1[%d]: %f\n", t, state1[t]);
+				t ++;
+			}					
+		}
+	
+		int newvectorsize = (tstep-1)*(vectsize-1);
+		
+		if (state1.size() < newvectorsize)
+		{
+			printf("%s\n", "!.............");
+		}
+		else
+		{
+			state_1.assign(state1.end() - newvectorsize, state1.end());	
+			state.push_back(state_1);
+		}		
+						
 	}
+
 	return state;					
 }
 
@@ -105,61 +144,50 @@ int main(int argc, char **argv)
 
 	ros::Publisher  pub1 = nh.advertise<origarm_ros::Command_ABL>("Cmd_ABL_joy", 100);	
 
-	vector<float> state_A1;
-	vector<float> state_B1;
-	vector<float> state_L1;
-	vector<float> state_A2;
-	vector<float> state_B2;
-	vector<float> state_L2;
-
 	readFromFile();
 
-	printf("read from file: %f\n", s_A1[0]);
-	printf("read from file: %f\n", s_A1[1]);
-	printf("read from file: %f\n", s_A1[2]);
-	printf("read from file: %f\n", s_A1[3]);
-	printf("read from file: %f\n", s_A1[4]);
-	
-	state_A1 = LinearDiffTrajGeneration(s_A1, 10);
+	state_A = LinearDiffTrajGeneration(s_A, 10);
+	state_B = LinearDiffTrajGeneration(s_B, 10);
+	state_L = LinearDiffTrajGeneration(s_L, 10);
 
-	printf("read from file: %f\n", state_A1[0]);
-	printf("read from file: %f\n", state_A1[9]);
-	printf("read from file: %f\n", state_A1[19]);
-
-
-	state_B1 = LinearDiffTrajGeneration(s_B1, 10);
-	state_L1 = LinearDiffTrajGeneration(s_L1, 10);
-
-	printf("read from file: %f\n", state_L1[0]);
-	printf("read from file: %f\n", state_L1[10]);
-	printf("read from file: %f\n", state_L1[20]);
-
-	state_A2 = LinearDiffTrajGeneration(s_A2, 10);
-	state_B2 = LinearDiffTrajGeneration(s_B2, 10);
-	state_L2 = LinearDiffTrajGeneration(s_L2, 10);
+	// for (int i = 0; i < state_A.size(); i++)
+	// {
+	// 	for (int j = 0; j < state_A[0].size(); j++)
+	// 	{
+	// 		printf("state_A[%d][%d]: %f\n", i, j, state_A[i][j]);
+	// 	}		
+	// }
 
 	while (ros::ok())
 	{
 		origarm_ros::Command_ABL Command_ABL_demo;
 		
-		int sizeoftraj = state_A1.size();
-		printf("generate trajectory: %d\n", sizeoftraj);
-
-		for (int j = 0; j < sizeoftraj; j++)
+		if (flag)
 		{
-			for (int i = 0; i < 3; i++)
+			for (int j = 0; j < state_A[0].size(); j++)
 			{
-				Command_ABL_demo.segment[i].A = state_A1[j];
-				Command_ABL_demo.segment[i].B = state_B1[j];
-				Command_ABL_demo.segment[i].L = state_L1[j];
+				for (int i = 0; i < 6; i++)
+				{
+					Command_ABL_demo.segment[i].A = state_A[i][j];
+					Command_ABL_demo.segment[i].B = state_B[i][j];
+					Command_ABL_demo.segment[i].L = state_L[i][j];
+				}
+				for (int i = 6; i < 9; i++)
+				{
+					Command_ABL_demo.segment[i].A = 0;
+					Command_ABL_demo.segment[i].B = 0;
+					Command_ABL_demo.segment[i].L = length0;
+				}
+				
+				pub1.publish(Command_ABL_demo);
+				usleep(ts);
 			}
-			for (int i = 3; i < 6; i++)
-			{
-				Command_ABL_demo.segment[i].A = state_A2[j];
-				Command_ABL_demo.segment[i].B = state_B2[j];
-				Command_ABL_demo.segment[i].L = state_L2[j];
-			}
-			for (int i = 6; i < 9; i++)
+
+			flag = 0;		
+		}
+		else
+		{
+			for (int i = 0; i < 9; i++)
 			{
 				Command_ABL_demo.segment[i].A = 0;
 				Command_ABL_demo.segment[i].B = 0;
@@ -169,7 +197,7 @@ int main(int argc, char **argv)
 			pub1.publish(Command_ABL_demo);
 			usleep(ts);
 		}
-
+		
 		r.sleep();
 	}
 
