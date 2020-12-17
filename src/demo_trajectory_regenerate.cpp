@@ -61,10 +61,15 @@ static void readFromFile()
 	}
 	else
 	{
-		while (!inFile.eof())
+		while (true)
 		{
 			inFile>>mode_in>>x_in>>y_in>>z_in>>a_in[0]>>b_in[0]>>l_in[0]>>a_in[1]>>b_in[1]>>l_in[1]>>a_in[2]>>b_in[2]>>l_in[2]>>a_in[3]>>b_in[3]>>l_in[3]>>a_in[4]>>b_in[4]>>l_in[4]>>a_in[5]>>b_in[5]>>l_in[5];
 		
+			if ( inFile.eof() )	
+			{
+				break;
+			}	
+
 			for (int i = 0; i < 6; i++)
 			{
 				s_a.push_back(a_in[i]);
@@ -85,7 +90,7 @@ static void readFromFile()
 				s_A.push_back(s_a1);
 				s_B.push_back(s_b1);
 				s_L.push_back(s_l1);
-			}			
+			}	
 		}		
 	}
 
@@ -145,6 +150,14 @@ int main(int argc, char **argv)
 	ros::Publisher  pub1 = nh.advertise<origarm_ros::Command_ABL>("Cmd_ABL_joy", 100);	
 
 	readFromFile();
+
+	// for (int i = 0; i < s_A.size(); i++)
+	// {
+	// 	for (int j = 0; j < s_A[0].size(); j++)
+	// 	{
+	// 		printf("state_A[%d][%d]: %f\n", i, j, s_A[i][j]);
+	// 	}		
+	// }
 
 	state_A = LinearDiffTrajGeneration(s_A, 10);
 	state_B = LinearDiffTrajGeneration(s_B, 10);
