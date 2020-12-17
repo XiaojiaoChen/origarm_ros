@@ -15,15 +15,31 @@ float genetraj(float ps, float pe, int step, int tstep)
 
 const int mt = 1000; //1ms
 int ts = 10*mt;     //time sleep at each point
-int tstep[]={800, 500};
+int tstep[]={500, 400, 500, 300, 1200};
 int flag = 1;
 
-float alpha1 =  0.433002;
-float alpha2 =  0.0;
-float alpha3 = -0.321001;
-float length1 = 0.0509096;
-float length2 = 0.0548099;
-float length3 = 0.0548099;
+// float alpha1 =  0.414002;
+// float alpha2 =  0.0;
+// float alpha3 = -0.342001;
+// float length1 = 0.055;
+// float length2 = 0.065;
+// float length3 = 0.056;
+
+// float alpha1 =  0.201;
+// float alpha2 =  0.0;
+// float alpha3 = -0.164;
+// float length1 = 0.0458593;
+// float length2 = 0.035;
+// float length3 = 0.0527699;
+
+float alpha1[2] = {0.414002, 0.414002};
+float alpha2[2] = {0, 0};
+float alpha3[2] = {-0.342001, -0.342001};
+
+float length1[2] = {0.055, 0.0458593};
+float length2[2] = {0.075, 0.035};
+float length3[2] = {0.056, 0.0527699};
+
 float beta;
 
 int main(int argc, char **argv)
@@ -36,31 +52,29 @@ int main(int argc, char **argv)
 
 	while (ros::ok())
 	{				
-		origarm_ros::Command_ABL Command_ABL_demo;
-		
-		//change beta 0->2*pi
-		if (flag)
+		origarm_ros::Command_ABL Command_ABL_demo;		
+		if (flag == 1) //initial pose hold for 5 sec
 		{
-			for (int i = 0; i < tstep[0]; i++)
+			for (int i = 0; i < tstep[2]; i++)
 			{
-				beta = genetraj(0, 2*M_PI, i, tstep[0]);
+				beta = 0;
 				for (int i = 0; i < 2; i++)
 				{
-					Command_ABL_demo.segment[i].A = alpha1;
+					Command_ABL_demo.segment[i].A = alpha1[0];
 					Command_ABL_demo.segment[i].B = beta;
-					Command_ABL_demo.segment[i].L = length1;
+					Command_ABL_demo.segment[i].L = length1[0];
 				}
 				for (int i = 2; i < 4; i++)
 				{
-					Command_ABL_demo.segment[i].A = alpha2;
+					Command_ABL_demo.segment[i].A = alpha2[0];
 					Command_ABL_demo.segment[i].B = beta;
-					Command_ABL_demo.segment[i].L = length2;
+					Command_ABL_demo.segment[i].L = length2[0];
 				}
 				for (int i = 4; i < 6; i++)
 				{
-					Command_ABL_demo.segment[i].A = alpha3;
+					Command_ABL_demo.segment[i].A = alpha3[0];
 					Command_ABL_demo.segment[i].B = beta;
-					Command_ABL_demo.segment[i].L = length3;
+					Command_ABL_demo.segment[i].L = length3[0];
 				}
 				for (int i = 6; i < SEGNUM; i++)
 				{
@@ -70,10 +84,233 @@ int main(int argc, char **argv)
 				}
 
 				pub1.publish(Command_ABL_demo);					
-				usleep(ts);
+				usleep(ts);							
+			}
 
-				flag = 0; 			
-			}			
+			flag = 2; 			
+		}
+		else if (flag == 2) // maximum circle 
+		{
+			for (int i = 0; i < tstep[4]; i++)
+			{
+				beta = genetraj(0, M_PI, i, tstep[4]);
+				for (int i = 0; i < 2; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha1[0];
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length1[0];
+				}
+				for (int i = 2; i < 4; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha2[0];
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length2[0];
+				}
+				for (int i = 4; i < 6; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha3[0];
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length3[0];
+				}
+				for (int i = 6; i < SEGNUM; i++)
+				{
+					Command_ABL_demo.segment[i].A = 0;
+					Command_ABL_demo.segment[i].B = 0;
+					Command_ABL_demo.segment[i].L = length0;
+				}
+
+				pub1.publish(Command_ABL_demo);					
+				usleep(ts);							
+			}
+			
+			flag = 3; 			
+		}
+		else if (flag == 3) // maximum ending position hold for 3 sec
+		{
+			for (int i = 0; i < tstep[3]; i++)
+			{
+				beta = M_PI;
+				for (int i = 0; i < 2; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha1[0];
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length1[0];
+				}
+				for (int i = 2; i < 4; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha2[0];
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length2[0];
+				}
+				for (int i = 4; i < 6; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha3[0];
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length3[0];
+				}
+				for (int i = 6; i < SEGNUM; i++)
+				{
+					Command_ABL_demo.segment[i].A = 0;
+					Command_ABL_demo.segment[i].B = 0;
+					Command_ABL_demo.segment[i].L = length0;
+				}
+
+				pub1.publish(Command_ABL_demo);					
+				usleep(ts);							
+			}
+
+			flag = 4; 	
+		}
+		else if (flag == 4) // maximum position to minimum position
+		{
+			for (int i = 0; i < tstep[1]; i++)
+			{
+				float alpha_1 = genetraj(alpha1[0], alpha1[1], i, tstep[1]);
+				float alpha_2 = 0;
+				float alpha_3 = genetraj(alpha3[0], alpha3[1], i, tstep[1]);
+				float beta = M_PI;
+				float length_1 = genetraj(length1[0], length1[1], i, tstep[1]);
+				float length_2 = genetraj(length2[0], length2[1], i, tstep[1]);
+				float length_3 = genetraj(length3[0], length3[1], i, tstep[1]);
+
+				for (int i = 0; i < 2; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha_1;
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length_1;
+				}
+				for (int i = 2; i < 4; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha_2;
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length_2;
+				}
+				for (int i = 4; i < 6; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha_3;
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length_3;
+				}
+				for (int i = 6; i < SEGNUM; i++)
+				{
+					Command_ABL_demo.segment[i].A = 0;
+					Command_ABL_demo.segment[i].B = 0;
+					Command_ABL_demo.segment[i].L = length0;
+				}
+
+				pub1.publish(Command_ABL_demo);					
+				usleep(ts);	
+			}
+
+			flag = 5;
+		}
+		else if (flag == 5) // minimum starting pose hold for 3 sec
+		{
+			for (int i = 0; i < tstep[3]; i++)
+			{
+				beta = M_PI;
+				for (int i = 0; i < 2; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha1[1];
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length1[1];
+				}
+				for (int i = 2; i < 4; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha2[1];
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length2[1];
+				}
+				for (int i = 4; i < 6; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha3[1];
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length3[1];
+				}
+				for (int i = 6; i < SEGNUM; i++)
+				{
+					Command_ABL_demo.segment[i].A = 0;
+					Command_ABL_demo.segment[i].B = 0;
+					Command_ABL_demo.segment[i].L = length0;
+				}
+
+				pub1.publish(Command_ABL_demo);					
+				usleep(ts);							
+			}
+
+			flag = 6; 	
+		}
+		else if (flag == 6) // minimum circle
+		{
+			for (int i = 0; i < tstep[0]; i++)
+			{
+				beta = genetraj(M_PI, 2*M_PI, i, tstep[0]);
+				for (int i = 0; i < 2; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha1[1];
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length1[1];
+				}
+				for (int i = 2; i < 4; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha2[1];
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length2[1];
+				}
+				for (int i = 4; i < 6; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha3[1];
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length3[1];
+				}
+				for (int i = 6; i < SEGNUM; i++)
+				{
+					Command_ABL_demo.segment[i].A = 0;
+					Command_ABL_demo.segment[i].B = 0;
+					Command_ABL_demo.segment[i].L = length0;
+				}
+
+				pub1.publish(Command_ABL_demo);					
+				usleep(ts);							
+			}
+
+			flag = 7;
+		}
+		else if (flag == 7) // minimum position hold for 3 sec
+		{
+			for (int i = 0; i < tstep[3]; i++)
+			{
+				beta = 2*M_PI;
+				for (int i = 0; i < 2; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha1[1];
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length1[1];
+				}
+				for (int i = 2; i < 4; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha2[1];
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length2[1];
+				}
+				for (int i = 4; i < 6; i++)
+				{
+					Command_ABL_demo.segment[i].A = alpha3[1];
+					Command_ABL_demo.segment[i].B = beta;
+					Command_ABL_demo.segment[i].L = length3[1];
+				}
+				for (int i = 6; i < SEGNUM; i++)
+				{
+					Command_ABL_demo.segment[i].A = 0;
+					Command_ABL_demo.segment[i].B = 0;
+					Command_ABL_demo.segment[i].L = length0;
+				}
+
+				pub1.publish(Command_ABL_demo);					
+				usleep(ts);							
+			}
+
+			flag = 0; 	
 		}
 		else
 		{
@@ -81,7 +318,7 @@ int main(int argc, char **argv)
 			{
 				Command_ABL_demo.segment[i].A = 0;
 				Command_ABL_demo.segment[i].B = 0;
-				Command_ABL_demo.segment[i].L = 0.055;
+				Command_ABL_demo.segment[i].L = length0;
 			}
 		}
 						

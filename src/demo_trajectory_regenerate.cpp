@@ -19,13 +19,14 @@ using namespace std;
 
 ifstream inFile;
 const int ms = 1000;  //1ms
-int ts = 1000*ms;
+int ts = 50*ms;
 
 int mode_in;
 float x_in, y_in, z_in;
 float a_in[6], b_in[6], l_in[6];
 
 int flag = 1;
+int period = 100;
 
 vector<vector<float>> s_A;
 vector<vector<float>> s_B;
@@ -36,7 +37,7 @@ vector<vector<float>> state_B;
 vector<vector<float>> state_L;
 
 //generate single point by defining starting and ending point
-static float genetraj(float ps, float pe, int step, int tstep)
+static float lineardiffgenetraj(float ps, float pe, int step, int tstep)
 {
 	float pm = ps + step*(pe-ps)/(tstep-1); 
 	return pm;
@@ -52,7 +53,7 @@ static void readFromFile()
 	vector<float> s_b1;
 	vector<float> s_l1;
 
-	inFile.open("/home/ubuntu/catkin_ws/src/origarm_ros/predefined_param/trajp_2seg.txt", ios::in);
+	inFile.open("/home/ubuntu/catkin_ws/src/origarm_ros/predefined_param/trajp_2seg_1.txt", ios::in);
 
 	if (!inFile)
 	{
@@ -97,7 +98,7 @@ static void readFromFile()
 	inFile.close();	
 }
 
-static vector<vector<float>> LinearDiffTrajGeneration(vector<vector<float>> & vect1, int tstep)
+static vector<vector<float>> TrajGeneration(vector<vector<float>> & vect1, int tstep)
 {
 	int vectsize = vect1.size(); // return row size of 2d vector, size of timestamp read from file
 	
@@ -117,7 +118,7 @@ static vector<vector<float>> LinearDiffTrajGeneration(vector<vector<float>> & ve
 
 			for (int k = 0; k < tstep-1; k++)
 			{
-				float pm = genetraj(ps, pe, k, tstep);
+				float pm = lineardiffgenetraj(ps, pe, k, tstep);
 				state1.push_back(pm);				
 				// printf("state1[%d]: %f\n", t, state1[t]);
 				t ++;
@@ -159,9 +160,9 @@ int main(int argc, char **argv)
 	// 	}		
 	// }
 
-	state_A = LinearDiffTrajGeneration(s_A, 10);
-	state_B = LinearDiffTrajGeneration(s_B, 10);
-	state_L = LinearDiffTrajGeneration(s_L, 10);
+	state_A = TrajGeneration(s_A, period);
+	state_B = TrajGeneration(s_B, period);
+	state_L = TrajGeneration(s_L, period);
 
 	// for (int i = 0; i < state_A.size(); i++)
 	// {
@@ -175,7 +176,30 @@ int main(int argc, char **argv)
 	{
 		origarm_ros::Command_ABL Command_ABL_demo;
 		
-		if (flag)
+		if (flag == 1)
+		{
+			for (int t = 0; t < 100; t++)
+			{
+				for (int i = 0; i < 6; i++)
+				{
+					Command_ABL_demo.segment[i].A = state_A[i][0];
+					Command_ABL_demo.segment[i].B = state_B[i][0];
+					Command_ABL_demo.segment[i].L = state_L[i][0];
+				}
+				for (int i = 6; i < 9; i++)
+				{
+					Command_ABL_demo.segment[i].A = 0;
+					Command_ABL_demo.segment[i].B = 0;
+					Command_ABL_demo.segment[i].L = length0;
+				}
+				
+				pub1.publish(Command_ABL_demo);
+				usleep(ts);
+			}
+
+			flag = 2;
+		}
+		else if (flag == 2)
 		{
 			for (int j = 0; j < state_A[0].size(); j++)
 			{

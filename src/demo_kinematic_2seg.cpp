@@ -25,11 +25,21 @@ int flag = 1;
 // float length1 = 0.0459096;
 // float length2 = 0.0508099;
 
+// float alpha1 =  0.414002;
+// float alpha2 = -0.342001;
+// float length1 = 0.055;
+// float length2 = 0.056;
+
 // point with smaller radius
-float alpha1 =  0.198;
-float alpha2 = -0.139;
-float length1 = 0.0403279;
-float length2 = 0.0475594;
+// float alpha1 =  0.198;
+// float alpha2 = -0.139;
+// float length1 = 0.0403279;
+// float length2 = 0.0475594;
+
+float alpha1 =  0.201;
+float alpha2 = -0.164;
+float length1 = 0.0458593;
+float length2 = 0.0527699;
 
 float beta;
 
@@ -71,9 +81,10 @@ int main(int argc, char **argv)
 				}
 
 				pub1.publish(Command_ABL_demo);					
-				usleep(ts);
-				flag = 2;
-			}			
+				usleep(ts);				
+			}
+			
+			flag = 2;			
 		}
 		else if (flag == 2)
 		{
