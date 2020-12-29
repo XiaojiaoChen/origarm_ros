@@ -114,7 +114,7 @@ int main(int argc, char** argv)
 					event.value);
 				if (event.value == 0)
 				{
-					keycode.keycodePressed=	event.code;
+					keycode.keycodePressed =	event.code;
 					pub.publish(keycode);
 					printf("KEY %d pressed\n", keycode.keycodePressed);
 				}				
