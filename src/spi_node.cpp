@@ -74,6 +74,9 @@ int flag_saveSensor = 0;
 string sensorDataFileName = "";
 ofstream sensorDataStream;
 ros::Time sensorDataBeginTime;
+
+int16_t info_receive[1]; // receive force sensor information
+
 std::string getTimeString()
 {
 	time_t rawtime;
@@ -125,6 +128,9 @@ static void saveSelectedToFile(string filePath)
 				 << endl;
 		}
 	}
+
+	data << info_receive[0] << endl;
+
 	data.close();
 	cout << "Selected data Saved" << endl;
 }
@@ -495,6 +501,8 @@ int main(int argc, char *argv[])
 				Sensor.sensor_segment[i].sensor_actuator[j].pose.orientation.z = sensorData.data[i][j].quaternion.imuData[3] / 32768.0;
 			}
 		}
+
+		info_receive[0] = sensorData.infos[0];
 
 		memcpy(&sensorData_last, &sensorData, sizeof(SPIDATA_T));
 
