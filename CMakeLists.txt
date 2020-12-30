@@ -367,3 +367,9 @@ add_dependencies(demo_abl_datacollection ${${PROJECT_NAME}_EXPORTED_TARGETS} ${c
 target_link_libraries(demo_abl_datacollection           
    ${catkin_LIBRARIES}
  )
+
+add_executable(Kinematics_grids src/Kinematics_grids.cpp) 
+add_dependencies(Kinematics_grids ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+target_link_libraries(Kinematics_grids           
+   ${catkin_LIBRARIES}
+ )
