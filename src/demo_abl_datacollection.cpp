@@ -23,13 +23,12 @@ float genetraj(float ps, float pe, int step, int tstep)
 
 const int mt = 1000; //1ms
 int ts = 2500*mt;      //time sleep at each point
-int tsleep = 2000*mt;
-int a1_step = 6; //0->amax
-int b1_step = 6; //0-bmax
-int l1_step = 5; //l0-lengthmax / l0->lengthmin
-int a2_step = 12; //amin->amax
-int b2_step = 6; //0-bmax
-int l2_step = 5; //l0-lengthmax / l0->lengthmin
+int a1_step = 3; //0->amax
+int b1_step = 2; //0-bmax
+int l1_step = 3; //l0-lengthmax / l0->lengthmin
+int a2_step = 6; //amin->amax
+int b2_step = 2; //0-bmax
+int l2_step = 3; //l0-lengthmax / l0->lengthmin
 int flag = 1;
 
 float alpha1 =  0;
@@ -81,10 +80,18 @@ std::string getTimeNsecString()
 	std::string ret = std::to_string(pasttimems);
 	return ret;
 }
+
 static void saveABLDataToFile()
 {
 	std::string curtime = getTimeNsecString();
 	ABLDataStream << curtime << alpha1 << " " << beta1 << " " << length1 << " " << alpha2 << " " << beta2 << " " << length2 << endl;
+}
+
+float* generateABL(float range[12] , int step[6], int internal[6])
+{
+	float abl_command[6] = {0, 0, length0, 0, 0, length0};
+
+	return abl_command;
 }
 
 void keyCallback(const origarm_ros::keynumber &key)
@@ -108,12 +115,13 @@ void keyCallback(const origarm_ros::keynumber &key)
 	}	
 }
 
+
+
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "demo_abl_datacollection");
 	ros::NodeHandle nh;	
 	ros::Rate r(100);     //Hz
-
 
 	ABLDataPath = ros::package::getPath("origarm_ros") + "/data/ABLData/";
 
@@ -122,8 +130,7 @@ int main(int argc, char **argv)
 	origarm_ros::Command_ABL Command_ABL_demo;
 
 	while (ros::ok())
-	{						
-		
+	{							
 		if (flag == 1) // start from initial position
 		{
 			alpha1 = 0;
@@ -162,17 +169,17 @@ int main(int argc, char **argv)
 		}
 		else if (flag == 2)
 		{
-			for (int step_l2 = 0; step_l2 < l2_step; step_l2 ++)
+			for (int step_l1 = 0; step_l1 < l1_step; step_l1 ++)
 			{
-				for (int step_b2 = 0; step_b2 < b2_step; step_b2 ++)
+				for (int step_b1 = 0; step_b1 < b1_step; step_b1 ++)
 				{
-					for (int step_a2 = 0; step_a2 < a2_step; step_a2 ++)
+					for (int step_a1 = 0; step_a1 < a1_step; step_a1 ++)
 					{
-						for (int step_l1 = 0; step_l1 < l1_step; step_l1 ++)
+						for (int step_l2 = 0; step_l2 < l2_step; step_l2 ++)
 						{
-							for (int step_b1 = 0; step_b1 < b1_step; step_b1 ++)
+							for (int step_b2 = 0; step_b2 < b2_step; step_b2 ++)
 							{
-								for (int step_a1 = 0; step_a1 < a1_step; step_a1 ++)
+								for (int step_a2 = 0; step_a2 < a2_step; step_a2 ++)
 								{
 									length2 = genetraj(length0, lengthmax, step_l2, l2_step);
 									beta2 = genetraj(betamin, betamax, step_b2, b2_step);
@@ -249,17 +256,17 @@ int main(int argc, char **argv)
 		}
 		else if (flag == 4)
 		{
-			for (int step_l2 = 0; step_l2 < l2_step; step_l2 ++)
+			for (int step_l1 = 0; step_l1 < l1_step; step_l1 ++)
 			{
-				for (int step_b2 = 0; step_b2 < b2_step; step_b2 ++)
+				for (int step_b1 = 0; step_b1 < b1_step; step_b1 ++)
 				{
-					for (int step_a2 = 0; step_a2 < a2_step; step_a2 ++)
+					for (int step_a1 = 0; step_a1 < a1_step; step_a1 ++)
 					{
-						for (int step_l1 = 0; step_l1 < l1_step; step_l1 ++)
+						for (int step_l2 = 0; step_l2 < l2_step; step_l2 ++)
 						{
-							for (int step_b1 = 0; step_b1 < b1_step; step_b1 ++)
+							for (int step_b2 = 0; step_b2 < b2_step; step_b2 ++)
 							{
-								for (int step_a1 = 0; step_a1 < a1_step; step_a1 ++)
+								for (int step_a2 = 0; step_a2 < a2_step; step_a2 ++)
 								{
 									length2 = genetraj(length0, lengthmin, step_l2, l2_step);
 									beta2 = genetraj(betamin, betamax, step_b2, b2_step);
@@ -297,7 +304,7 @@ int main(int argc, char **argv)
 			}
 
 			flag = 0;			
-		}		
+		}
 		else
 		{
 			alpha1 = 0;
@@ -316,11 +323,29 @@ int main(int argc, char **argv)
 
 			pub1.publish(Command_ABL_demo);				
 		}
-					
-		// ros::spinOnce();				
-		r.sleep();
+
+		// for (int i = 0; i < 3; i++)
+		// {
+		// 	Command_ABL_demo.segment[i].A = alpha1;
+		// 	Command_ABL_demo.segment[i].B = beta1;
+		// 	Command_ABL_demo.segment[i].L = length1;
+		// }
+		// for (int i = 3; i < 6; i++)
+		// {
+		// 	Command_ABL_demo.segment[i].A = alpha2;
+		// 	Command_ABL_demo.segment[i].B = beta2;
+		// 	Command_ABL_demo.segment[i].L = length2;
+		// }
+		// for (int i = 6; i < SEGNUM; i++)
+		// {
+		// 	Command_ABL_demo.segment[i].A = 0;
+		// 	Command_ABL_demo.segment[i].B = 0;
+		// 	Command_ABL_demo.segment[i].L = length0;
+		// }
+
+		// pub1.publish(Command_ABL_demo);													
+		// r.sleep();
 	}
 		
 	return 0;
-
 }
