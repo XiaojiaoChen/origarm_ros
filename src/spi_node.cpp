@@ -180,8 +180,6 @@ static void saveABLnSensorDataToFile()
 		}
 	}
 
-	ABLDataStream << info_receive[0] << endl;
-
 	for (int i = 0; i < 6; i++)
 	{
 		ABLDataStream << i << " " << alpha_data[i] << " " << beta_data[i] << " "<< length_data[i] << " " << endl;
@@ -298,6 +296,9 @@ static void writeCommand()
 	if(flag_zero){
 		commandData.infos[0]='z';
 		flag_zero=0;
+	}
+	else{
+		commandData.infos[0]=0x00;
 	}
 }
 

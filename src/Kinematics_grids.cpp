@@ -35,7 +35,7 @@ static float deg2rad = M_PI / 180.0f;
 
 ifstream inFile;
 string GivenDataFilePath = ros::package::getPath("origarm_ros") + "/data/GridData/";
-string GivenDataFileName = "data2_1.txt";
+string GivenDataFileName = "data1.txt";
 string name;
 
 // given data 2d vector[N][13], N = max(dataNo)
