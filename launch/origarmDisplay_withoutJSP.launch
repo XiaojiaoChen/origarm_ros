@@ -6,7 +6,7 @@
 
   <node name="kinematicsEquivalence_node" pkg="origarm_ros" type="kinematicsEquivalence" />
 
-  <!--node name="joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" /-->
+  <node name="joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" />
   <node name="robot_state_publisher_node" pkg="robot_state_publisher" type="robot_state_publisher" />
   <node name="rqt_gui_node" pkg="rqt_gui" type="rqt_gui" output="screen" />
   <node name="rviz_node" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />

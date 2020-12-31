@@ -72,6 +72,7 @@ static string quattDummyFileName = "imu_move_segment0.txt";
 static string quatSaveFileName = "data_imu0.txt";
 static string quatReadFileName = "data_imu0.txt";
 static string IMUDataPath = "";
+static void InitFrames();
 
 /*Indication of whether the IMU is working well*/
 static int goodIMU[SEGNUM][ACTNUM] = {
@@ -249,6 +250,7 @@ public:
             printf(" KEY_C pressed!\r\n");
             string path = IMUDataPath + quatSaveFileName;
             saveQuatToFile(QuattInIMU, path);
+            InitFrames();
         }
         else if (key.keycodePressed == KEY_R) // 'r' pressed
         {
