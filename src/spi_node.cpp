@@ -238,7 +238,7 @@ void keyCallback(const origarm_ros::keynumber &key)
 	else if (key.keycodePressed == KEY_Z)
 	{
 		printf(" KEY_Z pressed!\r\n");
-				flag_zero=1;
+		flag_zero=1;
 	}
 }
 
@@ -293,11 +293,13 @@ static void writeCommand()
 			}
 		}
 	}
-	if(flag_zero){
+	if(flag_zero)
+	{
 		commandData.infos[0]='z';
 		flag_zero=0;
 	}
-	else{
+	else
+	{
 		commandData.infos[0]=0x00;
 	}
 }

@@ -859,7 +859,7 @@ int main(int argc, char **argv)
         //     printf("random_number[%d]: %d\r\n", i, randn_array[i]);
         // }
                
-        int caseNo = 0;
+        int caseNo = 1;
         float distp = 1;
         float disto = 1;
         generatetarget(caseNo, randn_array, distp, disto);        
@@ -885,12 +885,12 @@ int main(int argc, char **argv)
         {
             solution_selected  = SelectSolution(target_pos, target_OrtCarCoord, solution_candidate, ep, eo, givenData);            
         }
+        time_t dt5 = getCurrentTime()-curr_time;
+        diff_time = dt1 + dt2 + dt3 + dt4 + dt5;
 
-        diff_time = getCurrentTime()-curr_time;
-
+        printf("seperated computational time (us): %lu, %lu, %lu, %lu, %lu\r\n", dt1, dt2, dt3, dt4, dt5);
         ResultsDisplay(); 
-        printf("duration (us): %lu, %lu, %lu, %lu, %lu\r\n", dt1, dt2, dt3, dt4, diff_time);
-
+        
         if (caseNo == 1)
         {
             Eigen::Quaternionf closep_quat(givenData[randn_array[0]][12], givenData[randn_array[0]][9], givenData[randn_array[0]][10], givenData[randn_array[0]][11]);
