@@ -355,3 +355,21 @@ add_dependencies(demo_trajectory ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 target_link_libraries(demo_trajectory            
    ${catkin_LIBRARIES}
  )
+
+add_executable(demo_trajectory_regenerate src/demo_trajectory_regenerate.cpp) 
+add_dependencies(demo_trajectory_regenerate ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+target_link_libraries(demo_trajectory_regenerate           
+   ${catkin_LIBRARIES}
+ )
+
+add_executable(demo_abl_datacollection src/demo_abl_datacollection.cpp) 
+add_dependencies(demo_abl_datacollection ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+target_link_libraries(demo_abl_datacollection           
+   ${catkin_LIBRARIES}
+ )
+
+add_executable(Kinematics_grids src/Kinematics_grids.cpp) 
+add_dependencies(Kinematics_grids ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+target_link_libraries(Kinematics_grids           
+   ${catkin_LIBRARIES}
+ )

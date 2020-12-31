@@ -70,10 +70,22 @@ int time_hor;
 int time_min;
 int time_sec;
 
+float alpha_data[6];
+float beta_data[6];
+float length_data[6];
+int flag_saveABLnSensor = 0; 
+string ABLDataFileName = "";
+string ABLDataPath = "";
+ofstream ABLDataStream;
+ros::Time ABLDataBeginTime;
+
 int flag_saveSensor = 0;
 string sensorDataFileName = "";
 ofstream sensorDataStream;
 ros::Time sensorDataBeginTime;
+
+int16_t info_receive[1]; // receive force sensor information
+
 std::string getTimeString()
 {
 	time_t rawtime;
@@ -125,6 +137,9 @@ static void saveSelectedToFile(string filePath)
 				 << endl;
 		}
 	}
+
+	data << info_receive[0] << endl;
+
 	data.close();
 	cout << "Selected data Saved" << endl;
 }
@@ -144,7 +159,34 @@ static void saveSensorDataToFile()
 							 << endl;
 		}
 	}
+
+	sensorDataStream << info_receive[0] << endl;
 	sensorDataStream << endl;
+}
+
+static void saveABLnSensorDataToFile()
+{
+	std::string curtime = getTimeNsecString();
+
+	for (int p = 0; p < 6; p++)
+	{		
+		for (int q = 0; q < ACTNUM; q++)
+		{
+			ABLDataStream << curtime << " " << p << " " << q << " " << commandData.data[p][q].values[0] << " " << sensorData.data[p][q].pressure << " " << sensorData.data[p][q].distance
+							 << " " << sensorData.data[p][q].quaternion.imuData[0] << " " << sensorData.data[p][q].quaternion.imuData[1] << " " << sensorData.data[p][q].quaternion.imuData[2] << " " << sensorData.data[p][q].quaternion.imuData[3]
+							 << endl;
+		}
+	}
+
+	ABLDataStream << info_receive[0] << endl;
+
+	for (int i = 0; i < 6; i++)
+	{
+		ABLDataStream << i << " " << alpha_data[i] << " " << beta_data[i] << " "<< length_data[i] << " " << endl;
+	}
+
+	ABLDataStream << endl;
+	
 }
 
 void keyCallback(const origarm_ros::keynumber &key)
@@ -174,6 +216,25 @@ void keyCallback(const origarm_ros::keynumber &key)
 		saveSelectedToFile((SelectedDataPath + "selectedData_" + getTimeString() + ".txt"));
 		cout << "Selected data Saved" << endl;
 	}
+	else if (key.keycodePressed == KEY_J)
+	{
+		printf(" KEY_J pressed!\r\n");
+
+		flag_saveABLnSensor = 1;
+		ABLDataBeginTime = ros::Time::now();
+		ABLDataFileName = "ABLData_" + getTimeString() + ".txt";
+		ABLDataStream.open(ABLDataPath + ABLDataFileName, ios::app); // ios::app
+
+		cout << "Saving ABL & sensor data to" + ABLDataPath + ABLDataFileName << endl;
+	}
+	else if (key.keycodePressed == KEY_L)
+	{
+		printf(" KEY_L pressed!\r\n");
+
+		flag_saveABLnSensor = 0;		
+		ABLDataStream.close(); // ios::app
+		cout << "ABL & sensor data Saved" << endl;
+	}
 }
 
 void pressureCallback(const origarm_ros::Command_Pre_Open &pressured)
@@ -197,6 +258,16 @@ void modeNumberCallback(const origarm_ros::modenumber &msg)
 {
 	controlmode = msg.modeNumber;
 	status = msg.status;
+}
+
+void ABLCallback(const origarm_ros::Command_ABL &msg)
+{
+	for (int i = 0; i < 6; i++)
+	{
+		alpha_data[i] = msg.segment[i].A;
+		beta_data[i] = msg.segment[i].B;
+		length_data[i] = msg.segment[i].L;
+	}
 }
 
 static void writeCommand()
@@ -392,8 +463,9 @@ int main(int argc, char *argv[])
 	ros::NodeHandle nh;
 	ROS_INFO("spi_node starts!");
 
-	SensorDataPath = ros::package::getPath("origarm_ros") + "/data/sensorData/";
+	SensorDataPath   = ros::package::getPath("origarm_ros") + "/data/sensorData/";
 	SelectedDataPath = ros::package::getPath("origarm_ros") + "/data/selectedData/";
+	ABLDataPath      = ros::package::getPath("origarm_ros") + "/data/ABLData/";
 
 	int ret = 0;
 	int fd;
@@ -442,6 +514,7 @@ int main(int argc, char *argv[])
 	ros::Subscriber sub1 = nh.subscribe("Command_Pre_Open", 1, pressureCallback);
 	ros::Subscriber sub2 = nh.subscribe("modenumber", 1, modeNumberCallback);
 	ros::Subscriber sub3 = nh.subscribe("segnumber", 1, segNumberCallback);
+	ros::Subscriber sub4 = nh.subscribe("Cmd_ABL_joy", 1, ABLCallback);
 	ros::Publisher pub1 = nh.advertise<origarm_ros::Sensor>("Sensor", 100);
 
 	ros::Rate r(100);
@@ -455,7 +528,7 @@ int main(int argc, char *argv[])
 
 		transfer(fd, (uint8_t *)(&commandData), (uint8_t *)(&sensorData), sizeof(SPIDATA_R));
 
-		/*printf("time:%d, segN:%d, mode:%d, status: %d\r\n", t, segNumber, controlmode, status); 
+		printf("time:%d, segN:%d, mode:%d, status: %d\r\n", t, segNumber, controlmode, status); 
 		//printf("CommandPressure        | sensorData\r\n"); 
 		for (int i = 0; i < SEGNUM; i++)
 		{
@@ -479,7 +552,7 @@ int main(int argc, char *argv[])
 				sensorData.data[i][4].distance,
 				sensorData.data[i][5].distance
 				);			
-		}*/
+		}
 
 		origarm_ros::Sensor Sensor;
 		for (int i = 0; i < SEGNUM; i++)
@@ -496,6 +569,8 @@ int main(int argc, char *argv[])
 			}
 		}
 
+		info_receive[0] = sensorData.infos[0];
+
 		memcpy(&sensorData_last, &sensorData, sizeof(SPIDATA_T));
 
 		pub1.publish(Sensor);
@@ -503,6 +578,11 @@ int main(int argc, char *argv[])
 		if (flag_saveSensor)
 		{
 			saveSensorDataToFile();
+		}
+
+		if (flag_saveABLnSensor)
+		{
+			saveABLnSensorDataToFile();
 		}
 
 		t = t + 1;
