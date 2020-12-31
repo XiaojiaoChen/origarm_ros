@@ -85,6 +85,8 @@ ofstream sensorDataStream;
 ros::Time sensorDataBeginTime;
 
 int16_t info_receive[1]; // receive force sensor information
+int flag_zero = 0;
+
 
 std::string getTimeString()
 {
@@ -235,6 +237,11 @@ void keyCallback(const origarm_ros::keynumber &key)
 		ABLDataStream.close(); // ios::app
 		cout << "ABL & sensor data Saved" << endl;
 	}
+	else if (key.keycodePressed == KEY_Z)
+	{
+		printf(" KEY_Z pressed!\r\n");
+				flag_zero=1;
+	}
 }
 
 void pressureCallback(const origarm_ros::Command_Pre_Open &pressured)
@@ -287,6 +294,10 @@ static void writeCommand()
 				commandData.data[i][j].values[0] = Cmd_pressure[i][j];
 			}
 		}
+	}
+	if(flag_zero){
+		commandData.infos[0]='z';
+		flag_zero=0;
 	}
 }
 
