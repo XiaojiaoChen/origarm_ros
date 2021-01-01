@@ -228,23 +228,23 @@ int main(int argc, char **argv)
 		trajectory_group.push_back(trajectoryGroup);
 	}
 
-	for (int i = 0; i < trajectory_group.size(); i++)
-	{
-		for (int j = 0; j < trajectory_group[i].size(); j++)
-		{
-			for (int k = 0; k < trajectory_group[i][j].size(); k++)
-			{
-				printf("trajectory_group[%d][%d][%d]: %.4f\r\n", i, j, k, trajectory_group[i][j][k]);
-			}			
-		}
-	}
+	// for (int i = 0; i < trajectory_group.size(); i++)
+	// {
+	// 	for (int j = 0; j < trajectory_group[i].size(); j++)
+	// 	{
+	// 		for (int k = 0; k < trajectory_group[i][j].size(); k++)
+	// 		{
+	// 			printf("trajectory_group[%d][%d][%d]: %.4f\r\n", i, j, k, trajectory_group[i][j][k]);
+	// 		}			
+	// 	}
+	// }
 
 	while (ros::ok())
 	{				
 		writeABLCommand(); 
-		// printf("flag_start: %d, current_step: %d\r\n", flag_start, current_step);
-		// printf("alpha1: %.4f, beta1: %.4f, length1: %.4f, alpha2: %.4f, beta2: %.4f, length2: %.4f\r\n", 
-		// 		alpha1, beta1, length1, alpha2, beta2, length2);
+		printf("flag_start: %d, current_step: %d\r\n", flag_start, current_step);
+		printf("alpha1: %.4f, beta1: %.4f, length1: %.4f, alpha2: %.4f, beta2: %.4f, length2: %.4f\r\n", 
+				alpha1, beta1, length1, alpha2, beta2, length2);
 
 		for (int i = 0; i < 3; i++)
 		{
