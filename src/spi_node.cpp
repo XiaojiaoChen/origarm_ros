@@ -221,7 +221,7 @@ void keyCallback(const origarm_ros::keynumber &key)
 		printf(" KEY_J pressed!\r\n");
 
 		flag_saveABLnSensor = 1;
-		ABLDataBeginTime = ros::Time::now();
+		sensorDataBeginTime = ros::Time::now();
 		ABLDataFileName = "ABLData_" + getTimeString() + ".txt";
 		ABLDataStream.open(ABLDataPath + ABLDataFileName, ios::app); // ios::app
 
