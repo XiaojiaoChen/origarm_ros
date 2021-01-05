@@ -211,7 +211,6 @@ void keyCallback(const origarm_ros::keynumber &key)
 	}
 	else if (key.keycodePressed == KEY_I) // 'I' pressed
 	{
-
 		printf(" KEY_I pressed!\r\n");
 		saveSelectedToFile((SelectedDataPath + "selectedData_" + getTimeString() + ".txt"));
 		cout << "Selected data Saved" << endl;

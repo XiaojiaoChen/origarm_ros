@@ -16,7 +16,7 @@
 using namespace std;
 
 const int mt = 1000; //1ms
-int ts = 2500*mt;    //time sleep at each point
+int ts = 2000*mt;    //time sleep at each point
 
 int current_step = 0;
 int count_step = 0;
@@ -31,22 +31,36 @@ float length2 = length0*3;
 // order: a2, b2, l2, a1, b1, l1
 vector<vector<int>> steps {
 	{      2,      1,       1,      1,      1,       1},
-	{      3,      3,       3,      3,      3,       3},
-	{      4,      1,       1,      1,      1,       1},
-	{      3,      3,       3,      3,      3,       3}};
+	{      6,      2,       2,      3,      2,       2}};
 
 vector<vector<float>> p_start_group{
-	{-0.35*3,      0, 0.055*3,      0,      0, 0.055*3},  //initial
-	{-0.35*3,      0, 0.055*3,      0,      0, 0.055*3},  //l0->lmax
-	{-0.35*3,      0, 0.055*3,      0,      0, 0.055*3},  //initial
-	{-0.35*3,      0, 0.055*3,      0,      0, 0.055*3}}; //l0->lmin
+	{-0.30*3,      0, 0.055*3,      0,      0, 0.055*3},  //initial
+	{-0.30*3,      0, 0.055*3,      0,      0, 0.055*3}   //l0->lmax
+};
 
 vector<vector<float>> p_end_group{
-	{-0.35*3,     0, 0.055*3,      0,      0, 0.055*3},
-	{0.35*3, M_PI/3,  0.08*3, 0.35*3, M_PI/3,  0.08*3},
-	{-0.35*3,     0, 0.055*3,      0,      0, 0.055*3},
-	{0.35*3, M_PI/3,  0.03*3, 0.35*3, M_PI/3,  0.03*3}
-	};
+	{-0.30*3,     0, 0.055*3,      0,      0, 0.055*3},
+	{0.30*3, M_PI/3,  0.03*3, 0.30*3, M_PI/3,  0.03*3}
+};
+
+// vector<vector<int>> steps {
+// 	{      2,      1,       1,      1,      1,       1},
+// 	{      3,      3,       3,      3,      3,       3},
+// 	{      4,      1,       1,      1,      1,       1},
+// 	{      3,      3,       3,      3,      3,       3}};	
+
+// vector<vector<float>> p_start_group{
+// 	{-0.30*3,      0, 0.055*3,      0,      0, 0.055*3},  //initial
+// 	{-0.30*3,      0, 0.055*3,      0,      0, 0.055*3},  //l0->lmax
+// 	{-0.30*3,      0, 0.055*3,      0,      0, 0.055*3},  //initial
+// 	{-0.30*3,      0, 0.055*3,      0,      0, 0.055*3}}; //l0->lmin
+
+// vector<vector<float>> p_end_group{
+// 	{-0.30*3,     0, 0.055*3,      0,      0, 0.055*3},
+// 	{0.30*3, M_PI/3,  0.065*3, 0.30*3, M_PI/3,  0.065*3},
+// 	{-0.30*3,     0, 0.055*3,      0,      0, 0.055*3},
+// 	{0.30*3, M_PI/3,  0.03*3, 0.30*3, M_PI/3,  0.03*3}
+// 	};
 
 vector<vector<float>> trajectoryGroup;
 vector<vector<vector<float>>> trajectory_group;
@@ -89,12 +103,12 @@ void keyCallback(const origarm_ros::keynumber &key)
 {
 	if (key.keycodePressed == KEY_B) // break and reset all command pressure to 0
 	{		
-		// printf("KEY_B pressed!\r\n");
+		printf("KEY_B pressed!\r\n");
 		flag_start = 0;
 	}
 	else if (key.keycodePressed == KEY_J) // same as saving button
 	{
-		// printf("KEY_J pressed!\r\n");
+		printf("KEY_J pressed!\r\n");
 		flag_start = 1;
 	}	
 }
