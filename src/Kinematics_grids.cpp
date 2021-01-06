@@ -36,13 +36,13 @@ static float deg2rad = M_PI / 180.0f;
 ifstream inFile;
 string GivenDataFilePath = ros::package::getPath("origarm_ros") + "/data/GridData/";
 string GivenDataFileName = "data1.txt";
-string name;
+string name = "";
 
 // given data 2d vector[N][13], N = max(dataNo)
 static vector< vector<float> > givenData;
 
 // given PosGrid & OrtGrid, both expressions are necessary
-static vector<float> PosCarGrid_x{-0.3557, -0.1779,      0, 0.0395, 0.1186, 0.1976, 0.2767, 0.3557};
+static vector<float> PosCarGrid_x{-0.3557, -0.1779,      0, 0.1779, 0.3557};
 static vector<float> PosCarGrid_y{-0.3557, -0.1779,      0, 0.1779, 0.3557};
 static vector<float> PosCarGrid_z{ 0.0644,  0.1704, 0.2764, 0.3824, 0.4884};
 static vector<float> OrtSphGrid_omega{0, 0.7879, 1.5758, 2.3637, 3.1516};
@@ -50,7 +50,7 @@ static vector<float> OrtSphGrid_phi  {0, 0.7879, 1.5758, 2.3637, 3.1516};
 static vector<float> OrtSphGrid_theta{0, 1.5733, 3.1466, 4.7199, 6.2932};
 
 static vector<vector<float>> Grid_group{    
-    {-0.3557, -0.1779,      0, 0.0395, 0.1186, 0.1976, 0.2767, 0.3557},
+    {-0.3557, -0.1779,      0, 0.1779, 0.3557},
     {-0.3557, -0.1779,      0, 0.1779, 0.3557},
     { 0.0644,  0.1704, 0.2764, 0.3824, 0.4884},
     {      0,  0.7879, 1.5758, 2.3637, 3.1516},
@@ -197,7 +197,7 @@ static Eigen::Quaternionf OrtCarCoord2quat(Eigen::Vector3f& OrtCarCoord)
     return quat;
 }
 
-//Coord conversion: Cartesian2Sphere, return in [omega; phi; normalized theta]
+//Coord conversion: Cartesian2Sphere, return [omega; phi; normalized theta]
 static Eigen::Vector3f Cartesian2Sphere(Eigen::Vector3f& CartesianCoord)
 {
     Eigen::Vector3f SphereCoord;
@@ -232,7 +232,7 @@ static Eigen::Vector3f Cartesian2Sphere(Eigen::Vector3f& CartesianCoord)
     return SphereCoord;
 }
 
-//Coord conversion: Sphere2Cartesian, return in [x, y, z]
+//Coord conversion: Sphere2Cartesian, return [x, y, z]
 static Eigen::Vector3f Sphere2Cartesian(Eigen::Vector3f& SphereCoord)
 {
     Eigen::Vector3f CartesianCoord;
@@ -378,7 +378,7 @@ static void generateDataGridTable()
                     if (dimension_x == px_No[dataNo] && dimension_y == py_No[dataNo] && dimension_z == pz_No[dataNo])
                     {
                         PosDataGridTable[dimension_x][dimension_y][dimension_z].push_back(dataNo);
-                    }                   
+                    }                                       
                 }
             }
         }
@@ -481,24 +481,6 @@ static void generatetarget(int casen, int rand_no[7], float distp, float disto)
     }
 }
 
-//print 4d vector with unspecified length 
-static void printDataGridTable(vector<vector<vector<vector<int>>>> & gridtable)
-{
-    for (int i = 0; i < gridtable.size(); i++)
-    {
-        for (int j = 0; j < gridtable[i].size(); j++)
-        {
-            for (int k = 0; k < gridtable[i][j].size(); k++)
-            {
-                for (int r = 0; r < gridtable[i][j][k].size(); r++)
-                {
-                    printf("gridtable[%d][%d][%d][%d]: %d\r\n", i, j, k, r, gridtable[i][j][k][r]);
-                }               
-            }
-        }
-    }
-}
-
 //print Vector3df
 static void print3dVector(string& title, Eigen::Vector3f& vect)
 {
@@ -552,72 +534,74 @@ static void ResultsDisplay()
     }   
 }
 
-//search neighbour grid for each dimension, grino: pxn...ozn, gridarray should be GridGroup, new_gridno[0][i], px dimension, i^{th} gridno
-static vector<vector<int>> SearchNeighbourGrid(vector<int> & gridno, vector<vector<float>> & gridarray)
-{    
-    int size_gridno = gridno.size(); //should be 6
-    vector<vector<int>> new_gridno;
-    vector<int> temp_gridno;
-
+//search neighbour grid for each dimension, e.g. grino: 5, new_gridno[]: 4,6
+static vector<int> SearchNeighbourGrid(int gridno, vector<float> & gridarray)
+{      
+    vector<int> new_gridno; 
     new_gridno.push_back(gridno);
-    
-    for (int i = 0; i < size_gridno; i ++)
+
+    int forward  = gridno - 1;
+    int backward = gridno + 1;
+
+    if (forward >= 0 && forward < gridarray.size()-1)
     {
-        int forward  = gridno[i] - 1;
-        int backward = gridno[i] + 1;
-
-        if (forward >= 0 && forward < gridarray[i].size())
-        {
-            temp_gridno.push_back(forward);            
-        }
-
-        if (backward > 0 && backward <= gridarray[i].size())
-        {
-            temp_gridno.push_back(backward);
-        }        
+        new_gridno.push_back(forward);            
     }
 
-    new_gridno.push_back(temp_gridno);
-    
+    if (backward > 0 && backward < gridarray.size()-1)
+    {
+        new_gridno.push_back(backward);
+    }        
+         
     return new_gridno;
 }
 
-static vector<vector<int>> SearchMoreGrid(vector<vector<int>> & gridno, vector<vector<float>> & gridarray)
+static vector<vector<int>> SearchMoreGrids(vector<vector<int>> & gridno, vector<vector<float>> & gridarray)
 {    
-    int size_gridno = gridno.size(); //should be 6
     vector<vector<int>> new_gridno;
     vector<int> temp_gridno;
-  
-    for (int i = 0; i < size_gridno; i ++)
+     
+    for (int i = 0; i < gridno.size(); i ++)
     {
+        vector<int> gridno_temp;
         for (int j = 0; j < gridno[i].size(); j++)
         {
-            int forward  = gridno[i][j] - 1;
-            int backward = gridno[i][j] + 1;
-
-            if (forward >= 0 && forward < gridarray[i].size())
+            
+            temp_gridno = SearchNeighbourGrid(gridno[i][j], gridarray[i]); 
+            for (int k = 0; k < temp_gridno.size(); k++)
             {
-                temp_gridno.push_back(forward);            
-            }
-
-            if (backward > 0 && backward <= gridarray[i].size())
-            {
-                temp_gridno.push_back(backward);
-            }        
-        }              
+                gridno_temp.push_back(temp_gridno[k]);
+                // printf("i: %d, j: %d, temp_gridno: %d\r\n", i, j, temp_gridno[k]);
+            }                           
+        } 
+        new_gridno.push_back(gridno_temp);                    
     }
 
-    new_gridno.push_back(temp_gridno);
-    
+    // remove repeated elements
+    for (int i = 0; i < new_gridno.size(); i++)
+    {       
+        for (int j = 0; j < new_gridno[i].size(); j++)
+        {   
+            int repeat = new_gridno[i][j];
+            for (int k = j+1; k < new_gridno[i].size(); k++)
+            {
+                if (repeat == new_gridno[i][k])
+                {
+                    new_gridno[i].erase(new_gridno[i].begin()+k);
+                }
+            }           
+        }
+    }
+
     return new_gridno;
 }
 
 //search for solutions, gridnoarray: [pxn,...,ozn], solution[0]: posNo; solution[1]: ortNo, get solution(dataNo) based on gridno
 static vector<int> SearchSolution_once(vector<vector<int>> & gridnoarray, vector<vector<vector<vector<int>>>> & posgridarray, vector<vector<vector<vector<int>>>> & ortgridarray) 
 {
-    vector<int> solution;
-    vector<int> solution_pos;
-    vector<int> solution_ort;
+    vector<int> solution{-1};
+    vector<int> solution_pos{-1};
+    vector<int> solution_ort{-1};
     int n1 = 0;
     int n2 = 0;
     int n3 = 0;
@@ -631,56 +615,64 @@ static vector<int> SearchSolution_once(vector<vector<int>> & gridnoarray, vector
         {
             for (int k = 0; k < gridnoarray[2].size(); k++)
             {
-                for (int r = 0; r < gridnoarray[3].size(); r++)
+                n1 = gridnoarray[0][i];
+                n2 = gridnoarray[1][j];
+                n3 = gridnoarray[2][k];
+                if (posgridarray[n1][n2][n3].size() >= 1)
                 {
-                    for (int s = 0; s < gridnoarray[4].size(); s++)
+                    for (int p = 0; p < posgridarray[n1][n2][n3].size(); p++)
                     {
-                        for (int t = 0; t < gridnoarray[5].size(); t++)
-                        {
-                            n1 = gridnoarray[0][i];
-                            n2 = gridnoarray[1][j];
-                            n3 = gridnoarray[2][k];
-                            n4 = gridnoarray[3][r];
-                            n5 = gridnoarray[4][s];
-                            n6 = gridnoarray[5][t];
-
-                            if (posgridarray[n1][n2][n3].size() >= 1)
-                            {
-                                for (int p = 0; p < posgridarray[n1][n2][n3].size(); p++)
-                                solution_pos.push_back(posgridarray[n1][n2][n3][p]);
-                            }
-
-                            if (ortgridarray[n4][n5][n6].size() >= 1)
-                            {
-                                for (int q = 0; q < ortgridarray[n4][n5][n6].size(); q++)
-                                solution_ort.push_back(ortgridarray[n4][n5][n6][q]);
-                            }
-
-                            for (int u = 0; u < solution_pos.size(); u++)
-                            {
-                                for (int v = 0; v < solution_ort.size(); v++)
-                                {
-                                    if (solution_pos[u] == solution_ort[v] && solution_pos[u] != -1)
-                                    {
-                                        solution.push_back(solution_pos[u]);
-                                    }            
-                                }
-                            }
-                        }
-                    }
+                        solution_pos.push_back(posgridarray[n1][n2][n3][p]); 
+                        // printf("pos: %d\r\n", posgridarray[n1][n2][n3][p]);                                   
+                    }                                
                 }
             }
-        }               
-    }   
+        }
+    }
+   
+    for (int r = 0; r < gridnoarray[3].size(); r++)
+    {
+        for (int s = 0; s < gridnoarray[4].size(); s++)
+        {
+            for (int t = 0; t < gridnoarray[5].size(); t++)
+            {               
+                n4 = gridnoarray[3][r];
+                n5 = gridnoarray[4][s];
+                n6 = gridnoarray[5][t];
+                                                                                                    
+                if (ortgridarray[n4][n5][n6].size() >= 1)
+                {
+                    for (int q = 0; q < ortgridarray[n4][n5][n6].size(); q++)
+                    {
+                        solution_ort.push_back(ortgridarray[n4][n5][n6][q]);                                    
+                    }                               
+                }                                                                                                                                        
+            }
+        }
+    } 
 
+    for (int u = 0; u < solution_pos.size(); u++)
+    {
+        for (int v = 0; v < solution_ort.size(); v++)
+        {           
+            if (solution_pos[u] == solution_ort[v] && solution_pos[u] != -1)
+            {                
+                solution.push_back(solution_pos[u]);
+            }            
+        }
+    }
+   
+    // name = "solution";
+    // printOnedVector(name, solution);
     return solution;
 }
 
 static vector<int> SearchSolution_candidate(vector<int> & gridno, vector<vector<vector<vector<int>>>> & posgridarray, vector<vector<vector<vector<int>>>> & ortgridarray, vector<vector<float>> & gridarray)
 {
-    vector<int> solution;
+    vector<int> solution{-1};
     vector<int> solution_pos{-1};
     vector<int> solution_ort{-1};
+    vector<int> newgridno;
 
     int pxn = gridno[0];
     int pyn = gridno[1];
@@ -708,11 +700,25 @@ static vector<int> SearchSolution_candidate(vector<int> & gridno, vector<vector<
         }        
     }
 
-    if (solution_pos.size() < 1 || solution_ort.size() < 1)
+    // name = "gridno";
+    // printOnedVector(name, gridno);
+
+    if (solution_pos.size() <= 1 || solution_ort.size() <= 1)
     {
         vector<vector<int>> newgridnoarray;
-        newgridnoarray = SearchNeighbourGrid(gridno, gridarray);
+        for (int i = 0; i < gridno.size(); i++)
+        {
+            newgridno = SearchNeighbourGrid(gridno[i], gridarray[i]);
+            newgridnoarray.push_back(newgridno);
+        }        
+
+        // name = "newgrid1";
+        // printTwodVector(name, newgridnoarray);
+
         solution = SearchSolution_once(newgridnoarray, posgridarray, ortgridarray);
+
+        // name = "solution";
+        // printOnedVector(name, solution);
 
         int n1 = 0;
         int n2 = 0;
@@ -720,19 +726,25 @@ static vector<int> SearchSolution_candidate(vector<int> & gridno, vector<vector<
         int n4 = 0;
         int n5 = 0;
         int n6 = 0;
+                           
+        // printf("size of solution: %lu\r\n", solution.size());
 
-        while (solution.size() < 1 && n1 < Grid_group[0].size() && n2 < Grid_group[1].size() && n3 < Grid_group[2].size() 
-                                   && n4 < Grid_group[3].size() && n5 < Grid_group[4].size() && n6 < Grid_group[5].size())
+        while (solution.size() <= 1 && n1 < gridarray[0].size()-1 && n2 < gridarray[1].size()-1 && n3 < gridarray[2].size()-1 
+                                    && n4 < gridarray[3].size()-1 && n5 < gridarray[4].size()-1 && n6 < gridarray[5].size()-1)
         {
-            newgridnoarray = SearchMoreGrid(newgridnoarray, gridarray); 
+            newgridnoarray = SearchMoreGrids(newgridnoarray, gridarray);
+                     
+            // name = "newgrid2";           
+            // printTwodVector(name, newgridnoarray); 
+
             solution = SearchSolution_once(newgridnoarray, posgridarray, ortgridarray);
             n1 = newgridnoarray[0].size();
             n2 = newgridnoarray[1].size();
             n3 = newgridnoarray[2].size();
             n4 = newgridnoarray[3].size();
             n5 = newgridnoarray[4].size();
-            n6 = newgridnoarray[5].size();
-        } 
+            n6 = newgridnoarray[5].size();                     
+        }
     }
     else
     {
@@ -746,13 +758,17 @@ static vector<int> SearchSolution_candidate(vector<int> & gridno, vector<vector<
                 }            
             }
         }
-    }
-    
-    if (solution.size() < 1)
+    }   
+
+    if (solution.size() <= 1)
     {
         flag_sol = 0;
-    } 
-       
+    }
+    else
+    {
+        solution.erase(solution.begin());
+    }
+     
     return solution;
 }
 
@@ -843,6 +859,20 @@ int main(int argc, char **argv)
     readFromDataFile(); 
     generateDataGridTable();
 
+    // for (int i = 0; i < PosDataGridTable.size(); i++)
+    // {
+    //     for (int j = 0; j < PosDataGridTable[i].size(); j++)
+    //     {
+    //         for (int k = 0; k < PosDataGridTable[i][j].size(); k++)
+    //         {
+    //             for (int p = 0; p < PosDataGridTable[i][j][k].size(); p++)
+    //             {
+    //                 printf("PosDataGridTable[%d][%d][%d][%d]: %d\r\n", i, j, k, p, PosDataGridTable[i][j][k][p]);
+    //             }
+    //         }
+    //     }
+    // }
+   
     while (ros::ok())
 	{
         int size_givendata = givenData.size(); 
@@ -859,10 +889,19 @@ int main(int argc, char **argv)
         //     printf("random_number[%d]: %d\r\n", i, randn_array[i]);
         // }
                
-        int caseNo = 1;
-        float distp = 1;
-        float disto = 1;
-        generatetarget(caseNo, randn_array, distp, disto);        
+        // int caseNo = 0;
+        // float distp = 1;
+        // float disto = 1;
+        // generatetarget(caseNo, randn_array, distp, disto); 
+
+        target_pos.x() = 0.2176;
+        target_pos.y() = 0.2806;
+        target_pos.z() = 0.1257;
+
+        target_quat.w() = 0.9412;
+        target_quat.x() = 0.3120;
+        target_quat.y() = 0;
+        target_quat.z() = -0.1293;             
 
         curr_time = getCurrentTime();
         target_OrtCarCoord = quat2OrtCarCoord(target_quat); 
@@ -878,9 +917,11 @@ int main(int argc, char **argv)
 
         curr_time = getCurrentTime(); 
         solution_candidate = SearchSolution_candidate(target_gridno, PosDataGridTable, OrtDataGridTable, Grid_group);
+        // name = "solution_candidate";
+        // printOnedVector(name, solution_candidate);
         time_t dt4 = getCurrentTime()-curr_time; 
 
-        curr_time = getCurrentTime(); 
+        curr_time = getCurrentTime();
         if (flag_sol)
         {
             solution_selected  = SelectSolution(target_pos, target_OrtCarCoord, solution_candidate, ep, eo, givenData);            
@@ -889,31 +930,8 @@ int main(int argc, char **argv)
         diff_time = dt1 + dt2 + dt3 + dt4 + dt5;
 
         printf("seperated computational time (us): %lu, %lu, %lu, %lu, %lu\r\n", dt1, dt2, dt3, dt4, dt5);
-        ResultsDisplay(); 
-        
-        if (caseNo == 1)
-        {
-            Eigen::Quaternionf closep_quat(givenData[randn_array[0]][12], givenData[randn_array[0]][9], givenData[randn_array[0]][10], givenData[randn_array[0]][11]);
-            Eigen::Vector3f    closep_OrtCarCoord;
-            Eigen::Vector3f    closep_OrtSphCoord;
-            Eigen::Vector3f    select_OrtCarCoord;
-            Eigen::Vector3f    select_OrtSphCoord;
-
-            closep_OrtCarCoord = quat2OrtCarCoord(closep_quat);
-            closep_OrtSphCoord = Cartesian2Sphere(closep_OrtCarCoord);
-
-            select_OrtCarCoord = quat2OrtCarCoord(selected_quat);
-            select_OrtSphCoord = Cartesian2Sphere(select_OrtCarCoord);
-
-            // printf("computp   :  x: %.4f,  y: %.4f,  z: %.4f, qw: %.4f, qx: %.4f, qy: %.4f, qz: %.4f\r\n", givenData[randn_array[0]][6], givenData[randn_array[0]][7], givenData[randn_array[0]][8], closep_quat.w(), closep_quat.x(), closep_quat.y(), closep_quat.z());
-            // name = "target_OrtCarCoord"; 
-            // print3dVector(name, target_OrtCarCoord);
-            // name = "comput_OrtCarCoord";
-            // print3dVector(name, closep_OrtCarCoord); 
-            // name = "select_OrtCarCoord";
-            // print3dVector(name, select_OrtCarCoord);               
-        }
-
+        ResultsDisplay();
+              
         for (int i = 0; i < 3; i++)
         {
             Command_ABL_demo.segment[i].A = alpha_s[0]/3;
