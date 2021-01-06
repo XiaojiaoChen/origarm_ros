@@ -31,17 +31,107 @@ float length2 = length0*3;
 // order: a2, b2, l2, a1, b1, l1
 vector<vector<int>> steps {
 	{      2,      1,       1,      1,      1,       1},
-	{      6,      2,       2,      3,      2,       2}};
+	{      7,      2,       2,      3,      2,       2}
+};
 
+// group 1_1, beta: 0->pi/6, length: l0->lmax
 vector<vector<float>> p_start_group{
 	{-0.30*3,      0, 0.055*3,      0,      0, 0.055*3},  //initial
-	{-0.30*3,      0, 0.055*3,      0,      0, 0.055*3}   //l0->lmax
+	{-0.30*3,      0, 0.055*3,      0,      0, 0.055*3}   
 };
 
 vector<vector<float>> p_end_group{
-	{-0.30*3,     0, 0.055*3,      0,      0, 0.055*3},
-	{0.30*3, M_PI/3,  0.03*3, 0.30*3, M_PI/3,  0.03*3}
+	{-0.30*3,      0, 0.055*3,      0,      0, 0.055*3},
+	{ 0.30*3, M_PI/6, 0.065*3, 0.30*3, M_PI/6, 0.065*3}
 };
+
+// // group 1_2, beta: 0->pi/6, length: l0->lmid
+// vector<vector<float>> p_start_group{
+// 	{-0.30*3,      0, 0.055*3,      0,      0, 0.055*3},  //initial
+// 	{-0.30*3,      0, 0.055*3,      0,      0, 0.055*3}   
+// };
+
+// vector<vector<float>> p_end_group{
+// 	{-0.30*3,      0, 0.055*3,      0,      0, 0.055*3},
+// 	{ 0.30*3, M_PI/6, 0.040*3, 0.30*3, M_PI/6, 0.040*3}
+// };
+
+// group 1_3, beta: 0->pi/6, length: lmid->lmin
+// vector<vector<float>> p_start_group{
+// 	{-0.30*3,      0, 0.040*3,      0,      0, 0.040*3},  //initial
+// 	{-0.30*3,      0, 0.040*3,      0,      0, 0.040*3}   
+// };
+
+// vector<vector<float>> p_end_group{
+// 	{-0.30*3,      0, 0.040*3,      0,      0, 0.040*3},
+// 	{ 0.30*3, M_PI/6, 0.030*3, 0.30*3, M_PI/6, 0.030*3}
+// };
+
+// // group 2_1, beta: pi/6->pi/3, length: l0->lmax
+// vector<vector<float>> p_start_group{
+// 	{-0.30*3, M_PI/6, 0.055*3,      0, M_PI/6, 0.055*3},  //initial
+// 	{-0.30*3, M_PI/6, 0.055*3,      0, M_PI/6, 0.055*3}   
+// };
+
+// vector<vector<float>> p_end_group{
+// 	{-0.30*3, M_PI/6, 0.055*3,      0, M_PI/6, 0.055*3},
+// 	{ 0.30*3, M_PI/3, 0.065*3, 0.30*3, M_PI/3, 0.065*3}
+// };
+
+// // group 2_2, beta: pi/6->pi/3, length: l0->lmid
+// vector<vector<float>> p_start_group{
+// 	{-0.30*3, M_PI/6, 0.055*3,      0, M_PI/6, 0.055*3},  //initial
+// 	{-0.30*3, M_PI/6, 0.055*3,      0, M_PI/6, 0.055*3}   
+// };
+
+// vector<vector<float>> p_end_group{
+// 	{-0.30*3, M_PI/6, 0.055*3,      0, M_PI/6, 0.055*3},
+// 	{ 0.30*3, M_PI/3, 0.040*3, 0.30*3, M_PI/3, 0.040*3}
+// };
+
+// // group 2_3, beta: pi/6->pi/3, length: lmid->lmin
+// vector<vector<float>> p_start_group{
+// 	{-0.30*3, M_PI/6, 0.040*3,      0, M_PI/6, 0.040*3},  //initial
+// 	{-0.30*3, M_PI/6, 0.040*3,      0, M_PI/6, 0.040*3}   
+// };
+
+// vector<vector<float>> p_end_group{
+// 	{-0.30*3, M_PI/6, 0.040*3,      0, M_PI/6, 0.040*3},
+// 	{ 0.30*3, M_PI/3, 0.030*3, 0.30*3, M_PI/3, 0.030*3}
+// };
+
+// // group 3_1, beta: pi/3->pi/2, length: l0->lmax
+// vector<vector<float>> p_start_group{
+// 	{-0.30*3, M_PI/3, 0.055*3,      0, M_PI/3, 0.055*3},  //initial
+// 	{-0.30*3, M_PI/3, 0.055*3,      0, M_PI/3, 0.055*3}   
+// };
+
+// vector<vector<float>> p_end_group{
+// 	{-0.30*3, M_PI/3, 0.055*3,      0, M_PI/3, 0.055*3},
+// 	{ 0.30*3, M_PI/2, 0.065*3, 0.30*3, M_PI/2, 0.065*3}
+// };
+
+// // group 3_2, beta: pi/3->pi/2, length: l0->lmid
+// vector<vector<float>> p_start_group{
+// 	{-0.30*3, M_PI/3, 0.055*3,      0, M_PI/3, 0.055*3},  //initial
+// 	{-0.30*3, M_PI/3, 0.055*3,      0, M_PI/3, 0.055*3}   
+// };
+
+// vector<vector<float>> p_end_group{
+// 	{-0.30*3, M_PI/3, 0.055*3,      0, M_PI/3, 0.055*3},
+// 	{ 0.30*3, M_PI/2, 0.040*3, 0.30*3, M_PI/2, 0.040*3}
+// };
+
+// // group 3_3, beta: pi/3->pi/2, length: lmid->lmin
+// vector<vector<float>> p_start_group{
+// 	{-0.30*3, M_PI/3, 0.040*3,      0, M_PI/3, 0.040*3},  //initial
+// 	{-0.30*3, M_PI/3, 0.040*3,      0, M_PI/3, 0.040*3}   
+// };
+
+// vector<vector<float>> p_end_group{
+// 	{-0.30*3, M_PI/3, 0.040*3,      0, M_PI/3, 0.040*3},
+// 	{ 0.30*3, M_PI/2, 0.030*3, 0.30*3, M_PI/2, 0.030*3}
+// };
 
 // vector<vector<int>> steps {
 // 	{      2,      1,       1,      1,      1,       1},
