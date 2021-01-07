@@ -33,10 +33,16 @@ using namespace std;
 static float rad2deg = 180.0f / M_PI;
 static float deg2rad = M_PI / 180.0f;
 
+// given data read from file
 ifstream inFile;
 string GivenDataFilePath = ros::package::getPath("origarm_ros") + "/data/GridData/";
-string GivenDataFileName = "data1.txt";
+string GivenDataFileName = "data2.txt";
 string name = "";
+
+// saving data into file
+ofstream outFile;
+string SaveDataFilePath = ros::package::getPath("origarm_ros") + "/data/GridData/";
+string SaveDataFileName = "save2.txt";
 
 // given data 2d vector[N][13], N = max(dataNo)
 static vector< vector<float> > givenData;
@@ -57,7 +63,7 @@ static vector<vector<float>> Grid_group{
     {      0, 0.7879, 1.5758, 2.3637,  3.1516},
     {      0, 1.5733, 3.1466, 4.7199,  6.2932}};
 
-int Grid_size[6] = {7, 4, 4, 4, 4, 4};
+int Grid_size[6] = {4, 4, 4, 4, 4, 4};
 
 // given workspace {{xmin, ..., thetamin}, {xmax,...,thetamax}}
 static float workspace[2][6] = 
@@ -700,10 +706,22 @@ static vector<int> SearchSolution_candidate(vector<int> & gridno, vector<vector<
         }        
     }
 
+    for (int i = 0; i < solution_pos.size(); i++)
+    {
+        for (int j = 0; j < solution_ort.size(); j++)
+        {
+            if (solution_pos[i] == solution_ort[j] && solution_pos[i] != -1)
+            {
+                solution.push_back(solution_pos[i]);
+            }            
+        }
+    }
+
     // name = "gridno";
     // printOnedVector(name, gridno);
+    // printf("size of solution: %lu\r\n", solution.size());
 
-    if (solution_pos.size() <= 1 || solution_ort.size() <= 1)
+    if (solution.size() <= 1)
     {
         vector<vector<int>> newgridnoarray;
         for (int i = 0; i < gridno.size(); i++)
@@ -712,7 +730,7 @@ static vector<int> SearchSolution_candidate(vector<int> & gridno, vector<vector<
             newgridnoarray.push_back(newgridno);
         }        
 
-        // name = "newgrid1";
+        // name = "newgridnoarray";
         // printTwodVector(name, newgridnoarray);
 
         solution = SearchSolution_once(newgridnoarray, posgridarray, ortgridarray);
@@ -727,15 +745,15 @@ static vector<int> SearchSolution_candidate(vector<int> & gridno, vector<vector<
         int n5 = 0;
         int n6 = 0;
                            
-        // printf("size of solution: %lu\r\n", solution.size());
+        printf("size of solution: %lu\r\n", solution.size());
 
         while (solution.size() <= 1 && n1 < gridarray[0].size()-1 && n2 < gridarray[1].size()-1 && n3 < gridarray[2].size()-1 
                                     && n4 < gridarray[3].size()-1 && n5 < gridarray[4].size()-1 && n6 < gridarray[5].size()-1)
         {
             newgridnoarray = SearchMoreGrids(newgridnoarray, gridarray);
                      
-            // name = "newgrid2";           
-            // printTwodVector(name, newgridnoarray); 
+            name = "updated newgridnoarray";           
+            printTwodVector(name, newgridnoarray); 
 
             solution = SearchSolution_once(newgridnoarray, posgridarray, ortgridarray);
             n1 = newgridnoarray[0].size();
@@ -743,20 +761,9 @@ static vector<int> SearchSolution_candidate(vector<int> & gridno, vector<vector<
             n3 = newgridnoarray[2].size();
             n4 = newgridnoarray[3].size();
             n5 = newgridnoarray[4].size();
-            n6 = newgridnoarray[5].size();                     
-        }
-    }
-    else
-    {
-        for (int i = 0; i < solution_pos.size(); i++)
-        {
-            for (int j = 0; j < solution_ort.size(); j++)
-            {
-                if (solution_pos[i] == solution_ort[j] && solution_pos[i] != -1)
-                {
-                    solution.push_back(solution_pos[i]);
-                }            
-            }
+            n6 = newgridnoarray[5].size(); 
+
+            printf("n1: %d, n2: %d, n3: %d, n4: %d, n5: %d, n6: %d", n1, n2, n3, n4, n5, n6);                    
         }
     }   
 
@@ -855,7 +862,14 @@ int main(int argc, char **argv)
 		
 	ros::Publisher  pub1 = nh.advertise<origarm_ros::Command_ABL>("Cmd_ABL_joy", 100);	
 	origarm_ros::Command_ABL Command_ABL_demo;
-
+   
+    // outFile.open(SaveDataFilePath + SaveDataFileName, ios::app);
+    // if (!outFile)
+    // {
+    //     printf("Unable to open file for saving data!");
+    //     exit(1);
+    // }
+            
     readFromDataFile(); 
     generateDataGridTable();
 
@@ -872,7 +886,7 @@ int main(int argc, char **argv)
     //         }
     //     }
     // }
-   
+                 
     while (ros::ok())
 	{
         int size_givendata = givenData.size(); 
@@ -883,25 +897,20 @@ int main(int argc, char **argv)
         {
             randn_array[i] = rand() % 1000;           
         }
+              
+        int caseNo = 0;
+        float distp = 5;
+        float disto = 5;
+        generatetarget(caseNo, randn_array, distp, disto); 
 
-        // for (int i = 0; i < 7; i++)
-        // {
-        //     printf("random_number[%d]: %d\r\n", i, randn_array[i]);
-        // }
-               
-        // int caseNo = 0;
-        // float distp = 1;
-        // float disto = 1;
-        // generatetarget(caseNo, randn_array, distp, disto); 
+        // target_pos.x() = 0.2176;
+        // target_pos.y() = 0.2806;
+        // target_pos.z() = 0.1257;
 
-        target_pos.x() = 0.2176;
-        target_pos.y() = 0.2806;
-        target_pos.z() = 0.1257;
-
-        target_quat.w() = 0.9412;
-        target_quat.x() = 0.3120;
-        target_quat.y() = 0;
-        target_quat.z() = -0.1293;             
+        // target_quat.w() = 0.9412;
+        // target_quat.x() = 0.3120;
+        // target_quat.y() = 0;
+        // target_quat.z() = -0.1293;
 
         curr_time = getCurrentTime();
         target_OrtCarCoord = quat2OrtCarCoord(target_quat); 
@@ -916,9 +925,8 @@ int main(int argc, char **argv)
         time_t dt3 = getCurrentTime()-curr_time; 
 
         curr_time = getCurrentTime(); 
-        solution_candidate = SearchSolution_candidate(target_gridno, PosDataGridTable, OrtDataGridTable, Grid_group);
-        // name = "solution_candidate";
-        // printOnedVector(name, solution_candidate);
+        solution_candidate = SearchSolution_candidate(target_gridno, PosDataGridTable, OrtDataGridTable, Grid_group);        
+
         time_t dt4 = getCurrentTime()-curr_time; 
 
         curr_time = getCurrentTime();
@@ -929,9 +937,11 @@ int main(int argc, char **argv)
         time_t dt5 = getCurrentTime()-curr_time;
         diff_time = dt1 + dt2 + dt3 + dt4 + dt5;
 
-        printf("seperated computational time (us): %lu, %lu, %lu, %lu, %lu\r\n", dt1, dt2, dt3, dt4, dt5);
+        // printf("seperated computational time (us): %lu, %lu, %lu, %lu, %lu\r\n", dt1, dt2, dt3, dt4, dt5);
         ResultsDisplay();
-              
+
+        // outFile << solution_candidate.size() <<" "<< dt1 <<" "<< dt2 <<" "<< dt3 <<" "<< dt4 <<" "<< dt5 <<" "<< diff_time << endl;
+                      
         for (int i = 0; i < 3; i++)
         {
             Command_ABL_demo.segment[i].A = alpha_s[0]/3;
@@ -962,6 +972,7 @@ int main(int argc, char **argv)
         
 		r.sleep();
 	}
-		
+
+	// outFile.close();	
 	return 0;
 }
