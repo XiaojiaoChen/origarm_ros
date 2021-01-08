@@ -31,7 +31,7 @@ float length2 = length0*3;
 // order: a2, b2, l2, a1, b1, l1
 vector<vector<int>> steps {
 	{     1,      1,       1,      1,      1,       1},
-	{     7,      2,       1,      4,      2,       1}	
+	{     7,      4,       1,      4,      1,       1}	
 };
 
 // vector<vector<int>> steps {
@@ -61,7 +61,7 @@ vector<vector<float>> p_start_group{
 
 vector<vector<float>> p_end_group{
 	{-0.30*3,      0, 0.055*3,      0,      0, 0.055*3},
-	{ 0.30*3,M_PI/12, 0.055*3, 0.30*3,M_PI/12, 0.055*3}
+	{ 0.30*3, M_PI/2, 0.055*3, 0.30*3,		0, 0.055*3}
 };
 
 // // group 1_2, beta: pi/6->pi/4, length: l0
