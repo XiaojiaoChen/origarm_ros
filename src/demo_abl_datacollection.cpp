@@ -16,10 +16,11 @@
 using namespace std;
 
 const int mt = 1000; //1ms
-int ts = 3000*mt;    //time sleep at each point
+int ts[2] = {2600*mt, 4500*mt};    //time sleep at each point
 
 int current_step = 0;
 int count_step = 0;
+// int current_ts = 0;
 
 float alpha1 =  0;
 float alpha2 =  0;
@@ -30,7 +31,7 @@ float length2 = length0*3;
 
 // order: a2, b2, l2, a1, b1, l1
 vector<vector<int>> steps {
-	{     1,      1,       1,      1,      1,       1},
+	//{     1,      1,       1,      1,      1,       1},
 	{     7,      4,       1,      4,      1,       1}	
 };
 
@@ -55,12 +56,12 @@ vector<vector<int>> steps {
 
 // group 1_1, beta: 0->pi/12, length: l0
 vector<vector<float>> p_start_group{
-	{-0.30*3,      0, 0.055*3,      0,      0, 0.055*3},  //initial
+	//{-0.30*3,      0, 0.055*3,      0,      0, 0.055*3},  //initial
 	{-0.30*3,      0, 0.055*3,      0,      0, 0.055*3}   
 };
 
 vector<vector<float>> p_end_group{
-	{-0.30*3,      0, 0.055*3,      0,      0, 0.055*3},
+	//{-0.30*3,      0, 0.055*3,      0,      0, 0.055*3},
 	{ 0.30*3, M_PI/2, 0.055*3, 0.30*3,		0, 0.055*3}
 };
 
@@ -372,8 +373,15 @@ void writeABLCommand()
 		beta1 = trajectory_group[trajgroup_no][4][current_step];
 		length1 = trajectory_group[trajgroup_no][5][current_step];
 
-		current_step ++;		
-		usleep(ts);																						
+		current_step ++;
+		if ( abs(alpha2 + 0.2*3) < 1e-5)
+		{
+			usleep(ts[1]);	
+		}
+		else
+		{
+			usleep(ts[0]);	
+		}																											
 	}
 	else
 	{
