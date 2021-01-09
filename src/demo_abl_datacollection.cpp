@@ -59,11 +59,11 @@ vector<vector<int>> steps {
 
 // group 1_1, beta: 0->pi/12, length: l0
 vector<vector<float>> p_start_group{
-	{-0.30*3,      0, 0.045*3,      0,  0, 0.055*3}   
+	{-0.30*3,      0, 0.045*3,      0,  M_PI/2, 0.055*3}   
 };
 
 vector<vector<float>> p_end_group{
-	{ 0.30*3, M_PI/2, 0.045*3, 0.30*3,  0, 0.055*3}
+	{ 0.30*3, M_PI/2, 0.045*3, 0.30*3,  M_PI/2, 0.055*3}
 };
 
 // // group 1_2, beta: pi/6->pi/4, length: l0
