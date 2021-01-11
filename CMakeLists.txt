@@ -373,3 +373,9 @@ add_dependencies(Kinematics_grids ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_E
 target_link_libraries(Kinematics_grids           
    ${catkin_LIBRARIES}
  )
+
+add_executable(demo_repeatability src/demo_repeatability.cpp) 
+add_dependencies(demo_repeatability ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+target_link_libraries(demo_repeatability           
+   ${catkin_LIBRARIES}
+ )
