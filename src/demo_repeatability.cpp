@@ -26,18 +26,18 @@ using namespace std;
 
 ifstream inFile;
 string GivenDataFilePath = ros::package::getPath("origarm_ros") + "/predefined_param/";
-string GivenDataFileName = "repeat_3_0.txt";
+string GivenDataFileName = "repeat_6_1.txt";
 
 const int ms = 1000;  //1ms
-int ts[] = {10*ms, 10*ms, 10*ms, 10*ms};
+int ts[] = {5*ms, 10*ms, 60*ms, 10*ms};
 
 int mode_in;
 float x_in, y_in, z_in;
 float a_in[6], b_in[6], l_in[6];
 
 int flag_start = 0;
-int period = 100;
-int repeat = 10;  // whole repeat times
+int period = 175;
+int repeat = 12;  // whole repeat times
 int num = 0;     // smallest step number
 int loop_no = 0; // to which step exactly
 

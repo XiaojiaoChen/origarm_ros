@@ -72,6 +72,9 @@ PID_Type *alphaPID  = newPID(0.8, 0.005, 0, 0.005, 0.6, 1);
 PID_Type *betaPID   = newPID(0.8, 0.005, 0, 0.005, 0.5, 1.5);
 PID_Type *lengthPID = newPID(  1,  0.01, 0, 0.005, 0.1, 0.1);
 
+
+
+
 void initParameter()
 {
   for (int i = 0; i < SEGNUM; i++)
@@ -89,48 +92,11 @@ void initParameter()
   }
 }
 
-//ABL->Pressure D:desired
-void ABLD2PD()
-{
-  for (int i = 0; i < SEGNUM; i ++)
-  {
-    b1[i] = 2*C1*(lengthd[i]-length0)/(radR*6);
-    btem[i] = C1*alphad[i]/6;
-    b2[i] = btem[i]*cos(betad[i]);
-    b3[i] = (1.7320508)*btem[i]*sin(betad[i]);
-    
-    pressureD[i][0] = b1[i]+b2[i]*2;
-    pressureD[i][1] = b1[i]+b2[i]+b3[i];
-    pressureD[i][2] = b1[i]-b2[i]+b3[i];
-    pressureD[i][3] = b1[i]-b2[i]*2;
-    pressureD[i][4] = b1[i]-b2[i]-b3[i];
-    pressureD[i][5] = b1[i]+b2[i]-b3[i];
-  }  	
-}
 
-//calculate PressureFeedback
-void FeedbackController(int feedbackFlag) 
-{
-  if (mode_ <= 3) // mode modified, change mode[3] to 2 abl control
-  {
-    for (int i = 0; i < SEGNUM; i++)
-    {
-      alphad[i]  = ajoy[i];
-      betad[i]   = bjoy[i];
-      lengthd[i] = ljoy[i];
-    }
-  }
-  else
-  {
-    for (int i = 0; i < SEGNUM; i++)
-    {
-      alphad[i]  = apos[i];
-      betad[i]   = bpos[i];
-      lengthd[i] = lpos[i];
-    }
-  }
 
-  for (int i = 0; i < SEGNUM; i++)
+void ABLD2PD_LMS()
+{
+    for (int i = 0; i < SEGNUM; i++)
   {
     Tx[i] = Texta[i]/crossA/radR-C1*alphad[i];
     Ty[i] = Textb[i]/crossA/radR;
@@ -155,6 +121,102 @@ void FeedbackController(int feedbackFlag)
     pressureDFeed[i][4]-=pLimitOptimal;
     pressureDFeed[i][5]+=pLimitOptimal;
   }
+}
+
+void ABLD2PD_3v3()
+{
+  
+    for (int i = 0; i < SEGNUM; i++)
+  {
+    float pvalue=alphad[i]*250000;
+    pressureDFeed[i][0] = -pvalue;
+    pressureDFeed[i][1] = -pvalue;
+    pressureDFeed[i][5] = -pvalue;
+
+    pressureDFeed[i][2] = pvalue;
+    pressureDFeed[i][3] = pvalue;
+    pressureDFeed[i][4] = pvalue;
+  }
+}
+
+void ABLD2PD_2v4()
+{
+    for (int i = 0; i < SEGNUM; i++)
+  {
+    float pvalue=alphad[i]*250000;
+    pressureDFeed[i][0] = -pvalue;
+    pressureDFeed[i][3] = -pvalue;
+    pressureDFeed[i][4] = -pvalue;
+    pressureDFeed[i][5] = -pvalue;
+
+    pressureDFeed[i][1] = pvalue;
+    pressureDFeed[i][2] = pvalue;
+    
+  }
+}
+
+void ABLD2PD_4v2()
+{
+    for (int i = 0; i < SEGNUM; i++)
+  {
+    
+float pvalue=alphad[i]*250000;
+    pressureDFeed[i][4] = -pvalue;
+    pressureDFeed[i][5] = -pvalue;
+
+    pressureDFeed[i][0] = pvalue;
+    pressureDFeed[i][1] = pvalue;
+    pressureDFeed[i][2] = pvalue;
+    pressureDFeed[i][3] = pvalue;
+    
+  }
+}
+
+
+void ABLD2PD_2v2()
+{
+
+    for (int i = 0; i < SEGNUM; i++)
+  {
+    
+float pvalue=alphad[i]*250000;
+    pressureDFeed[i][4] = -pvalue;
+    pressureDFeed[i][5] = -pvalue;
+
+
+    pressureDFeed[i][1] = pvalue;
+    pressureDFeed[i][2] = pvalue;
+
+    pressureDFeed[i][0] = 0;
+    pressureDFeed[i][3] = 0;
+    
+  }
+}
+
+
+//calculate PressureFeedback
+void FeedbackController(int feedbackFlag) 
+{
+  if (mode_ <= 3) // mode modified, change mode[3] to 2 abl control
+  {
+    for (int i = 0; i < SEGNUM; i++)
+    {
+      alphad[i]  = ajoy[i];
+      betad[i]   = bjoy[i];
+      lengthd[i] = ljoy[i];
+    }
+  }
+  else
+  {
+    for (int i = 0; i < SEGNUM; i++)
+    {
+      alphad[i]  = apos[i];
+      betad[i]   = bpos[i];
+      lengthd[i] = lpos[i];
+    }
+  }
+
+  ABLD2PD_LMS();
     
   if(feedbackFlag)
   {
