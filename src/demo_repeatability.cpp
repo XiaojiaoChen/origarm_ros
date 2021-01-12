@@ -2,90 +2,56 @@
 #include <geometry_msgs/Pose.h> 
 #include <math.h>
 #include <time.h>
+#include <ros/ros.h>
+#include <geometry_msgs/Pose.h> 
+#include <math.h>
+#include <time.h>
 #include <fstream>
-#include <sys/time.h>
-#include <ros/time.h>
-#include "ros/package.h"
-#include <linux/input-event-codes.h>
+#include <iostream>
 #include <vector>
+#include <Eigen/Eigen>
+#include <linux/input-event-codes.h>
 
+#include "origarm_ros/Command_Position.h"
 #include "origarm_ros/Command_ABL.h"
+#include "origarm_ros/modenumber.h"
+#include "origarm_ros/segnumber.h"
 #include "origarm_ros/keynumber.h"
+#include "ros/package.h"
 #include "myData.h"
+
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
 using namespace std;
 
-const int mt = 10; //1ms
-int ts[2] = {2600*mt, 4500*mt};    //time sleep at each point
+ifstream inFile;
+string GivenDataFilePath = ros::package::getPath("origarm_ros") + "/predefined_param/";
+string GivenDataFileName = "repeat_3_0.txt";
 
-int current_step = 0;
-int count_step = 0;
+const int ms = 1000;  //1ms
+int ts[] = {10*ms, 10*ms, 10*ms, 10*ms};
 
-vector<vector<float>> trajectory_Alpha;
-vector<vector<float>> trajectory_Beta;
-vector<vector<float>> trajectory_Length;
+int mode_in;
+float x_in, y_in, z_in;
+float a_in[6], b_in[6], l_in[6];
 
-static int flag_start = 0;
-int trajgroup_no = 0;
+int flag_start = 0;
+int period = 100;
+int repeat = 10;  // whole repeat times
+int num = 0;     // smallest step number
+int loop_no = 0; // to which step exactly
 
+vector<vector<float>> s_A;
+vector<vector<float>> s_B;
+vector<vector<float>> s_L;
+
+vector<vector<float>> state_A;
+vector<vector<float>> state_B;
+vector<vector<float>> state_L;
 
 vector<float> alpha {0, 0, 0, 0, 0, 0};
 vector<float> beta  {0, 0, 0, 0, 0, 0};
 vector<float> length{length0, length0, length0, length0, length0, length0};
-
-vector<int> steps {2, 2, 2, 2};
-
-vector<vector<float>> state_Alpha{
-    {   0,    0,    0,    0,    0,    0},
-    {   0,    0,    0,    0,    0,    0},
-    {-0.3, -0.3, -0.3, -0.3, -0.3, -0.3},
-    {   0,    0,    0,    0,    0,    0}
-};
-
-vector<vector<float>> state_Beta{
-    {   0,    0,    0,    0,    0,    0},
-    {   0,    0,    0,    0,    0,    0},
-    {   0,    0,    0,    0,    0,    0},
-    {   0,    0,    0,    0,    0,    0}
-};
-
-vector<vector<float>> state_Length{
-    {0.055,    0.055,    0.055,    0.055,    0.055,    0.055},
-    {0.055,    0.055,    0.055,    0.055,    0.055,    0.055},
-    {0.055,    0.055,    0.055,    0.055,    0.055,    0.055},
-    {0.055,    0.055,    0.055,    0.055,    0.055,    0.055}
-};
-
-ros::Time ABLDataBeginTime;
-std::string getTimeString()
-{
-	time_t rawtime;
-	struct tm *timeinfo;
-	char buffer[100];
-
-	time(&rawtime);
-	timeinfo = localtime(&rawtime);
-	struct timeval time_now
-	{
-	};
-	gettimeofday(&time_now, nullptr);
-	time_t msecs_time = time_now.tv_usec;
-	time_t msec = (msecs_time / 1000) % 1000;
-
-	strftime(buffer, 100, "%G_%h_%d_%H_%M_%S", timeinfo);
-	std::string ret1 = buffer;
-	std::string ret = ret1 + "_" + std::to_string(msec);
-	return ret;
-}
-
-std::string getTimeNsecString()
-{
-	ros::Time curtime = ros::Time::now();
-	ros::Duration pasttime = curtime - ABLDataBeginTime;
-	int64_t pasttimems = pasttime.toNSec() / 1000000;
-	std::string ret = std::to_string(pasttimems);
-	return ret;
-}
 
 void keyCallback(const origarm_ros::keynumber &key)
 {
@@ -93,6 +59,7 @@ void keyCallback(const origarm_ros::keynumber &key)
 	{		
 		printf("KEY_B pressed!\r\n");
 		flag_start = 0;
+		repeat = 2;
 	}
 	else if (key.keycodePressed == KEY_J) // same as saving button
 	{
@@ -101,76 +68,153 @@ void keyCallback(const origarm_ros::keynumber &key)
 	}	
 }
 
-static vector<float> trajectoryGeneration(float ps, float pe, int tstep)
+//generate single point by defining starting and ending point
+static float lineardiffgenetraj(float ps, float pe, int step, int tstep)
 {
-	vector<float> trajectory;
-	float point_temp;
-	
-    for (int i = 0; i < tstep; i++)
-    {
-        if (tstep == 1 || ps == pe)
-        {            
-            point_temp = ps;
-            trajectory.push_back(point_temp);				
-        }
-        else
-        {
-            point_temp = ps + i*(pe-ps)/(tstep-1);
-            trajectory.push_back(point_temp);					
-        }											
-    }
-		
-	return trajectory;
+	float pm = ps + step*(pe-ps)/(tstep-1); 
+	return pm;
 }
 
-// generate trajectory via linear differences between start&end pose, ps{a1,...,a6}
-static vector<vector<float>> TrajGroupGeneration(vector<float> & ps, vector<float> & pe, int tstep)
-{	
-	vector<float> traj_temp;
-	vector<vector<float>> traj_group;
-		
-	for (int i = 0; i < ps.size(); i++)
-	{		
-		traj_temp = trajectoryGeneration(ps[i], pe[i], tstep);
-		traj_group.push_back(traj_temp);
-	}
-
-	return traj_group;
-}
-
-void writeABLCommand()
+//read state information from File
+static void readFromFile()
 {
-	if (flag_start)
-	{		
-        if (current_step >= trajectory_Alpha.size())
-        {
-            current_step = 0;
-            flag_start = 0;				
-        }		
+	vector<float> s_a;
+	vector<float> s_b;
+	vector<float> s_l;
+	vector<float> s_a1;
+	vector<float> s_b1;
+	vector<float> s_l1;
 
-        for (int i = 0; i < trajectory_Alpha.size(); i++)
-        {
-            for (int j = 0; j < 6; j++)
-            {
-                alpha[i] = trajectory_Alpha[i][j];
-                beta[i] = trajectory_Beta[i][j];
-                length[i] = trajectory_Length[i][j];
-            }
-        }			
+	inFile.open(GivenDataFilePath + GivenDataFileName, ios::in);
 
-		current_step ++;
-        usleep(ts[1]);																										
+	if (!inFile)
+	{
+		printf("%s\n", "unable to open the file.");
+		exit(1);
 	}
 	else
 	{
-        for (int i = 0; i < 6; i++)
-        {
-            alpha[i]  = 0;
-            beta[i]   = 0;
-            length[i] = length0;
-        }
-		current_step = 0;
+		while (true)
+		{
+			inFile>>mode_in>>x_in>>y_in>>z_in>>a_in[0]>>b_in[0]>>l_in[0]>>a_in[1]>>b_in[1]>>l_in[1]>>a_in[2]>>b_in[2]>>l_in[2]>>a_in[3]>>b_in[3]>>l_in[3]>>a_in[4]>>b_in[4]>>l_in[4]>>a_in[5]>>b_in[5]>>l_in[5];
+		
+			if ( inFile.eof() )	
+			{
+				break;
+			}	
+
+			for (int i = 0; i < 6; i++)
+			{
+				s_a.push_back(a_in[i]);
+				s_b.push_back(b_in[i]);
+				s_l.push_back(l_in[i]);
+			}			
+
+			if (s_a.size() < 6)
+			{
+				printf("%s\n", ".............");
+				exit(1);
+			}
+			else
+			{
+				s_a1.assign(s_a.end()-6, s_a.end());
+				s_b1.assign(s_b.end()-6, s_b.end());
+				s_l1.assign(s_l.end()-6, s_l.end());
+
+				s_A.push_back(s_a1);
+				s_B.push_back(s_b1);
+				s_L.push_back(s_l1);
+			}	
+		}		
+	}
+
+	inFile.close();	
+}
+
+static vector<vector<float>> TrajGeneration(vector<vector<float>> & vect1, int tstep)
+{
+	int vectsize = vect1.size(); // return row size of 2d vector, size of timestamp read from file
+	
+	vector< vector<float> > state;
+	vector<float> state_1;
+	vector<float> state1;
+		
+	int t = 0;
+
+	for (int i = 0; i < 6; i++)
+	{
+		for (int j = 0; j < vectsize-1; j++)
+		{
+			float ps = vect1[j][i];
+			float pe = vect1[j+1][i];
+			
+			// printf("ps: %f, pe: %f\n", ps, pe);
+			
+			for (int k = 0; k < tstep; k++)// include both starting & ending point
+			{
+				float pm = lineardiffgenetraj(ps, pe, k, tstep);
+				state1.push_back(pm);				
+				// printf("state1[%d]: %f\n", t, state1[t]);
+				t ++;
+			}			
+		}			
+
+		int newvectorsize = tstep*(vectsize-1);
+	
+		if (state1.size() < newvectorsize)
+		{
+			printf("%s\n", "!.............");
+			exit(1);
+		}
+		else
+		{
+			state_1.assign(state1.end() - newvectorsize, state1.end());	
+			state.push_back(state_1);
+		}										
+	}
+
+	return state;					
+}
+
+static void writeABLCommand()
+{
+	if (flag_start && repeat > 0)
+	{
+		if (num < state_A[0].size())
+		{
+			for (int i = 0; i < 6; i++)
+			{
+				alpha[i]  = state_A[i][num];
+				beta[i]   = state_B[i][num];
+				length[i] = state_L[i][num];
+			}
+			
+			usleep(ts[loop_no]);			
+			num ++;
+			if (num % period == 0)
+			{
+				loop_no ++;
+			}									
+		}
+		else
+		{
+			num = 0;
+			loop_no = 0;
+			repeat = repeat - 1;
+		}					
 	}		
+	else
+	{
+		num = 0;
+		loop_no = 0;
+
+		for (int i = 0; i < 6; i++)
+		{
+			alpha[i]  = 0;
+			beta[i]   = 0;
+			length[i] = length0;
+		}
+	}	
 }
 
 int main(int argc, char **argv)
@@ -179,35 +223,41 @@ int main(int argc, char **argv)
 	ros::NodeHandle nh;	
 	ros::Rate r(100);     //Hz
 
+	ros::Publisher  pub1 = nh.advertise<origarm_ros::Command_ABL>("Cmd_ABL_joy", 100);
 	ros::Subscriber key_sub_ = nh.subscribe("key_number", 1, keyCallback);
-	ros::Publisher  pub1 = nh.advertise<origarm_ros::Command_ABL>("Cmd_ABL_joy", 100);	
-	origarm_ros::Command_ABL Command_ABL_demo;
+	origarm_ros::Command_ABL Command_ABL_demo;	
 
-	//load parameters
-	for (int i = 0; i < state_Alpha.size()-1; i++)
-	{
-		trajectory_Alpha  = TrajGroupGeneration(state_Alpha[i], state_Alpha[i+1], steps[i]);
-        trajectory_Beta   = TrajGroupGeneration(state_Beta[i], state_Beta[i+1], steps[i]);
-        trajectory_Length = TrajGroupGeneration(state_Length[i], state_Length[i+1], steps[i]);
-	}
+	readFromFile();
 
-	for (int i = 0; i < trajectory_Alpha.size(); i++)
-	{
-		for (int j = 0; j < trajectory_Alpha[i].size(); j++)
-		{			
-            printf("Alpha [%d][%d]: %.4f\r\n", i, j, trajectory_Alpha[i][j]);
-            printf("Beta  [%d][%d]: %.4f\r\n", i, j, trajectory_Beta[i][j]);
-            printf("Length[%d][%d]: %.4f\r\n", i, j, trajectory_Length[i][j]);			
-		}
-	}
+	// for (int i = 0; i < s_A.size(); i++)
+	// {
+	// 	for (int j = 0; j < s_A[0].size(); j++)
+	// 	{
+	// 		printf("s_A[%d][%d]: %f\n", i, j, s_A[i][j]);
+	// 	}		
+	// }
+
+	state_A = TrajGeneration(s_A, period);
+	state_B = TrajGeneration(s_B, period);
+	state_L = TrajGeneration(s_L, period);
+
+	// for (int i = 0; i < state_A.size(); i++)
+	// {
+	// 	for (int j = 0; j < state_A[0].size(); j++)
+	// 	{
+	// 		printf("state_A[%d][%d]: %f\n", i, j, state_A[i][j]);
+	// 	}		
+	// }
 
 	while (ros::ok())
 	{				
 		writeABLCommand(); 
-		// printf("flag_start: %d, current_step: %d\r\n", flag_start, current_step);
-		// printf("alpha1: %.4f, beta1: %.4f, length1: %.4f, alpha2: %.4f, beta2: %.4f, length2: %.4f\r\n", 
-		// 		alpha1, beta1, length1, alpha2, beta2, length2);
-
+		printf("flag_start: %d, num: %d, loop_no: %d, repeat: %d\r\n", flag_start, num, loop_no, repeat);
+		for (int i = 0; i < 6; i++)
+		{
+			printf("alpha[%d]: %.4f, beta[%d]: %.4f, length[%d]: %.4f\r\n", i, alpha[i], i, beta[i], i, length[i]);
+		}
+		
 		for (int i = 0; i < 6; i++)
 		{
 			Command_ABL_demo.segment[i].A = alpha[i];
@@ -226,6 +276,8 @@ int main(int argc, char **argv)
 		ros::spinOnce(); //necessary for subscribe											
 		r.sleep();		
 	}
-		
+
+	inFile.close();	
 	return 0;
 }
+
