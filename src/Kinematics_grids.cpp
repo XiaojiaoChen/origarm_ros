@@ -6,6 +6,7 @@
 #include <linux/input-event-codes.h>
 #include <vector>
 
+#include <ros/time.h>
 #include "ros/package.h"
 #include "math.h"
 #include "myData.h"
@@ -36,29 +37,29 @@ static float deg2rad = M_PI / 180.0f;
 // given data read from file
 ifstream inFile;
 string GivenDataFilePath = ros::package::getPath("origarm_ros") + "/data/GridData/";
-string GivenDataFileName = "data2.txt";
+string GivenDataFileName = "Quadrant1.txt";
 string name = "";
 
 // saving data into file
 ofstream outFile;
 string SaveDataFilePath = ros::package::getPath("origarm_ros") + "/data/GridData/";
-string SaveDataFileName = "save2.txt";
+string SaveDataFileName = "";
 
 // given data 2d vector[N][13], N = max(dataNo)
 static vector< vector<float> > givenData;
 
 // given PosGrid & OrtGrid, both expressions are necessary
-static vector<float> PosCarGrid_x{-0.3557, -0.1779,      0, 0.1779, 0.3557};
-static vector<float> PosCarGrid_y{-0.3557, -0.1779,      0, 0.1779, 0.3557};
-static vector<float> PosCarGrid_z{ 0.0644,  0.1704, 0.2764, 0.3824, 0.4884};
+static vector<float> PosCarGrid_x{-65.6539,   -7.8542,   49.9456,  107.7453,  165.5451,  223.3448};
+static vector<float> PosCarGrid_y{-72.6837,  -15.4107,   41.8623,   99.1354,  156.4084,  213.6814};
+static vector<float> PosCarGrid_z{182.2847,  230.6516,  279.0186,  327.3855,  375.7524};
 static vector<float> OrtSphGrid_omega{0, 0.7879, 1.5758, 2.3637, 3.1516};
 static vector<float> OrtSphGrid_phi  {0, 0.7879, 1.5758, 2.3637, 3.1516};
 static vector<float> OrtSphGrid_theta{0, 1.5733, 3.1466, 4.7199, 6.2932};
 
 static vector<vector<float>> Grid_group{    
-    {-0.3557, -0.1779,      0, 0.1779, 0.3557},
-    {-0.3557, -0.1779,      0, 0.1779, 0.3557},
-    { 0.0644,  0.1704, 0.2764, 0.3824, 0.4884},
+    {-65.6539,   -7.8542,   49.9456,  107.7453,  165.5451,  223.3448},
+    {-72.6837,  -15.4107,   41.8623,   99.1354,  156.4084,  213.6814},
+    {182.2847,  230.6516,  279.0186,  327.3855,  375.7524},
     {      0,  0.7879, 1.5758, 2.3637, 3.1516},
     {      0, 0.7879, 1.5758, 2.3637,  3.1516},
     {      0, 1.5733, 3.1466, 4.7199,  6.2932}};
@@ -75,7 +76,7 @@ static vector< vector< vector< vector<int> > > > PosDataGridTable;
 static vector< vector< vector< vector<int> > > > OrtDataGridTable;
 
 // given target position & orientation
-Eigen::Vector3f    target_pos(0.000000, 0.000000, 0.165000);
+Eigen::Vector3f    target_pos(0.000000, 0.000000, 330.000);
 Eigen::Quaternionf target_quat(1.000000, 0.000000, 0.000000, 0.000000); // initilization as :(qw,qx,qy,qz)
 Eigen::Vector3f    target_OrtSphCoord;
 Eigen::Vector3f    target_OrtCarCoord;
@@ -85,6 +86,13 @@ int solution_selected;
 float ep = 0.5;
 float eo = 0.5;
 int flag_sol = 1; // flag_sol == 1: solution found, == 0: not found
+
+const int ms = 1000;  //1ms
+int ts[] = {10*ms, 1000*ms};
+int datanumber = 0;
+int flag_start = 0;
+int repeat = 1;
+int cyclenumber = 0;
 
 // finally selected ABL based on grids and given data
 Eigen::Vector3f    selected_pos;
@@ -102,9 +110,25 @@ float position_distance;
 float orientation_distance;
 float weightedsum_distance;
 
+//keyboard callback
+void keyCallback(const origarm_ros::keynumber &key)
+{
+	if (key.keycodePressed == KEY_B) // break and reset all command pressure to 0
+	{		
+		printf("KEY_B pressed!\r\n");
+		flag_start = 0;
+	}
+	else if (key.keycodePressed == KEY_J) // same as saving button
+	{
+		printf("KEY_J pressed!\r\n");
+		flag_start = 1;
+	}	
+}
+
 //getcurrent time for evaluating computational efficiency
 time_t curr_time;
 time_t diff_time;
+ros::Time BeginTime;
 static time_t getCurrentTime()
 {
 	time_t rawtime;
@@ -123,6 +147,36 @@ static time_t getCurrentTime()
     curr_time = msecs_time;
     return curr_time;
 } 
+
+std::string getTimeString()
+{
+	time_t rawtime;
+	struct tm *timeinfo;
+	char buffer[100];
+
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
+	struct timeval time_now
+	{
+	};
+	gettimeofday(&time_now, nullptr);
+	time_t msecs_time = time_now.tv_usec;
+	time_t msec = (msecs_time / 1000) % 1000;
+
+	strftime(buffer, 100, "%G_%h_%d_%H_%M_%S", timeinfo);
+	std::string ret1 = buffer;
+	std::string ret = ret1 + "_" + std::to_string(msec);
+	return ret;
+}
+
+std::string getTimeNsecString()
+{
+	ros::Time curtime = ros::Time::now();
+	ros::Duration pasttime = curtime - BeginTime;
+	int64_t pasttimems = pasttime.toNSec() / 1000000;
+	std::string ret = std::to_string(pasttimems);
+	return ret;
+}
 
 //Coord conversion: quat2OrtCarCoord
 static Eigen::Vector3f quat2OrtCarCoord(Eigen::Quaternionf& quat)
@@ -180,7 +234,7 @@ static Eigen::Quaternionf OrtCarCoord2quat(Eigen::Vector3f& OrtCarCoord)
     Eigen::Quaternionf quat;
     
     float theta = OrtCarCoord.norm()*2*M_PI;
-    if (abs(theta) < 1e-10)
+    if (abs(theta) < 1e-6)
     {
         quat.w() = 1;
         quat.x() = 0;
@@ -210,7 +264,7 @@ static Eigen::Vector3f Cartesian2Sphere(Eigen::Vector3f& CartesianCoord)
     float magnitude = CartesianCoord.norm();
     float omega, phi;
 
-    if (abs(magnitude) < 1e-10)
+    if (abs(magnitude) < 1e-6)
     {
         omega = 0;
         phi = 0;
@@ -306,6 +360,8 @@ static int GridNo(float target, vector<float> & gridarray)
 {
     int gridNo = -1;
     int arraysize = gridarray.size();
+
+    // printf("target: %f\r\n", target);
     if (arraysize <= 1)
     {
         printf("%s\n", "Wrong definition of input grids.");
@@ -325,6 +381,7 @@ static int GridNo(float target, vector<float> & gridarray)
 
     if (gridNo == -1)
     {
+        printf("target: %f\r\n", target);
         printf("%s\n", "target out of workspace.");
         exit(1);
     } 
@@ -367,7 +424,12 @@ static void generateDataGridTable()
 
         ox_No[dataNo] = GridNo(OrtSphereCoord(0), OrtSphGrid_omega); 
         oy_No[dataNo] = GridNo(OrtSphereCoord(1), OrtSphGrid_phi); 
-        oz_No[dataNo] = GridNo(OrtSphereCoord(2), OrtSphGrid_theta);        
+        oz_No[dataNo] = GridNo(OrtSphereCoord(2), OrtSphGrid_theta); 
+
+        // if (px_No[dataNo] == -1 || py_No[dataNo] == -1 || pz_No[dataNo] == -1 || ox_No[dataNo] == -1 || oy_No[dataNo] == -1 || oz_No[dataNo] == -1)  
+        // {
+        //     printf("wrong gridNo: dataNo: %d\r\n", dataNo);           
+        // }     
 
         for (int dimension_x = 0; dimension_x < Grid_size[0]; dimension_x ++)
         {
@@ -485,6 +547,121 @@ static void generatetarget(int casen, int rand_no[7], float distp, float disto)
         ortCarCoord_t = Sphere2Cartesian(ortSphCoord_t);
         target_quat = OrtCarCoord2quat(ortCarCoord_t);
     }
+}
+
+//generate target from specified groups
+static void getTarget()
+{
+    // xy line
+    vector<vector<float>> pose{
+        { -4.9128,    2.8308,   23.7181,   31.2469,   38.6679,   45.3325,   49.4207,   54.2969,   61.2286,   75.5831},
+        { -7.4833,    7.0717,   34.7918,   44.4003,   55.7579,   63.3405,   72.7515,   81.4504,   97.3609,  122.9970},
+        {286.3539,  286.3228,  288.8755,  287.4387,  284.4454,  284.9149,  283.6367,  282.8943,  287.7892,  289.4274},
+        { 0.9981,    0.9963,    0.9981,    0.9837,    0.9784,    0.9975,    0.9569,    0.9965,    0.9590,    0.9548},
+        { 0.0513,   -0.0828,   -0.0411,   -0.1507,   -0.1267,    0.0624,   -0.2554,   -0.0701,   -0.2031,   -0.2567},
+        {-0.0341,    0.0246,    0.0457,    0.0975,   -0.1603,   -0.0042,    0.1380,    0.0421,    0.1948,    0.1496},
+        { 0.0085,   -0.0024,    0.0096,    0.0114,    0.0303,    0.0341,   -0.0028,   -0.0152,   -0.0349,   -0.0091},
+    };
+
+    // vector<vector<float>> pose{
+    //     {     -5,         3,        24,        31,        39,        45,        49,        54,        61,        76},
+    //     {     -7,         7,        35,        44,        56,        63,        73,        81,        97,       123},
+    //     {    287,       287,       287,       287,       287,       287,       287,       287,       287,       287},
+    //     { 0.9981,    0.9963,    0.9981,    0.9837,    0.9784,    0.9975,    0.9569,    0.9965,    0.9590,    0.9548},
+    //     { 0.0513,   -0.0828,   -0.0411,   -0.1507,   -0.1267,    0.0624,   -0.2554,   -0.0701,   -0.2031,   -0.2567},
+    //     {-0.0341,    0.0246,    0.0457,    0.0975,   -0.1603,   -0.0042,    0.1380,    0.0421,    0.1948,    0.1496},
+    //     { 0.0085,   -0.0024,    0.0096,    0.0114,    0.0303,    0.0341,   -0.0028,   -0.0152,   -0.0349,   -0.0091}
+    // };
+
+    // xz line
+    // vector<vector<float>> pose{
+    //     {-22.5556,  -10.7705,   -4.0489,    3.3324,    8.5535,   10.9776,   28.1908,   35.9824,   44.4595,   54.9354},
+    //     { 69.5237,   70.3328,   66.8795,   66.2239,   73.6699,   71.8197,   67.9891,   71.5107,   70.4459,   67.0506},
+    //     {300.2442,  301.5906,  300.8895,  301.5647,  300.8822,  301.0794,  301.4203,  300.6809,  300.8366,  301.0689},
+    //     { 0.9859,    0.9428,    0.9949,    0.9958,    0.9741,    0.9814,    0.9945,    0.9989,    0.9723,    0.9766},
+    //     { 0.0546,   -0.1278,   -0.1005,    0.0878,   -0.1427,   -0.1640,   -0.1033,    0.0379,   -0.1501,   -0.1481},
+    //     {-0.1494,   -0.3033,   -0.0078,    0.0134,   -0.1737,    0.0969,   -0.0053,   -0.0268,    0.1778,   -0.1492},
+    //     { 0.0513,    0.0535,   -0.0061,   -0.0229,    0.0224,   -0.0257,   -0.0166,   -0.0090,   -0.0206,    0.0450}
+    // };
+
+    // vector<vector<float>> pose{
+    //     {    -23,       -11,        -4,         3,         9,        11,        28,        36,        44,        55},
+    //     {     70,        70,        70,        70,        70,        70,        70,        70,        70,        70},
+    //     {    300,       302,       301,       302,       301,       301,       301,       301,       301,       301},
+    //     { 0.9859,    0.9428,    0.9949,    0.9958,    0.9741,    0.9814,    0.9945,    0.9989,    0.9723,    0.9766},
+    //     { 0.0546,   -0.1278,   -0.1005,    0.0878,   -0.1427,   -0.1640,   -0.1033,    0.0379,   -0.1501,   -0.1481},
+    //     {-0.1494,   -0.3033,   -0.0078,    0.0134,   -0.1737,    0.0969,   -0.0053,   -0.0268,    0.1778,   -0.1492},
+    //     { 0.0513,    0.0535,   -0.0061,   -0.0229,    0.0224,   -0.0257,   -0.0166,   -0.0090,   -0.0206,    0.0450}
+    // };
+
+    // yz line
+    // vector<vector<float>> pose{
+    //     { 67.7210,   70.5729,   66.0869,   73.0463,   72.2866,   69.0400,   65.0088,   68.5409,   69.6764,   67.6263,   70.4315},
+    //     {-21.0424,  -15.4553,    2.1864,   16.3502,   22.3324,   31.7347,   41.9415,   59.8508,   82.2219,  127.3857,  151.4255},
+    //     {285.3869,  286.7497,  288.4001,  289.1978,  288.2873,  288.5113,  288.2698,  289.5599,  290.4155,  288.7492,  286.9740},
+    //     { 0.9845,    0.9757,    0.9822,    0.9796,    0.9772,    0.9774,    0.9589,    0.9414,    0.9307,    0.9599,    0.9372},
+    //     { 0.0376,   -0.0166,    0.0960,   -0.0553,   -0.0839,   -0.1240,   -0.0971,   -0.2204,   -0.2628,   -0.2530,   -0.3171},
+    //     { 0.1708,    0.2181,    0.1542,    0.1924,    0.1947,    0.1711,    0.2651,    0.2553,    0.2544,    0.1209,    0.1452},
+    //     {-0.0128,   -0.0084,   -0.0478,   -0.0155,   -0.0124,   -0.0086,   -0.0260,    0.0077,    0.0005,   -0.0007,    0.0016}
+    // };
+
+    // vector<vector<float>> pose{
+    //     {      70,        70,        70,        70,        70,        70,        70,        70,        70,        70,        70},
+    //     {-21.0424,  -15.4553,    2.1864,   16.3502,   22.3324,   31.7347,   41.9415,   59.8508,   82.2219,  127.3857,  151.4255},
+    //     {285.3869,  286.7497,  288.4001,  289.1978,  288.2873,  288.5113,  288.2698,  289.5599,  290.4155,  288.7492,  286.9740},
+    //     { 0.9845,    0.9757,    0.9822,    0.9796,    0.9772,    0.9774,    0.9589,    0.9414,    0.9307,    0.9599,    0.9372},
+    //     { 0.0376,   -0.0166,    0.0960,   -0.0553,   -0.0839,   -0.1240,   -0.0971,   -0.2204,   -0.2628,   -0.2530,   -0.3171},
+    //     { 0.1708,    0.2181,    0.1542,    0.1924,    0.1947,    0.1711,    0.2651,    0.2553,    0.2544,    0.1209,    0.1452},
+    //     {-0.0128,   -0.0084,   -0.0478,   -0.0155,   -0.0124,   -0.0086,   -0.0260,    0.0077,    0.0005,   -0.0007,    0.0016}
+    // };
+
+    // vector<vector<float>> pose{
+    //     {     70,        70,        70,        70,        70,        70,        70,        70,        70,        70,        70},
+    //     {    -21,     -15.5,         2,        16,        22,        32,        42,        60,        82,       127,       151},
+    //     {    285,       287,       288,       289,       288,       289,       288,       290,       290,       289,       287},
+    //     { 0.9845,    0.9757,    0.9822,    0.9796,    0.9772,    0.9774,    0.9589,    0.9414,    0.9307,    0.9599,    0.9372},
+    //     { 0.0376,   -0.0166,    0.0960,   -0.0553,   -0.0839,   -0.1240,   -0.0971,   -0.2204,   -0.2628,   -0.2530,   -0.3171},
+    //     { 0.1708,    0.2181,    0.1542,    0.1924,    0.1947,    0.1711,    0.2651,    0.2553,    0.2544,    0.1209,    0.1452},
+    //     {-0.0128,   -0.0084,   -0.0478,   -0.0155,   -0.0124,   -0.0086,   -0.0260,    0.0077,    0.0005,   -0.0007,    0.0016}
+    // };
+             
+    // given data
+    if (flag_start)
+    {
+        if (datanumber < pose[0].size() && cyclenumber < repeat)   
+        {
+            target_pos.x() = pose[0][datanumber];
+            target_pos.y() = pose[1][datanumber];
+            target_pos.z() = pose[2][datanumber];
+            target_quat.w() = pose[3][datanumber];
+            target_quat.x() = pose[4][datanumber];
+            target_quat.y() = pose[5][datanumber];
+            target_quat.z() = pose[6][datanumber];
+            usleep(ts[1]);
+            datanumber = datanumber + 1;
+        }
+        else if (cyclenumber < repeat)
+        {
+            cyclenumber = cyclenumber + 1;
+            datanumber = 0;
+        }
+        else
+        {
+            flag_start = 0;
+        }        
+    }
+    else
+    {
+        target_pos.x() = 0;
+        target_pos.y() = 0;
+        target_pos.z() = 330.0;
+        target_quat.w() = 1;
+        target_quat.x() = 0;
+        target_quat.y() = 0;
+        target_quat.z() = 0;
+        usleep(ts[0]);
+    }
+   
 }
 
 //print Vector3df
@@ -860,17 +1037,21 @@ int main(int argc, char **argv)
     ros::NodeHandle nh;	
 	ros::Rate r(100);     //Hz
 		
-	ros::Publisher  pub1 = nh.advertise<origarm_ros::Command_ABL>("Cmd_ABL_joy", 100);	
+	ros::Publisher  pub1 = nh.advertise<origarm_ros::Command_ABL>("Cmd_ABL_joy", 100);
+    ros::Subscriber key_sub_ = nh.subscribe("key_number", 1, keyCallback);	
 	origarm_ros::Command_ABL Command_ABL_demo;
    
-    // outFile.open(SaveDataFilePath + SaveDataFileName, ios::app);
-    // if (!outFile)
-    // {
-    //     printf("Unable to open file for saving data!");
-    //     exit(1);
-    // }
+    SaveDataFileName = "kinematicData_" + getTimeString() + ".txt";
+    outFile.open(SaveDataFilePath + SaveDataFileName, ios::app);
+    BeginTime = ros::Time::now();
+    if (!outFile)
+    {
+        printf("Unable to open file for saving data!");
+        exit(1);
+    }
             
     readFromDataFile(); 
+
     generateDataGridTable();
 
     // for (int i = 0; i < PosDataGridTable.size(); i++)
@@ -889,29 +1070,25 @@ int main(int argc, char **argv)
                  
     while (ros::ok())
 	{
-        int size_givendata = givenData.size(); 
-        int randn_array[7];
+        // int size_givendata = givenData.size(); 
+        // int randn_array[7];
 
-        randn_array[0] = rand() % size_givendata;
-        for (int i = 1; i < 7; i++)
-        {
-            randn_array[i] = rand() % 1000;           
-        }
+        // randn_array[0] = rand() % size_givendata;
+        // for (int i = 1; i < 7; i++)
+        // {
+        //     randn_array[i] = rand() % 1000;           
+        // }
               
-        int caseNo = 0;
-        float distp = 5;
-        float disto = 5;
-        generatetarget(caseNo, randn_array, distp, disto); 
+        // int caseNo = 0;
+        // float distp = 5;
+        // float disto = 5;
+        // generatetarget(caseNo, randn_array, distp, disto); 
 
-        // target_pos.x() = 0.2176;
-        // target_pos.y() = 0.2806;
-        // target_pos.z() = 0.1257;
-
-        // target_quat.w() = 0.9412;
-        // target_quat.x() = 0.3120;
-        // target_quat.y() = 0;
-        // target_quat.z() = -0.1293;
-
+        // given target pos & ort
+         getTarget();
+         printf("flag_start: %d, datanumber: %d, cyclenumber: %d\r\n",flag_start, datanumber, cyclenumber);
+        // printf("target_pos: %f, %f, %f\r\n",target_pos.x(), target_pos.y(), target_pos.z());
+       
         curr_time = getCurrentTime();
         target_OrtCarCoord = quat2OrtCarCoord(target_quat); 
         time_t dt1 = getCurrentTime()-curr_time; 
@@ -940,8 +1117,14 @@ int main(int argc, char **argv)
         // printf("seperated computational time (us): %lu, %lu, %lu, %lu, %lu\r\n", dt1, dt2, dt3, dt4, dt5);
         ResultsDisplay();
 
-        // outFile << solution_candidate.size() <<" "<< dt1 <<" "<< dt2 <<" "<< dt3 <<" "<< dt4 <<" "<< dt5 <<" "<< diff_time << endl;
-                      
+        if (flag_start)
+        {
+            std::string curtime = getTimeNsecString();            
+            outFile << curtime <<" "<< solution_candidate.size() <<" "<< dt1 <<" "<< dt2 <<" "<< dt3 <<" "<< dt4 <<" "<< dt5 <<" "<< diff_time << endl;
+            outFile << curtime <<" "<< target_pos.x() << " " << target_pos.y() << " " << target_pos.z() <<" "<< target_quat.w() <<" "<< target_quat.x() <<" "<<target_quat.y()<<" "<<target_quat.z()<<endl; 
+            outFile << curtime <<" "<< selected_pos.x() << " " << selected_pos.y() << " " << selected_pos.z() <<" "<< selected_quat.w() <<" "<< selected_quat.x() <<" "<<selected_quat.y()<<" "<<selected_quat.z()<<endl;  
+        }
+                             
         for (int i = 0; i < 3; i++)
         {
             Command_ABL_demo.segment[i].A = alpha_s[0]/3;
@@ -970,9 +1153,10 @@ int main(int argc, char **argv)
             length_prev[i] = length_s[i];
         }
         
+        ros::spinOnce(); //necessary for subscribe
 		r.sleep();
 	}
 
-	// outFile.close();	
+	outFile.close();	
 	return 0;
 }
