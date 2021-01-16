@@ -26,7 +26,7 @@ using namespace std;
 
 ifstream inFile;
 string GivenDataFilePath = ros::package::getPath("origarm_ros") + "/predefined_param/";
-string GivenDataFileName = "repeat_6_1.txt";
+string GivenDataFileName = "repeat_1_0.txt";
 
 const int ms = 1000;  //1ms
 int ts[] = {5*ms, 10*ms, 60*ms, 10*ms};
@@ -59,7 +59,7 @@ void keyCallback(const origarm_ros::keynumber &key)
 	{		
 		printf("KEY_B pressed!\r\n");
 		flag_start = 0;
-		repeat = 2;
+		repeat = 12;
 	}
 	else if (key.keycodePressed == KEY_J) // same as saving button
 	{
