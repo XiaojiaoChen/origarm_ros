@@ -307,7 +307,7 @@ target_link_libraries(keyboard
  )
 
 add_executable(demo_abl src/demo_abl.cpp) 
-add_dependencies(keyboard ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+add_dependencies(demo_abl ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(demo_abl             
    ${catkin_LIBRARIES}
  )
